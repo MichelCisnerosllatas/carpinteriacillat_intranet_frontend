@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/shared/ui/sonner'
 import { getLayoutScript } from '@/shared/lib/layout-script'
+import NextTopLoader from 'nextjs-toploader'
 import '@/shared/styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${inter.variable} font-inter antialiased`}>
+        <NextTopLoader showSpinner={false} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

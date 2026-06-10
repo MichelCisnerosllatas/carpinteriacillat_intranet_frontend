@@ -63,7 +63,7 @@ export type SidebarData = {
 // ─── Role filter utility ─────────────────────────────────────────────────────
 //
 // Call this function when you have the logged-in user's role.
-// Use it inside your sidebar/nav components:
+// Use it inside your sidebar/nav ui:
 //
 //   const filteredGroups = filterNavByRole(sidebarData.navGroups, currentUserRole)
 //

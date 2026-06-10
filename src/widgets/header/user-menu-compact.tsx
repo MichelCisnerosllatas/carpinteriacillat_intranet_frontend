@@ -22,6 +22,7 @@ import {
 } from '@/shared/ui/dropdown-menu'
 import type { NavUser } from '@/shared/config/nav-types'
 import { AppearanceDrawer } from './appearance-drawer'
+import { useLogoutHandler } from '@/features/auth/hooks/useLogoutHandler'
 
 /**
  * Compact version of the user menu for the Header.
@@ -31,6 +32,7 @@ import { AppearanceDrawer } from './appearance-drawer'
 export function UserMenuCompact({ user }: { user: NavUser }) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
+  const { handleLogout } = useLogoutHandler()
 
   const initials = user.name
     .split(' ')
@@ -122,7 +124,9 @@ export function UserMenuCompact({ user }: { user: NavUser }) {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={async (e) => handleLogout()}
+          >
             <LogOut className="mr-2 size-4" />
             Log out
           </DropdownMenuItem>

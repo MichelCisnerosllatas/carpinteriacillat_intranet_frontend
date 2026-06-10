@@ -5,31 +5,72 @@ import { type Table } from '@tanstack/react-table'
 import { cn, getPageNumbers } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import type { ReactNode } from 'react'
 
-export function DataTablePagination<TData>({ table, className }: { table: Table<TData>; className?: string }) {
-  const currentPage = table.getState().pagination.pageIndex + 1
+export function DataTablePagination<TData>({
+ table,
+ className,
+ summary,
+}: {
+  table: Table<TData>
+  className?: string
+  summary?: ReactNode
+}) {  const currentPage = table.getState().pagination.pageIndex + 1
   const totalPages = table.getPageCount()
   const pageNumbers = getPageNumbers(currentPage, totalPages)
 
   return (
     <div className={cn('flex items-center justify-between overflow-clip px-2', '@max-2xl/content:flex-col-reverse @max-2xl/content:gap-4', className)} style={{ overflowClipMargin: 1 }}>
-      <div className="flex w-full items-center justify-between">
-        <div className="flex w-25 items-center justify-center text-sm font-medium @2xl/content:hidden">
-          Page {currentPage} of {totalPages}
+      {/*<div className="flex w-full items-center justify-between">*/}
+      {/*  <div className="flex w-25 items-center justify-center text-sm font-medium @2xl/content:hidden">*/}
+      {/*    Page {currentPage} of {totalPages}*/}
+      {/*  </div>*/}
+      {/*  <div className="flex items-center gap-2 @max-2xl/content:flex-row-reverse">*/}
+      {/*    <Select value={`${table.getState().pagination.pageSize}`} onValueChange={v => table.setPageSize(Number(v))}>*/}
+      {/*      <SelectTrigger className="h-8 w-[70px]"><SelectValue placeholder={table.getState().pagination.pageSize} /></SelectTrigger>*/}
+      {/*      <SelectContent side="top">*/}
+      {/*        {[10, 20, 30, 40, 50].map(s => <SelectItem key={s} value={`${s}`}>{s}</SelectItem>)}*/}
+      {/*      </SelectContent>*/}
+      {/*    </Select>*/}
+      {/*    <p className="hidden text-sm font-medium sm:block">Filas</p>*/}
+      {/*  </div>*/}
+      {/*</div>*/}
+      <div className="flex w-full flex-wrap items-center gap-3">
+        <div className="flex w-25 items-center justify-center text-xs font-medium @2xl/content:hidden">
+          Pag {currentPage} de {totalPages}
         </div>
+
         <div className="flex items-center gap-2 @max-2xl/content:flex-row-reverse">
           <Select value={`${table.getState().pagination.pageSize}`} onValueChange={v => table.setPageSize(Number(v))}>
-            <SelectTrigger className="h-8 w-[70px]"><SelectValue placeholder={table.getState().pagination.pageSize} /></SelectTrigger>
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={table.getState().pagination.pageSize} />
+            </SelectTrigger>
+
             <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map(s => <SelectItem key={s} value={`${s}`}>{s}</SelectItem>)}
+              {[10, 20, 30, 40, 50].map(s => (
+                <SelectItem key={s} value={`${s}`}>
+                  {s}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <p className="hidden text-sm font-medium sm:block">Rows per page</p>
+
+          <p className="hidden text-xs font-medium sm:block">Filas</p>
         </div>
+
+        {summary && (
+          <p className="text-xs text-muted-foreground">
+            {summary}
+          </p>
+        )}
       </div>
+
       <div className="flex items-center sm:space-x-6 lg:space-x-8">
-        <div className="flex w-25 items-center justify-center text-sm font-medium @max-3xl/content:hidden">
-          Page {currentPage} of {totalPages}
+        {/*<div className="flex w-25 items-center justify-center text-sm font-medium @max-3xl/content:hidden">*/}
+        {/*  Pag {currentPage} of {totalPages}*/}
+        {/*</div>*/}
+        <div className="flex w-25 items-center justify-center text-xs font-medium @max-3xl/content:hidden">
+          Pag {currentPage} de {totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" className="size-8 p-0 @max-md/content:hidden" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>

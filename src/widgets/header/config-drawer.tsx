@@ -162,7 +162,7 @@ function IconDirRTL(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-// ─── Shared sub-components ───────────────────────────────────────────────────
+// ─── Shared sub-ui ───────────────────────────────────────────────────
 
 function SectionTitle({
   title,

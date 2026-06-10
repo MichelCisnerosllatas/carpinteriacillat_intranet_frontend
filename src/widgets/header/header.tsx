@@ -7,6 +7,7 @@ import { SidebarTrigger } from '@/shared/ui/sidebar'
 import { NotificationDropdown } from './notification-dropdown'
 import { UserMenuCompact } from './user-menu-compact'
 import { sidebarData } from '@/shared/config/sidebar-data'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
 
 type HeaderProps = React.HTMLAttributes<HTMLElement> & {
   fixed?: boolean
@@ -15,6 +16,13 @@ type HeaderProps = React.HTMLAttributes<HTMLElement> & {
 
 export function Header({ className, fixed = true, title, children, ...props }: HeaderProps) {
   const [offset, setOffset] = useState(0)
+  const loginDataDTO = useAuthStore((state) => state.loginDataDTO)
+
+  const currentUser = {
+    name: `${loginDataDTO?.person?.person_name ?? 'Usuario'} ${loginDataDTO?.person?.person_lastname ?? ''}`.trim(),
+    email: loginDataDTO?.user?.email ?? 'Sin correo',
+    avatar: '',
+  }
 
   useEffect(() => {
     const onScroll = () => {
@@ -53,7 +61,8 @@ export function Header({ className, fixed = true, title, children, ...props }: H
           <NotificationDropdown />
           <Separator orientation="vertical" className="mx-1 h-6" />
           {/* Compact: avatar only — same dropdown options as sidebar NavUser */}
-          <UserMenuCompact user={sidebarData.user} />
+          {/*<UserMenuCompact user={sidebarData.user} />*/}
+          <UserMenuCompact user={currentUser} />
         </div>
       </div>
     </header>

@@ -7,9 +7,15 @@ export enum EnvType {
 
 const CURRENT_ENV: EnvType = EnvType.LOCAL;
 
+const normalizeApiUrl = (url?: string) => {
+  if (!url) return undefined;
+
+  return url.replace(/\/$/, '');
+};
+
 const ENV_CONFIG = {
   [EnvType.LOCAL]: {
-    apiUrl: 'http://10.36.102.250:8000/api',
+    apiUrl: normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL) ?? 'http://192.168.1.112:8000/api',
     debug: true,
     internalToken: 'TU_TOKEN_INTERNO_AQUI',
   },

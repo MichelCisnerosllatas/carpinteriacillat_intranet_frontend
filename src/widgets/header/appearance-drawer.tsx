@@ -120,7 +120,7 @@ function IconLayoutFull(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Sub-ui ──────────────────────────────────────────────────────────
 
 function SectionTitle({
   title,
@@ -163,7 +163,7 @@ function RadioItem({ value, label, icon: Icon, isTheme }: {
   )
 }
 
-// ─── Section components ──────────────────────────────────────────────────────
+// ─── Section ui ──────────────────────────────────────────────────────
 
 function ThemeSection() {
   const { theme = 'system', setTheme } = useTheme()

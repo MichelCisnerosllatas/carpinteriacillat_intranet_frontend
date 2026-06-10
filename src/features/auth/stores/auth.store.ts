@@ -15,7 +15,7 @@ interface AuthState {
 
   verify: () => Promise<void>;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
+  logout: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -27,65 +27,92 @@ export const useAuthStore = create<AuthState>((set) => {
     loadingSplash: false,
     error: null,
 
-    verify: async () => {
-      set({
-        loginDataDTO: null,
-        loadingSplash: false,
-      });
 
-      const session = await AuthStorage.getSession();
+    verify: async () => {
+      set({ loadingSplash: true })
+
+      const session = await AuthStorage.getSession()
+
+      // console.log('VERIFY SESSION:', {
+      //   hasAccessToken: Boolean(session.accessToken),
+      //   hasRefreshToken: Boolean(session.refreshToken),
+      //   hasUser: Boolean(session.user_login),
+      //   user: session.user_login,
+      // })
+
       if (session.accessToken && session.user_login) {
         set({
           loginDataDTO: session.user_login,
           isAuthenticated: true,
-          loadingSplash: true,
-        });
-      } else {
-        set({
-          loginDataDTO: null,
-          isAuthenticated: false,
-        });
+          loadingSplash: false,
+          error: null,
+        })
+
+        return
       }
+
+      set({
+        loginDataDTO: null,
+        isAuthenticated: false,
+        loadingSplash: false,
+      })
     },
 
     login: async (email, password) => {
-      set({ loadingLogin: true, error: null })
+      set({
+        loadingLogin: true,
+        error: null,
+      })
 
       try {
         const response = await authService.login({
-          email: email,
-          password: password,
+          email,
+          password,
         })
 
-        if(!response.success){
-          throw new Error(response.message);
+        if (!response.success) {
+          throw new Error(response.message || 'No se pudo iniciar sesión')
         }
 
-        if (response.data === null) {
+        if (!response.data) {
           throw new Error('Respuesta de login vacía')
         }
 
-        if (response.data?.user === null) {
+        if (!response.data.user) {
           throw new Error('Usuario no encontrado en la respuesta de login')
         }
-
-        TokenStorage.setAccessToken(response.data?.access_token || '')
-        TokenStorage.setRefreshToken(response.data?.refresh_token || '')
+        //
+        // TokenStorage.setAccessToken(response.data.access_token || '')
+        // TokenStorage.setRefreshToken(response.data.refresh_token || '')
+        await AuthStorage.saveSession({
+          accessToken: response.data.access_token || '',
+          refreshToken: response.data.refresh_token || '',
+          user_login: response.data,
+        })
 
         set({
           loginDataDTO: response.data,
+          isAuthenticated: true,
           loadingLogin: false,
+          error: null,
         })
 
         return true
       } catch (error: any) {
-        console.log('LOGIN ERROR:', error?.response?.data)
+        console.log('LOGIN ERROR FULL:', error)
+        console.log('LOGIN ERROR RESPONSE:', error?.response?.data)
+
+        const message =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          'Error al iniciar sesión'
 
         set({
-          error:
-            error?.response?.data?.message ||
-            'Error al iniciar sesión',
+          error: message,
           loadingLogin: false,
+          isAuthenticated: false,
+          loginDataDTO: null,
         })
 
         return false
@@ -93,13 +120,23 @@ export const useAuthStore = create<AuthState>((set) => {
     },
 
     logout: async () => {
+      set({ logoutLoading: true })
+
       try {
         await authService.logout()
-      } catch {
+      } catch (error) {
+        console.log('LOGOUT API ERROR:', error)
       }
 
-      await TokenStorage.clearTokens()
-      set({ loginDataDTO: null })
+      await AuthStorage.clearSession()
+
+      set({
+        loginDataDTO: null,
+        isAuthenticated: false,
+        logoutLoading: false,
+      })
+
+      return true
     },
   })
 });
@@ -128,7 +165,7 @@ export const useAuthStore = create<AuthState>((set) => {
 //   }
 // }
 //
-// export const useAuthStore = create<AuthState>()((set, get) => {
+// export const useAuthStore = create<AuthState>()((set, getdto) => {
 //   const cookieToken = getCookie(ACCESS_TOKEN_KEY)
 //   const initToken = cookieToken ? JSON.parse(cookieToken) : ''
 //
@@ -159,7 +196,7 @@ export const useAuthStore = create<AuthState>((set) => {
 //         }),
 //
 //       isAuthenticated: () => {
-//         const { user, accessToken } = get().auth
+//         const { user, accessToken } = getdto().auth
 //         return !!accessToken && !!user && user.exp > Date.now()
 //       },
 //     },

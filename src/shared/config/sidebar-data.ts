@@ -1,3 +1,4 @@
+// src/shared/config/sidebar-data.ts
 import {
   AudioWaveform,
   Bell,
@@ -91,7 +92,7 @@ export const sidebarData: SidebarData = {
   user: {
     name: 'Admin User',
     email: 'admin@example.com',
-    avatar: '/images/avatar.jpg',
+    avatar: '',
   },
   teams: [
     {

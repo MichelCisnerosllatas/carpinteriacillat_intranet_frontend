@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import { SidebarInset, SidebarProvider } from '@/shared/ui/sidebar'
 import { AppSidebar } from '@/widgets/sidebar/app-sidebar'
 import { CommandMenu } from '@/widgets/command-menu/command-menu'
+import { AuthSessionProvider } from '@/features/auth/ui/auth-session-provider'
 
 type DashboardLayoutClientProps = {
   children: React.ReactNode
@@ -20,21 +21,41 @@ export function DashboardLayoutClient({
   defaultSidebarCollapsible,
 }: DashboardLayoutClientProps) {
   return (
-    <SidebarProvider defaultOpen={defaultSidebarOpen}>
-      <AppSidebar
-        defaultVariant={defaultSidebarVariant}
-        defaultCollapsible={defaultSidebarCollapsible}
-      />
-      <SidebarInset
-        className={cn(
-          '@container/content',
-          'has-data-[layout=fixed]:h-svh',
-          'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
-        )}
-      >
-        {children}
-      </SidebarInset>
-      <CommandMenu />
-    </SidebarProvider>
+    <AuthSessionProvider>
+      <SidebarProvider defaultOpen={defaultSidebarOpen}>
+        <AppSidebar
+          defaultVariant={defaultSidebarVariant}
+          defaultCollapsible={defaultSidebarCollapsible}
+        />
+        <SidebarInset
+          className={cn(
+            '@container/content',
+            'has-data-[layout=fixed]:h-svh',
+            'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
+          )}
+        >
+          {children}
+        </SidebarInset>
+        <CommandMenu />
+      </SidebarProvider>
+    </AuthSessionProvider>
   )
+  // return (
+  //   <SidebarProvider defaultOpen={defaultSidebarOpen}>
+  //     <AppSidebar
+  //       defaultVariant={defaultSidebarVariant}
+  //       defaultCollapsible={defaultSidebarCollapsible}
+  //     />
+  //     <SidebarInset
+  //       className={cn(
+  //         '@container/content',
+  //         'has-data-[layout=fixed]:h-svh',
+  //         'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
+  //       )}
+  //     >
+  //       {children}
+  //     </SidebarInset>
+  //     <CommandMenu />
+  //   </SidebarProvider>
+  // )
 }

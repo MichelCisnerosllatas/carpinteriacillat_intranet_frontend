@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-// ── shadcn/ui components ──────────────────────────────────────────────────
+// ── shadcn/ui ui ──────────────────────────────────────────────────
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,

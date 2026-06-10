@@ -98,19 +98,24 @@ apiClient.interceptors.response.use(
           const newAccessToken = response.data.access_token;
           const newRefreshToken = response.data.refresh_token;
 
-          await TokenStorage.setAccessToken(newAccessToken);
+          TokenStorage.setAccessToken(newAccessToken);
 
           if (newRefreshToken) {
-            await TokenStorage.setRefreshToken(newRefreshToken);
+            TokenStorage.setRefreshToken(newRefreshToken);
           }
 
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         } 
         catch (refreshError) {
-          await TokenStorage.clearTokens();
-          SessionExpired.execute();
-          return Promise.reject(refreshError);
+          TokenStorage.clearTokens()
+
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth_user')
+          }
+
+          SessionExpired.execute()
+          return Promise.reject(refreshError)
         } 
         finally {
           isRefreshing = false;

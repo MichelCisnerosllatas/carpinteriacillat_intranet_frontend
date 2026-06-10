@@ -13,13 +13,14 @@ const benefits = [
   'Panel administrativo moderno y organizado',
 ]
 
+
 export default function SignInPage() {
   return (
     <main className="relative min-h-svh overflow-hidden bg-background">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_35%),radial-gradient(circle_at_bottom_right,hsl(var(--primary)/0.12),transparent_30%)]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,oklch(0.208_0.042_265.755_/_0.18),transparent_35%),radial-gradient(circle_at_bottom_right,oklch(0.208_0.042_265.755_/_0.12),transparent_30%)]" />
 
       <section className="grid min-h-svh lg:grid-cols-[1.05fr_0.95fr]">
-        <aside className="relative hidden overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <aside className="relative hidden overflow-hidden bg-[oklch(0.208_0.042_265.755)] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.18),transparent_35%),radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.22),transparent_28%)]" />
 
           <div className="relative z-10 flex items-center gap-3">
@@ -55,11 +56,6 @@ export default function SignInPage() {
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="relative z-10 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80 backdrop-blur">
-            <ShieldCheck className="size-5 shrink-0" />
-            <p>Conexión protegida para usuarios autorizados.</p>
           </div>
         </aside>
 

@@ -1,3 +1,4 @@
+// src/app/(auth)/sign-in/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -29,10 +30,8 @@ interface SignInFormProps extends React.HTMLAttributes<HTMLFormElement> {
 }
 
 export function SignInForm({ className, redirectTo, ...props }: SignInFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [serverError, setServerError] = useState<string | null>(null)
-  const router = useRouter()
-  const {login, loginDataDTO, error} = useAuthStore();
+  const { login, loadingLogin, error, loginDataDTO } = useAuthStore();
+  const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -40,49 +39,33 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
   })
 
   async function onSubmit(data: FormValues) {
-    setIsLoading(true)
-    setServerError(null)
+    const ok = await login(data.email, data.password)
 
-    const ok = await login(data.email, data.password);
     if (!ok) {
-      setIsLoading(false);
-      toastError("Credenciales incorrectas", "verifica tus credenciales nuevamente");
-      return;
+      toastError(
+        'No se pudo iniciar sesión',
+        useAuthStore.getState().error || 'Verifica tus credenciales nuevamente'
+      )
+      return
     }
 
-    toastSuccess("Bienvenido a la intranet", `Has iniciado sesión exitosamente ${loginDataDTO?.person?.person_name} ${loginDataDTO?.person?.person_lastname}`)
-    router.replace('/dashboard')
+    const user = useAuthStore.getState().loginDataDTO
 
-    // toast.promise(sleep(900), {
-    //   loading: 'Validando credenciales...',
-    //   success: () => {
-    //     setIsLoading(false);
-    //
-    //     // auth.setUser({
-    //     //   accountNo: 'ACC001',
-    //     //   email: data.email,
-    //     //   role: ['user'],
-    //     //   exp: Date.now() + 24 * 60 * 60 * 1000,
-    //     // })
-    //     // auth.setAccessToken('mock-access-token')
-    //     router.replace(redirectTo ?? '/dashboard')
-    //     return 'Bienvenido a la intranet.'
-    //   },
-    //   error: () => {
-    //     setIsLoading(false)
-    //     setServerError('No se pudo iniciar sesión. Verifica tus credenciales.')
-    //     return 'No se pudo iniciar sesión.'
-    //   },
-    // })
+    toastSuccess(
+      'Bienvenido a la intranet',
+      `Has iniciado sesión exitosamente ${user?.person?.person_name ?? ''}`
+    )
+
+    router.replace(redirectTo ?? '/dashboard')
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className={cn('grid gap-4', className)} {...props}>
-        {serverError && (
+        {error && (
           <Alert variant="destructive">
             <AlertCircle className="size-4" />
-            <AlertDescription>{serverError}</AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
@@ -100,7 +83,7 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
                     autoComplete="email"
                     placeholder="usuario@empresa.com"
                     className="h-11 pl-10"
-                    disabled={isLoading}
+                    disabled={loadingLogin}
                     {...field}
                   />
                 </div>
@@ -129,7 +112,7 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
                     autoComplete="current-password"
                     placeholder="••••••••"
                     className="[&_input]:h-11 [&_input]:pl-10 [&_input]:pr-10"
-                    disabled={isLoading}
+                    disabled={loadingLogin}
                     {...field}
                   />
                 </div>
@@ -140,9 +123,9 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
           )}
         />
 
-        <Button type="submit" className="mt-2 h-11 w-full font-semibold" disabled={isLoading}>
-          {isLoading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-          {isLoading ? 'Ingresando...' : 'Ingresar al sistema'}
+        <Button type="submit" className="mt-2 h-11 w-full font-semibold" disabled={loadingLogin}>
+          {loadingLogin ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
+          {loadingLogin ? 'Ingresando...' : 'Ingresar al sistema'}
         </Button>
       </form>
     </Form>

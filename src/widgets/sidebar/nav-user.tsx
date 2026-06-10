@@ -29,11 +29,14 @@ import {
 } from '@/shared/ui/sidebar'
 import type { NavUser as NavUserType } from '@/shared/config/nav-types'
 import { AppearanceDrawer } from '@/widgets/header/appearance-drawer'
+import { useLogoutHandler } from '@/features/auth/hooks/useLogoutHandler'
+
 
 export function NavUser({ user }: { user: NavUserType }) {
   const { isMobile } = useSidebar()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
+  const { handleLogout } = useLogoutHandler()
 
   const initials = user.name
     .split(' ')
@@ -121,7 +124,9 @@ export function NavUser({ user }: { user: NavUserType }) {
                 Appearance & Layout
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={async (e) => handleLogout()}
+              >
                 <LogOut className="mr-2 size-4" />
                 Log out
               </DropdownMenuItem>

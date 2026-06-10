@@ -54,8 +54,10 @@ function getThemeOptions(): Partial<SweetAlertOptions> {
 }
 
 // ─── Base instance ────────────────────────────────────────────────────────────
-function baseSwal(options: SweetAlertOptions): Promise<SweetAlertResult> {
-  return Swal.fire({
+export function baseSwal<T = any>(
+  options: SweetAlertOptions
+): Promise<SweetAlertResult<T>> {
+  const finalOptions = {
     ...getThemeOptions(),
     customClass: {
       popup: 'rounded-xl shadow-xl border border-border text-sm',
@@ -63,9 +65,12 @@ function baseSwal(options: SweetAlertOptions): Promise<SweetAlertResult> {
       htmlContainer: 'text-muted-foreground text-sm',
       confirmButton: 'rounded-md px-4 py-2 text-sm font-medium',
       cancelButton: 'rounded-md px-4 py-2 text-sm font-medium',
+      ...(options.customClass ?? {}),
     },
     ...options,
-  })
+  } as SweetAlertOptions
+
+  return Swal.fire(finalOptions) as Promise<SweetAlertResult<T>>
 }
 
 // ─── Confirm dialog ───────────────────────────────────────────────────────────
@@ -119,7 +124,7 @@ export async function swalInput(options: {
   inputLabel?: string
   confirmText?: string
 }): Promise<SweetAlertResult<string>> {
-  return baseSwal({
+  return baseSwal<string>({
     title: options.title,
     text: options.text,
     input: 'text',
@@ -127,10 +132,24 @@ export async function swalInput(options: {
     inputLabel: options.inputLabel,
     showCancelButton: true,
     confirmButtonText: options.confirmText ?? 'OK',
-    inputValidator: (value) => {
+    inputValidator: (value: string) => {
       if (!value) return 'Please enter a value.'
+      return undefined
     },
-  }) as Promise<SweetAlertResult<string>>
+  })
+}
+
+export async function swalDeleteConfirm(
+  title = '¿Eliminar registro?',
+  text = 'Esta acción no se puede deshacer.'
+): Promise<boolean> {
+  return swalConfirm({
+    title,
+    text,
+    confirmText: 'Sí, eliminar',
+    cancelText: 'Cancelar',
+    danger: true,
+  })
 }
 
 // Re-export raw Swal for edge cases
