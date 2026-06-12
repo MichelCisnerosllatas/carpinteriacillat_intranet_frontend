@@ -14,11 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
-import { useUsuarioListStore } from '@/features/users/stores/useUsuarioListStore'
+import { useUserListStore } from '@/features/users/stores/useUserListStore'
+import { UsersError } from './users-error'
 import { usersColumns } from './users-columns'
 
 export function UsersTable() {
-  const { users, meta, filters, hasLoaded, isInitialLoading, isFetching, load } = useUsuarioListStore()
+  const { users, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } = useUserListStore()
 
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -101,13 +102,30 @@ export function UsersTable() {
     })
   }
 
-  if (isInitialLoading) {
+  if (!hasLoaded && !isInitialLoading) {
     return (
       <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
         <LoaderCircle className="mb-3 size-9 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cargando usuarios...</p>
       </div>
     )
+  }
+
+  if (isError) {
+    return (
+    <UsersError
+      title="Error al cargar usuarios"
+      message={message ?? 'No se pudieron cargar los usuarios'}
+      isLoading={isFetching}
+      showRetryButton={true}
+      // onRetry={() => void load()}
+      onRetry={async () => {
+        // useUserListStore.setState({ isInitialLoading: true });
+        reset();
+        await load();
+      }}
+    />
+  )
   }
 
   return (

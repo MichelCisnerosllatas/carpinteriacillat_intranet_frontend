@@ -1,9 +1,9 @@
 // src/features/users/model/userget.dto.ts
 import { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import { MetaPaginationType } from '@/shared/type/metaPagination.type'
-import { UserJoinType } from '@/shared/type/user/userjoin.type'
+import { UserJoinType } from '@/features/users/model/userjoin.type'
 
-export type userGetRequestDto = {
+export type UserGetRequestDto = {
   search?: string;
   state?: number;
   role?: number;
@@ -13,7 +13,7 @@ export type userGetRequestDto = {
   date_to?: string;
 }
 
-export type userGetResponseDto = {
+export type UserGetResponseDto = {
   success: boolean;
   status: number;
   message: string;

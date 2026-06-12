@@ -1,4 +1,3 @@
-// src/shared/type/user.type.ts
 import { TypeDocType } from '@/shared/type/type_doc.type'
 
 export type UserJoinType = {
@@ -30,4 +29,3 @@ type UserRoleType = {
   role_description: string | null;
   role_state: number;
 }
-

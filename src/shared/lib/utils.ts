@@ -9,6 +9,15 @@ export function sleep(ms = 1000) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// Returns current datetime formatted as "YYYY-MM-DD HH:mm:ss" (backend expected format)
+export function formatDatetime(date: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  )
+}
+
 export function getPageNumbers(currentPage: number, totalPages: number) {
   const maxVisiblePages = 5
   const rangeWithDots: (number | string)[] = []

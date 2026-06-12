@@ -1,27 +1,30 @@
 import { create } from 'zustand'
 import { userService } from '@/features/users/services/user.service'
-import type { userGetRequestDto } from '@/features/users/model/userget.dto'
+import type { UserGetRequestDto } from '@/features/users/model/userget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
 import type { User, UserRole, UserStatus } from '@/features/users/data/schema'
-import { UserJoinType } from '@/shared/type/user/userjoin.type'
+import type { UserJoinType } from '@/features/users/model/userjoin.type'
 
-type UserListFilters = userGetRequestDto
+type UserListFilters = UserGetRequestDto
 
 type State = {
   hasLoaded: boolean
   isInitialLoading: boolean
   isFetching: boolean
+  isError: boolean
   message: string | null
   users: User[]
   rawUsers: UserJoinType[]
   links: LinksPaginationType | null
   meta: MetaPaginationType | null
   filters: UserListFilters
+  currentUser: User | null
 }
 
 type Action = {
   load: (params?: UserListFilters) => Promise<boolean>
+  setCurrentUser: (user: User | null) => void
   reset: () => void
 }
 
@@ -56,49 +59,46 @@ const mapUserFromApi = (user: UserJoinType): User => {
   const status = normalizeStatus(user.user_state)
 
   return {
-    // IDs ocultos
     id: user.id,
     idPerson: user.person?.id_person ?? null,
     idRole: user.role?.id_rol ?? null,
     idTypeDoc: user.person?.id_typedoc ?? null,
 
-    // Datos
     firstName,
     lastName,
     username: `${firstName} ${lastName}`.trim() || user.email,
     email: user.email,
 
-    // Documento
     typeDocName: user.person?.type_doc?.typedoc_name ?? 'Sin documento',
     documentNumber: user.person?.person_numdoc ?? '-',
 
-    // Foto por defecto
     photoUrl: null,
 
-    // Estado
     status,
     statusLabel: status === 'active' ? 'Activo' : 'Inactivo',
 
-    // Rol
     role: normalizeRole(user.role?.role_name),
     roleLabel: user.role?.role_name ?? 'Sin rol',
 
-    // Fechas dinámicas
     createdAt: user.user_created_at_format ?? user.user_created_at,
     updatedAt: user.user_updated_at_format ?? user.user_updated_at,
   }
 }
 
-export const useUsuarioListStore = create<State & Action>((set, get) => ({
+export const useUserListStore = create<State & Action>((set, get) => ({
   hasLoaded: false,
   isInitialLoading: false,
   isFetching: false,
+  isError: false,
   message: null,
   users: [],
   rawUsers: [],
   links: null,
   meta: null,
   filters: defaultFilters,
+  currentUser: null,
+
+  setCurrentUser: (user) => set({ currentUser: user }),
 
   load: async (params = {}) => {
     const nextFilters = {
@@ -106,22 +106,25 @@ export const useUsuarioListStore = create<State & Action>((set, get) => ({
       ...params,
     }
 
-    const isFirstLoad = !get().hasLoaded
-
     set({
       filters: nextFilters,
-      isInitialLoading: isFirstLoad,
       isFetching: true,
+      isError: false,
       message: null,
     })
 
     try {
       const response = await userService.get(nextFilters)
 
+      if (!response.success) {
+        throw new Error(response.message || 'No se pudo cargar la lista de usuarios.')
+      }
+
       set({
         hasLoaded: true,
         isInitialLoading: false,
         isFetching: false,
+        isError: false,
         message: response.message,
         rawUsers: response.data,
         users: response.data.map(mapUserFromApi),
@@ -136,12 +139,13 @@ export const useUsuarioListStore = create<State & Action>((set, get) => ({
 
       return true
     } catch (error: any) {
-      const message = error?.response?.data?.message ?? 'No se pudo cargar la lista de usuarios.'
+      const message = error?.response?.data?.message ?? error?.message ?? 'No se pudo cargar la lista de usuarios.'
 
       set({
         hasLoaded: true,
         isInitialLoading: false,
         isFetching: false,
+        isError: true,
         message,
       })
 
@@ -154,6 +158,7 @@ export const useUsuarioListStore = create<State & Action>((set, get) => ({
       hasLoaded: false,
       isInitialLoading: false,
       isFetching: false,
+      isError: false,
       message: null,
       users: [],
       rawUsers: [],
@@ -163,43 +168,3 @@ export const useUsuarioListStore = create<State & Action>((set, get) => ({
     })
   },
 }))
-
-// import { create } from 'zustand'
-//
-// type State = {
-//   isload: boolean
-//   isloading: boolean
-//   message: string | null | undefined
-//   userdata: null
-// }
-//
-// type Action = {
-//   load: () => Promise<boolean>
-//   reset: () => void
-// }
-//
-// export const useUsuarioListStore = create<State & Action>((set) => ({
-//   isload: false,
-//   isloading: false,
-//   message: null,
-//   userdata: null,
-//
-//   load: async () => {
-//     set({
-//       isload: true,
-//       isloading: true,
-//       message: null,
-//     })
-//
-//     return true;
-//   },
-//
-//   reset: () => {
-//     set({
-//       isload: false,
-//       isloading: false,
-//       message: null,
-//       userdata: null,
-//     })
-//   },
-// }))

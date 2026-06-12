@@ -1,14 +1,13 @@
 import { UserType } from '@/shared/type/user/user.type'
 
-export type UserPostRequestDto = {
-  id_person: number;
-  id_rol: number;
-  email: string;
-  password: string;
-  user_state: number;
+export type UserPatchRequestDto = {
+  id_person?: number;
+  id_rol?: number;
+  email?: string;
+  user_state?: number;
 }
 
-export type UserPostResponseDto = {
+export type UserPatchResponseDto = {
   success: boolean;
   status: number;
   message: string;

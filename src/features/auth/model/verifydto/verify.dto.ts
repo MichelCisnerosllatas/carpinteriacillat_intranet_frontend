@@ -1,5 +1,5 @@
 // src/feature/auth/model/login/loginDTO.ts
-import { PersonType } from '@/shared/type/person.type'
+import { PersonType } from '@/entities/person/model/person.type'
 import { UserType } from '@/shared/type/user/user.type'
 
 export type VerifyResponseDTO = {
