@@ -33,7 +33,7 @@ import { applyApiErrors } from '@/shared/lib/api-errors'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import { useUserFormStore } from '@/features/users/stores/useUserFormStore'
 import { TypeDocSelect } from '@/features/typedoc/ui/typedoc-select'
-import { RoleSelect } from '@/features/role/ui/role-select'
+import { RoleSelect } from '@/features/roles/ui/role-select'
 import { AlertError } from '@/widgets/alerts_components'
 import { formatDatetime } from '@/shared/lib/utils'
 

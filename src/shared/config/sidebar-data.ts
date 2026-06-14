@@ -20,8 +20,6 @@ import {
   ShieldCheck,
   UserCog,
   UserX,
-  Users,
-  Wrench,
 } from 'lucide-react'
 import type { SidebarData } from './nav-types'
 
@@ -135,38 +133,39 @@ export const sidebarData: SidebarData = {
           url: '/chats',
           badge: '3',
           icon: MessagesSquare,
-        },
-        {
-          title: 'Users',
-          url: '/users',
-          icon: Users,
-          // Example: restrict to admins only
-          // roles: ['admin'],
-        },
+        }        
       ],
     },
     {
-      title: 'Pages',
+      title: 'Administracion',
       items: [
         {
-          title: 'Auth',
+          title: 'Gestion Usuario',
           icon: ShieldCheck,
           items: [
-            { title: 'Sign In', url: '/sign-in' },
-            { title: 'Sign Up', url: '/sign-up' },
+            { title: 'Usuarios', url: '/users',  icon: UserCog },
+            { title: 'Roles',    url: '/roles',  icon: ShieldCheck },
           ],
         },
-        {
-          title: 'Errors',
-          icon: Bug,
-          items: [
-            { title: 'Unauthorized',          url: '/errors/401', icon: Lock },
-            { title: 'Forbidden',             url: '/errors/403', icon: UserX },
-            { title: 'Not Found',             url: '/errors/404', icon: FileX },
-            { title: 'Internal Server Error', url: '/errors/500', icon: ServerOff },
-            { title: 'Maintenance',           url: '/errors/503', icon: Construction },
-          ],
-        },
+        // {
+        //   title: 'Auth',
+        //   icon: ShieldCheck,
+        //   items: [
+        //     { title: 'Sign In', url: '/sign-in' },
+        //     { title: 'Sign Up', url: '/sign-up' },
+        //   ],
+        // },
+        // {
+        //   title: 'Errors',
+        //   icon: Bug,
+        //   items: [
+        //     { title: 'Unauthorized',          url: '/errors/401', icon: Lock },
+        //     { title: 'Forbidden',             url: '/errors/403', icon: UserX },
+        //     { title: 'Not Found',             url: '/errors/404', icon: FileX },
+        //     { title: 'Internal Server Error', url: '/errors/500', icon: ServerOff },
+        //     { title: 'Maintenance',           url: '/errors/503', icon: Construction },
+        //   ],
+        // },
       ],
     },
     {
@@ -176,11 +175,9 @@ export const sidebarData: SidebarData = {
           title: 'Settings',
           icon: Settings,
           items: [
-            { title: 'Profile',       url: '/settings',              icon: UserCog },
-            { title: 'Account',       url: '/settings/account',      icon: Wrench },
-            { title: 'Appearance',    url: '/settings/appearance',   icon: Palette },
-            { title: 'Notifications', url: '/settings/notifications',icon: Bell },
-            { title: 'Display',       url: '/settings/display',      icon: Monitor },
+            { title: 'Apariencia',     url: '/settings/appearance',    icon: Palette },
+            { title: 'Notificaciones', url: '/settings/notifications', icon: Bell },
+            { title: 'Pantalla',       url: '/settings/display',       icon: Monitor },
           ],
         },
         {

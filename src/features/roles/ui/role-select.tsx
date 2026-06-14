@@ -9,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select'
-import { roleService } from '../services/role.service'
+
+import { rolesService } from '../services/roles.service'
 import type { RoleType } from '@/entities/role/model/role.type'
 
 interface RoleSelectProps {
@@ -29,8 +30,8 @@ export function RoleSelect({
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    roleService
-      .get()
+    rolesService
+      .getForSelect()
       .then((res) => { if (res.success) setOptions(res.data) })
       .finally(() => setIsLoading(false))
   }, [])
