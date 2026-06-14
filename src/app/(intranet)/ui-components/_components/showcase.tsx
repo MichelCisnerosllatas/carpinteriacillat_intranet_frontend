@@ -6,7 +6,7 @@ import { toastSuccess, toastError, toastWarning, toastInfo, toastPromise } from 
 // SweetAlert2 helpers
 import { swalConfirm, swalSuccess, swalError, swalWarning, swalInput } from '@/shared/lib/swal'
 // Axios instance
-import { api } from '@/shared/api/api'
+import api from '@/shared/api/apiClient'
 import { sleep } from '@/shared/lib/utils'
 import {
   Bell, Check, ChevronDown, Info, Loader2, Mail, Moon,

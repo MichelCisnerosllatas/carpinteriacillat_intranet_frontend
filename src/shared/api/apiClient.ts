@@ -3,11 +3,12 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { AUTH_ENDPOINTS } from '@/features/auth/services/auth.endpoints';
 import { TokenStorage } from '@/features/auth/storage/token.storage';
 import { SessionExpired } from '@/shared/api/sessionExpired'
-import { AppConfig } from '@/shared/api/env'
 import { getAppPlatform, getAppVersion, getClientType } from '@/shared/device/appInfo'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
+
 const apiClient = axios.create({
-  baseURL: AppConfig.apiUrl,
+  baseURL: API_URL,
   timeout: 15000,
   headers: {
     Accept: 'application/json',
@@ -83,7 +84,7 @@ apiClient.interceptors.response.use(
           }
 
           const response = await axios.post(
-            `${AppConfig.apiUrl}${AUTH_ENDPOINTS.v1.refresh}`,
+            `${API_URL}${AUTH_ENDPOINTS.v1.refresh}`,
             {
               refresh_token: refreshToken,
             },
