@@ -30,7 +30,7 @@ export function TypeDocSelect({
 
   useEffect(() => {
     typeDocService
-      .get()
+      .getForSelect()
       .then((res) => { if (res.success) setOptions(res.data) })
       .finally(() => setIsLoading(false))
   }, [])

@@ -31,6 +31,7 @@ import {
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
+import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
 import { useRoleFormStore } from '@/features/roles/stores/useRoleFormStore'
 import { AlertError } from '@/widgets/alerts_components'
@@ -40,7 +41,7 @@ import { AlertError } from '@/widgets/alerts_components'
 const roleFormSchema = z.object({
   role_name:        z.string().min(1, 'El nombre es requerido.').max(255),
   role_description: z.string().optional(),
-  role_state:       z.coerce.number(),
+  role_state:       z.number(),
 })
 
 type FormValues = z.infer<typeof roleFormSchema>
@@ -148,7 +149,7 @@ export function RoleForm({ mode, id }: RoleFormProps) {
                 name="role_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre</FormLabel>
+                    <FormLabel>Nombre <span className="text-destructive">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: Administrador" {...field} />
                     </FormControl>
@@ -172,8 +173,9 @@ export function RoleForm({ mode, id }: RoleFormProps) {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="1">Activo</SelectItem>
-                        <SelectItem value="0">Inactivo</SelectItem>
+                        {ENTITY_STATES.map((s) => (
+                          <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

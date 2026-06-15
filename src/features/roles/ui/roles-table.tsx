@@ -13,35 +13,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
+import { useRoleDeleteStore } from '@/features/roles/stores/useRoleDeleteStore'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { RolesError } from './roles-error'
 import { rolesColumns } from './roles-columns'
 
 export function RolesTable() {
   const { roles, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
     useRoleListStore()
+  const { bulkToggleState, bulkDeleteItems } = useRoleDeleteStore()
 
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection]     = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [search, setSearch] = useState(filters.search ?? '')
-  const [state, setState] = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
-  const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
-  const [dateTo, setDateTo] = useState(filters.date_to ?? '')
+  const [sorting, setSorting]               = useState<SortingState>([])
+  const [search, setSearch]                 = useState(filters.search ?? '')
+  const [state, setState]                   = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
+  const [dateFrom, setDateFrom]             = useState(filters.date_from ?? '')
+  const [dateTo, setDateTo]                 = useState(filters.date_to ?? '')
+  const [isBulkLoading, setIsBulkLoading]   = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  useEffect(() => {
-    void load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useEffect(() => { void load() }, [])
 
   useEffect(() => {
     if (!hasLoaded) return
-
     const timeout = window.setTimeout(() => {
       void load({
         search,
@@ -51,9 +54,7 @@ export function RolesTable() {
         page: 1,
       })
     }, 500)
-
     return () => window.clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, state, dateFrom, dateTo])
 
   const table = useReactTable({
@@ -64,8 +65,8 @@ export function RolesTable() {
     state: { sorting, pagination, rowSelection, columnVisibility },
     enableRowSelection: true,
     onPaginationChange: (updater) => {
-      const nextPagination = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: nextPagination.pageIndex + 1, per_page: nextPagination.pageSize })
+      const next = typeof updater === 'function' ? updater(pagination) : updater
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -74,12 +75,44 @@ export function RolesTable() {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
   const resetFilters = () => {
-    setSearch('')
-    setState('all')
-    setDateFrom('')
-    setDateTo('')
+    setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
     void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 })
+  }
+
+  const handleBulkActivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const ids = selectedRows.map((r) => r.original.id)
+      const ok = await bulkToggleState(ids, 1)
+      if (ok) { toastSuccess('Roles activados', `${selectedCount} rol(es) activado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron activar todos los roles.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDeactivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const ids = selectedRows.map((r) => r.original.id)
+      const ok = await bulkToggleState(ids, 0)
+      if (ok) { toastSuccess('Roles desactivados', `${selectedCount} rol(es) desactivado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron desactivar todos los roles.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDelete = async () => {
+    const confirmed = await swalDeleteConfirm(`¿Eliminar ${selectedCount} rol(es)?`, 'Esta acción no se puede deshacer.')
+    if (!confirmed) return
+    setIsBulkLoading(true)
+    try {
+      const ids = selectedRows.map((r) => r.original.id)
+      const ok = await bulkDeleteItems(ids)
+      if (ok) { toastSuccess('Roles eliminados', `${selectedCount} rol(es) eliminado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron eliminar todos los roles.')
+    } finally { setIsBulkLoading(false) }
   }
 
   if (!hasLoaded && !isInitialLoading) {
@@ -98,10 +131,7 @@ export function RolesTable() {
         message={message ?? 'No se pudieron cargar los roles'}
         isLoading={isFetching}
         showRetryButton
-        onRetry={async () => {
-          reset()
-          await load()
-        }}
+        onRetry={async () => { reset(); await load() }}
       />
     )
   }
@@ -117,66 +147,54 @@ export function RolesTable() {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <Input
-            placeholder="Buscar rol..."
-            value={search}
-            disabled={isFetching}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 w-full sm:w-[250px]"
-          />
-
-          <Select value={state} disabled={isFetching} onValueChange={setState}>
-            <SelectTrigger className="h-8 w-full sm:w-[150px]">
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="1">Activos</SelectItem>
-              <SelectItem value="0">Inactivos</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="date"
-            value={dateFrom}
-            disabled={isFetching}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="h-8 w-full sm:w-[155px]"
-          />
-
-          <Input
-            type="date"
-            value={dateTo}
-            disabled={isFetching}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="h-8 w-full sm:w-[155px]"
-          />
-
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-            Limpiar
-          </Button>
+      {/* Filtros */}
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Buscar</span>
+            <Input placeholder="Nombre o descripción..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Estado</span>
+            <Select value={state} disabled={isFetching} onValueChange={setState}>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Fecha desde</span>
+            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Fecha hasta</span>
+            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          </div>
+          <div className="flex flex-col justify-end">
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          </div>
         </div>
-
         <DataTableViewOptions table={table} />
       </div>
 
+      {/* Tabla */}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="group/row">
-                {headerGroup.headers.map((header) => (
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="group/row">
+                {hg.headers.map((h) => (
                   <TableHead
-                    key={header.id}
-                    colSpan={header.colSpan}
+                    key={h.id}
+                    colSpan={h.colSpan}
                     className={cn(
                       'whitespace-nowrap bg-background group-hover/row:bg-muted',
-                      (header.column.columnDef.meta as { className?: string })?.className
+                      (h.column.columnDef.meta as { className?: string })?.className
                     )}
                   >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -185,7 +203,11 @@ export function RolesTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="group/row">
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className={cn('group/row', selectedCount > 0 && !row.getIsSelected() && 'opacity-60')}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
@@ -213,11 +235,17 @@ export function RolesTable() {
       <DataTablePagination
         table={table}
         className="mt-auto"
-        summary={
-          meta
-            ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros`
-            : 'Sin registros'
-        }
+        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
+      />
+
+      {/* Acciones masivas flotantes */}
+      <DataTableBulkActions
+        selectedCount={selectedCount}
+        isLoading={isBulkLoading}
+        onActivate={handleBulkActivate}
+        onDeactivate={handleBulkDeactivate}
+        onDelete={handleBulkDelete}
+        onClear={() => table.resetRowSelection()}
       />
     </div>
   )

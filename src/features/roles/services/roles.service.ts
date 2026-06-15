@@ -30,6 +30,11 @@ export const rolesService = {
     return data
   },
 
+  patch: async (id: number, param: Partial<RolePutRequestDto>): Promise<RolePutResponseDto> => {
+    const { data } = await apiClient.patch<RolePutResponseDto>(ROLES_ENDPOINTS.v1.patch(id), param)
+    return data
+  },
+
   delete: async (id: number): Promise<boolean> => {
     const { data } = await apiClient.delete(ROLES_ENDPOINTS.v1.delete(id))
     return data.success

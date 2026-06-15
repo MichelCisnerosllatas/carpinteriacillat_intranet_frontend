@@ -5,10 +5,14 @@ import {
   Bug,
   Command,
   Construction,
+  FileText,
   FileX,
+  FolderOpen,
   GalleryVerticalEnd,
   HelpCircle,
   LayoutDashboard,
+  LayoutGrid,
+  Layers,
   ListTodo,
   Lock,
   MessagesSquare,
@@ -134,6 +138,21 @@ export const sidebarData: SidebarData = {
           badge: '3',
           icon: MessagesSquare,
         }        
+      ],
+    },
+    {
+      title: 'Tipos',
+      items: [
+        {
+          title: 'Catálogo de Tipos',
+          icon: FolderOpen,
+          items: [
+            { title: 'Colores',    url: '/typecolors',   icon: Palette },
+            { title: 'Documentos', url: '/typedocs',     icon: FileText },
+            { title: 'Secciones',  url: '/typesections', icon: LayoutGrid },
+            { title: 'Maderas',    url: '/typewoods',    icon: Layers },
+          ],
+        },
       ],
     },
     {

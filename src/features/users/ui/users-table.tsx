@@ -14,7 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
+import { useUserDeleteStore } from '../stores/useUserDeleteStore'
 import { UsersError } from './users-error'
 import { usersColumns } from './users-columns'
 
@@ -25,6 +30,7 @@ export function UsersTable() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting] = useState<SortingState>([])
   const [search, setSearch] = useState(filters.search ?? '')
+  const [isBulkLoading, setIsBulkLoading] = useState(false)
 
   const [state, setState] = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
   const [role, setRole] = useState<string>(filters.role !== undefined ? String(filters.role) : 'all')
@@ -39,6 +45,8 @@ export function UsersTable() {
   const roleOptions = [
     { label: 'Administrador', value: '1' },
   ]
+
+  const { bulkToggleState, bulkDeleteItems } = useUserDeleteStore()
 
   useEffect(() => {
     void load()
@@ -85,6 +93,9 @@ export function UsersTable() {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
   const resetFilters = () => {
     setSearch('')
     setState('all')
@@ -102,6 +113,38 @@ export function UsersTable() {
     })
   }
 
+  const handleBulkActivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const rows = selectedRows.map((r) => ({ id: r.original.id }))
+      const ok = await bulkToggleState(rows, 1)
+      if (ok) { toastSuccess('Activados', `${selectedCount} usuario(s) activado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron activar todos los usuarios.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDeactivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const rows = selectedRows.map((r) => ({ id: r.original.id }))
+      const ok = await bulkToggleState(rows, 0)
+      if (ok) { toastSuccess('Desactivados', `${selectedCount} usuario(s) desactivado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron desactivar todos los usuarios.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDelete = async () => {
+    const confirmed = await swalDeleteConfirm(`¿Eliminar ${selectedCount} usuario(s)?`, 'Esta acción no se puede deshacer.')
+    if (!confirmed) return
+    setIsBulkLoading(true)
+    try {
+      const ids = selectedRows.map((r) => r.original.id)
+      const ok = await bulkDeleteItems(ids)
+      if (ok) { toastSuccess('Eliminados', `${selectedCount} usuario(s) eliminado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron eliminar todos los usuarios.')
+    } finally { setIsBulkLoading(false) }
+  }
+
   if (!hasLoaded && !isInitialLoading) {
     return (
       <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
@@ -113,19 +156,17 @@ export function UsersTable() {
 
   if (isError) {
     return (
-    <UsersError
-      title="Error al cargar usuarios"
-      message={message ?? 'No se pudieron cargar los usuarios'}
-      isLoading={isFetching}
-      showRetryButton={true}
-      // onRetry={() => void load()}
-      onRetry={async () => {
-        // useUserListStore.setState({ isInitialLoading: true });
-        reset();
-        await load();
-      }}
-    />
-  )
+      <UsersError
+        title="Error al cargar usuarios"
+        message={message ?? 'No se pudieron cargar los usuarios'}
+        isLoading={isFetching}
+        showRetryButton={true}
+        onRetry={async () => {
+          reset();
+          await load();
+        }}
+      />
+    )
   }
 
   return (
@@ -139,63 +180,46 @@ export function UsersTable() {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <Input
-            placeholder="Buscar usuario..."
-            value={search}
-            disabled={isFetching}
-            onChange={(event) => setSearch(event.target.value)}
-            className="h-8 w-full sm:w-[250px]"
-          />
-
-          <Select value={state} disabled={isFetching} onValueChange={setState}>
-            <SelectTrigger className="h-8 w-full sm:w-[150px]">
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="1">Activos</SelectItem>
-              <SelectItem value="0">Inactivos</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={role} disabled={isFetching} onValueChange={setRole}>
-            <SelectTrigger className="h-8 w-full sm:w-[170px]">
-              <SelectValue placeholder="Rol" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los roles</SelectItem>
-
-              {roleOptions.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="date"
-            value={dateFrom}
-            disabled={isFetching}
-            onChange={(event) => setDateFrom(event.target.value)}
-            className="h-8 w-full sm:w-[155px]"
-          />
-
-          <Input
-            type="date"
-            value={dateTo}
-            disabled={isFetching}
-            onChange={(event) => setDateTo(event.target.value)}
-            className="h-8 w-full sm:w-[155px]"
-          />
-
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-            Limpiar
-          </Button>
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Buscar</span>
+            <Input placeholder="Nombre o correo..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Estado</span>
+            <Select value={state} disabled={isFetching} onValueChange={setState}>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Rol</span>
+            <Select value={role} disabled={isFetching} onValueChange={setRole}>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Rol" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los roles</SelectItem>
+                {roleOptions.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Fecha desde</span>
+            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Fecha hasta</span>
+            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          </div>
+          <div className="flex flex-col justify-end">
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          </div>
         </div>
-
         <DataTableViewOptions table={table} />
       </div>
 
@@ -212,10 +236,6 @@ export function UsersTable() {
                       'whitespace-nowrap bg-background group-hover/row:bg-muted',
                       (header.column.columnDef.meta as { className?: string })?.className
                     )}
-                    // className={cn(
-                    //   'bg-background group-hover/row:bg-muted',
-                    //   (header.column.columnDef.meta as { className?: string })?.className
-                    // )}
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
@@ -226,7 +246,7 @@ export function UsersTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="group/row">
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={cn('group/row', selectedCount > 0 && !row.getIsSelected() && 'opacity-60')}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
@@ -234,10 +254,6 @@ export function UsersTable() {
                         'bg-background align-middle group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
                         (cell.column.columnDef.meta as { className?: string })?.className
                       )}
-                      // className={cn(
-                      //   'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
-                      //   (cell.column.columnDef.meta as { className?: string })?.className
-                      // )}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -255,13 +271,6 @@ export function UsersTable() {
         </Table>
       </div>
 
-      {/*<div className="flex items-center justify-between text-sm text-muted-foreground">*/}
-      {/*  <span>*/}
-      {/*    {meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}*/}
-      {/*  </span>*/}
-      {/*</div>*/}
-
-      {/*<DataTablePagination table={table} className="mt-auto" />*/}
       <DataTablePagination
         table={table}
         className="mt-auto"
@@ -271,124 +280,15 @@ export function UsersTable() {
             : 'Sin registros'
         }
       />
+
+      <DataTableBulkActions
+        selectedCount={selectedCount}
+        isLoading={isBulkLoading}
+        onActivate={handleBulkActivate}
+        onDeactivate={handleBulkDeactivate}
+        onDelete={handleBulkDelete}
+        onClear={() => table.resetRowSelection()}
+      />
     </div>
   )
 }
-
-
-// 'use client'
-//
-// import { useState } from 'react'
-// import {
-//   type ColumnFiltersState, type PaginationState, type SortingState, type VisibilityState,
-//   flexRender, getCoreRowModel, getFacetedRowModel, getFacetedUniqueValues,
-//   getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable,
-// } from '@tanstack/react-table'
-// import { cn } from '@/shared/lib/utils'
-// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-// import { DataTableToolbar } from '@/shared/ui/data-table/toolbar'
-// import { DataTablePagination } from '@/shared/ui/data-table/pagination'
-// import { roles } from '../data/data'
-// import type { User } from '../data/schema'
-// import { usersColumns } from './users-columns'
-//
-// export function UsersTable({ data }: { data: User[] }) {
-//   const [rowSelection, setRowSelection] = useState({})
-//   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-//   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-//   const [sorting, setSorting] = useState<SortingState>([])
-//   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
-//
-//   const table = useReactTable({
-//     data,
-//     columns: usersColumns,
-//     state: { sorting, pagination, rowSelection, columnFilters, columnVisibility },
-//     enableRowSelection: true,
-//     onPaginationChange: setPagination,
-//     onColumnFiltersChange: setColumnFilters,
-//     onRowSelectionChange: setRowSelection,
-//     onSortingChange: setSorting,
-//     onColumnVisibilityChange: setColumnVisibility,
-//     getPaginationRowModel: getPaginationRowModel(),
-//     getCoreRowModel: getCoreRowModel(),
-//     getFilteredRowModel: getFilteredRowModel(),
-//     getSortedRowModel: getSortedRowModel(),
-//     getFacetedRowModel: getFacetedRowModel(),
-//     getFacetedUniqueValues: getFacetedUniqueValues(),
-//   })
-//
-//   return (
-//     <div className="flex flex-1 flex-col gap-4">
-//       <DataTableToolbar
-//         table={table}
-//         searchPlaceholder="Filter users..."
-//         searchKey="username"
-//         filters={[
-//           {
-//             columnId: 'status',
-//             title: 'Status',
-//             options: [
-//               { label: 'Active',    value: 'active' },
-//               { label: 'Inactive',  value: 'inactive' },
-//               { label: 'Invited',   value: 'invited' },
-//               { label: 'Suspended', value: 'suspended' },
-//             ],
-//           },
-//           {
-//             columnId: 'role',
-//             title: 'Role',
-//             options: roles.map((r) => ({ ...r })),
-//           },
-//         ]}
-//       />
-//       <div className="overflow-hidden rounded-md border">
-//         <Table>
-//           <TableHeader>
-//             {table.getHeaderGroups().map((hg) => (
-//               <TableRow key={hg.id} className="group/row">
-//                 {hg.headers.map((h) => (
-//                   <TableHead
-//                     key={h.id}
-//                     colSpan={h.colSpan}
-//                     className={cn(
-//                       'bg-background group-hover/row:bg-muted',
-//                       (h.column.columnDef.meta as { className?: string })?.className
-//                     )}
-//                   >
-//                     {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
-//                   </TableHead>
-//                 ))}
-//               </TableRow>
-//             ))}
-//           </TableHeader>
-//           <TableBody>
-//             {table.getRowModel().rows?.length ? (
-//               table.getRowModel().rows.map((row) => (
-//                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="group/row">
-//                   {row.getVisibleCells().map((cell) => (
-//                     <TableCell
-//                       key={cell.id}
-//                       className={cn(
-//                         'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
-//                         (cell.column.columnDef.meta as { className?: string })?.className
-//                       )}
-//                     >
-//                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-//                     </TableCell>
-//                   ))}
-//                 </TableRow>
-//               ))
-//             ) : (
-//               <TableRow>
-//                 <TableCell colSpan={usersColumns.length} className="h-24 text-center">
-//                   No results.
-//                 </TableCell>
-//               </TableRow>
-//             )}
-//           </TableBody>
-//         </Table>
-//       </div>
-//       <DataTablePagination table={table} className="mt-auto" />
-//     </div>
-//   )
-// }

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 
+import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
@@ -42,11 +43,11 @@ import { formatDatetime } from '@/shared/lib/utils'
 const baseSchema = z.object({
   person_name:     z.string().min(1, 'El nombre es requerido.'),
   person_lastname: z.string().min(1, 'El apellido es requerido.'),
-  id_tipodoc:      z.coerce.number().min(1, 'Selecciona un tipo de documento.'),
+  id_tipodoc:      z.number().min(1, 'Selecciona un tipo de documento.'),
   person_numdoc:   z.string().min(1, 'El número de documento es requerido.'),
   email:           z.string().email('Correo electrónico inválido.'),
-  id_rol:          z.coerce.number().min(1, 'Selecciona un rol.'),
-  user_state:      z.coerce.number(),
+  id_rol:          z.number().min(1, 'Selecciona un rol.'),
+  user_state:      z.number(),
 })
 
 const createSchema = baseSchema.extend({
@@ -199,7 +200,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                   name="person_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre</FormLabel>
+                      <FormLabel>Nombre <span className="text-destructive">*</span></FormLabel>
                       <FormControl><Input placeholder="Ej: Juan" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -211,7 +212,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                   name="person_lastname"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Apellido</FormLabel>
+                      <FormLabel>Apellido <span className="text-destructive">*</span></FormLabel>
                       <FormControl><Input placeholder="Ej: Pérez" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -223,7 +224,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                   name="id_tipodoc"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de Documento</FormLabel>
+                      <FormLabel>Tipo de Documento <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <TypeDocSelect
                           value={String(field.value)}
@@ -240,7 +241,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                   name="person_numdoc"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Número de Documento</FormLabel>
+                      <FormLabel>Número de Documento <span className="text-destructive">*</span></FormLabel>
                       <FormControl><Input placeholder="Ej: 12345678" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -262,7 +263,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Correo Electrónico</FormLabel>
+                      <FormLabel>Correo Electrónico <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="correo@ejemplo.com" {...field} />
                       </FormControl>
@@ -277,7 +278,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contraseña</FormLabel>
+                        <FormLabel>Contraseña <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <PasswordInput placeholder="Mínimo 8 caracteres" {...field} />
                         </FormControl>
@@ -292,7 +293,7 @@ export function UserForm({ mode, id }: UserFormProps) {
                   name="id_rol"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Rol</FormLabel>
+                      <FormLabel>Rol <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <RoleSelect
                           value={String(field.value)}
@@ -319,8 +320,9 @@ export function UserForm({ mode, id }: UserFormProps) {
                           <SelectTrigger><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="1">Activo</SelectItem>
-                          <SelectItem value="0">Inactivo</SelectItem>
+                          {ENTITY_STATES.map((s) => (
+                            <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

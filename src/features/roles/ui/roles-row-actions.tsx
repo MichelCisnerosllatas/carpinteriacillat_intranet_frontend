@@ -2,7 +2,7 @@
 
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { CheckCircle2, Eye, Pencil, Trash2, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
@@ -14,15 +14,18 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
-import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
-import { rolesService } from '@/features/roles/services/roles.service'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
+import { useRoleDeleteStore } from '@/features/roles/stores/useRoleDeleteStore'
 import type { Role } from '../data/schema'
 
 export function RolesRowActions({ row }: { row: Row<Role> }) {
   const router = useRouter()
-  const { load, setCurrentRole } = useRoleListStore()
+  const { setCurrentRole } = useRoleListStore()
+  const { toggleState, deleteItem } = useRoleDeleteStore()
+
+  const isActive = row.original.status === 'active'
 
   const handleView = () => {
     setCurrentRole(row.original)
@@ -36,20 +39,31 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
     router.push(`/roles/edit/${row.original.id}`)
   }
 
+  const handleToggleState = async () => {
+    const newState = isActive ? 0 : 1
+    const actionLabel = newState === 1 ? 'Activar' : 'Desactivar'
+    const confirmed = await swalConfirm({
+      title: `¿${actionLabel} este rol?`,
+      text: row.original.name,
+      confirmText: 'Sí, continuar',
+      cancelText: 'Cancelar',
+    })
+    if (!confirmed) return
+    const resultLabel = newState === 1 ? 'activado' : 'desactivado'
+    const ok = await toggleState(row.original.id, newState)
+    if (ok) toastSuccess(`Rol ${resultLabel}`, `"${row.original.name}" fue ${resultLabel}.`)
+    else toastError('Error', 'No se pudo cambiar el estado.')
+  }
+
   const handleDelete = async () => {
     const confirmed = await swalDeleteConfirm(
       `¿Eliminar el rol "${row.original.name}"?`,
       'Esta acción no se puede deshacer.'
     )
     if (!confirmed) return
-
-    try {
-      await rolesService.delete(row.original.id)
-      toastSuccess('Rol eliminado', `"${row.original.name}" fue eliminado.`)
-      void load()
-    } catch {
-      toastError('Error al eliminar', 'No se pudo eliminar el rol. Intenta nuevamente.')
-    }
+    const ok = await deleteItem(row.original.id)
+    if (ok) toastSuccess('Rol eliminado', `"${row.original.name}" fue eliminado.`)
+    else toastError('Error al eliminar', 'No se pudo eliminar el rol. Intenta nuevamente.')
   }
 
   return (
@@ -60,12 +74,20 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
           <span className="sr-only">Abrir menú</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={handleView}>
           Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleEdit}>
           Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => void handleToggleState()}>
+          {isActive ? (
+            <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
+          ) : (
+            <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>
+          )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">

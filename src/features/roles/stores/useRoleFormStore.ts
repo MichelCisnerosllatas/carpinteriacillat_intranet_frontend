@@ -60,7 +60,10 @@ export const useRoleFormStore = create<State & Action>((set) => ({
     set({ isSubmitting: true, error: null, fieldErrors: null })
 
     try {
-      const response = await rolesService.put(id, data)
+      const hasEmpty = Object.values(data).some((v) => v === null || v === undefined || v === '')
+      const response = hasEmpty
+        ? await rolesService.patch(id, Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<RolePutRequestDto>)
+        : await rolesService.put(id, data)
 
       if (!response.success) {
         set({
