@@ -33,7 +33,7 @@ import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import { useUserFormStore } from '@/features/users/stores/useUserFormStore'
-import { TypeDocSelect } from '@/features/typedoc/ui/typedoc-select'
+import { TypeDocSelect } from '@/features/typedocs/ui/typedoc-select'
 import { RoleSelect } from '@/features/roles/ui/role-select'
 import { AlertError } from '@/widgets/alerts_components'
 import { formatDatetime } from '@/shared/lib/utils'
@@ -227,8 +227,8 @@ export function UserForm({ mode, id }: UserFormProps) {
                       <FormLabel>Tipo de Documento <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <TypeDocSelect
-                          value={String(field.value)}
-                          onValueChange={(v) => field.onChange(Number(v))}
+                          value={field.value}
+                          onValueChange={(v) => field.onChange(v ?? 0)}
                         />
                       </FormControl>
                       <FormMessage />

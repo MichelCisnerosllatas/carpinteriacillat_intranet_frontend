@@ -13,6 +13,13 @@ export const typewoodsService = {
     return data
   },
 
+  getForSelect: async (): Promise<TypeWoodListResponseDto> => {
+    const { data } = await apiClient.get<TypeWoodListResponseDto>(TYPEWOODS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 500 },
+    })
+    return data
+  },
+
   post: async (param: TypeWoodPostRequestDto): Promise<TypeWoodPostResponseDto> => {
     const { data } = await apiClient.post<TypeWoodPostResponseDto>(TYPEWOODS_ENDPOINTS.v1.post, param)
     return data
