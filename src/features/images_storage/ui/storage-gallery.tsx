@@ -147,18 +147,25 @@ export function StorageGallery() {
             <span className="text-xs text-muted-foreground">{meta?.total ?? 0} archivos</span>
           </div>
 
-          {isFetching && (
+          {isFetching ? (
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
             </div>
-          )}
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void load({ page: 1 })}
+              className="hidden sm:flex"
+            >
+              <RefreshCw className="size-3.5 mr-1.5" />
+            </Button>
+          )}        
 
-          <Button size="sm" variant="outline" onClick={() => void load({ page: 1 })} className="hidden sm:flex">
-            <RefreshCw className="size-3.5 mr-1.5" />Recargar
-          </Button>
-          <Button size="icon" variant="outline" className="size-9 sm:hidden" onClick={() => void load({ page: 1 })}>
+
+          {/* <Button size="icon" variant="outline" className="size-9 sm:hidden" onClick={() => void load({ page: 1 })}>
             <RefreshCw className="size-4" />
-          </Button>
+          </Button> */}
 
           <Button size="sm" onClick={() => setUploadOpen(true)}>
             <Upload className="size-3.5 mr-1.5" />

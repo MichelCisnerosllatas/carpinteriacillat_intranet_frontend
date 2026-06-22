@@ -97,32 +97,41 @@ export function StorageUploadDialog({ open, onClose }: StorageUploadDialogProps)
     const { signal } = abortRef.current
     setIsUploading(true)
 
-    // Contadores locales — no dependen del estado de React (closure stale)
     let done = 0
     let errors = 0
 
-    await Promise.all(
-      pending.map(async (entry) => {
-        updateStatus(entry.id, 'uploading')
-        try {
-          const fd = new FormData()
-          fd.append('image', entry.file)
-          if (folder.trim()) fd.append('folder', folder.trim())
-          const res = await imagesService.upload(fd, signal)
-          if (res.success) {
-            done++
-            updateStatus(entry.id, 'done')
-          } else {
-            errors++
-            updateStatus(entry.id, 'error', res.message)
-          }
-        } catch (err: any) {
-          const isCanceled = err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError' || err?.name === 'AbortError'
-          if (!isCanceled) errors++
-          updateStatus(entry.id, isCanceled ? 'pending' : 'error', isCanceled ? undefined : (err?.response?.data?.message ?? 'Error al subir'))
+    // Subida secuencial — una a la vez. Si falla una, se abortan las demás.
+    for (const entry of pending) {
+      if (signal.aborted) {
+        updateStatus(entry.id, 'pending')
+        continue
+      }
+
+      updateStatus(entry.id, 'uploading')
+      try {
+        const fd = new FormData()
+        fd.append('image', entry.file)
+        if (folder.trim()) fd.append('folder', folder.trim())
+        const res = await imagesService.upload(fd, signal)
+        if (res.success) {
+          done++
+          updateStatus(entry.id, 'done')
+        } else {
+          errors++
+          updateStatus(entry.id, 'error', res.message)
+          abortRef.current?.abort()
         }
-      })
-    )
+      } catch (err: any) {
+        const isCanceled = err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError' || err?.name === 'AbortError'
+        if (isCanceled) {
+          updateStatus(entry.id, 'pending')
+        } else {
+          errors++
+          updateStatus(entry.id, 'error', err?.response?.data?.message ?? 'Error al subir')
+          abortRef.current?.abort()
+        }
+      }
+    }
 
     setIsUploading(false)
     abortRef.current = null
@@ -194,8 +203,9 @@ export function StorageUploadDialog({ open, onClose }: StorageUploadDialogProps)
               />
             )}
 
-            {/* ── With files: image grid ── */}
+            {/* ── With files: image grid with scroll ── */}
             {totalCount > 0 && (
+              <div className="max-h-[min(50vh,420px)] overflow-y-auto rounded-xl pr-0.5">
               <div
                 className={cn(
                   'grid gap-2',
@@ -294,6 +304,7 @@ export function StorageUploadDialog({ open, onClose }: StorageUploadDialogProps)
                     <span className="text-[9px] font-medium">Agregar</span>
                   </button>
                 )}
+              </div>
               </div>
             )}
 
