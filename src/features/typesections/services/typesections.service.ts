@@ -15,7 +15,7 @@ export const typesectionsService = {
 
   getForSelect: async (): Promise<TypeSectionListResponseDto> => {
     const { data } = await apiClient.get<TypeSectionListResponseDto>(TYPESECTIONS_ENDPOINTS.v1.get, {
-      params: { page: 1, per_page: 500 },
+      params: { page: 1, per_page: 100 },
     })
     return data
   },

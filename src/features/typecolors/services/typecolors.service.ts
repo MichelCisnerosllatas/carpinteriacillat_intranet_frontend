@@ -15,7 +15,7 @@ export const typecolorsService = {
 
   getForSelect: async (): Promise<TypeColorListResponseDto> => {
     const { data } = await apiClient.get<TypeColorListResponseDto>(TYPECOLORS_ENDPOINTS.v1.get, {
-      params: { page: 1, per_page: 500 },
+      params: { page: 1, per_page: 100 },
     })
     return data
   },

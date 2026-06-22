@@ -15,7 +15,7 @@ export const typewoodsService = {
 
   getForSelect: async (): Promise<TypeWoodListResponseDto> => {
     const { data } = await apiClient.get<TypeWoodListResponseDto>(TYPEWOODS_ENDPOINTS.v1.get, {
-      params: { page: 1, per_page: 500 },
+      params: { page: 1, per_page: 100 },
     })
     return data
   },
