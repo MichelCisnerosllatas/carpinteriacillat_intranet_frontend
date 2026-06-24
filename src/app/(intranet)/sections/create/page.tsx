@@ -10,7 +10,7 @@ export default function SectionCreatePage() {
     <>
       <Header fixed title="Nueva Sección" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <SectionsBreadcrumb currentPage="Nueva Sección" />
+        <SectionsBreadcrumb currentPage="Nueva Sección" showHeader={false} />
         <SectionForm mode="create" />
       </main>
     </>

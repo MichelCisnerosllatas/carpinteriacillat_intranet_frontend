@@ -7,5 +7,7 @@ export const AUTH_ENDPOINTS = {
     forgotPassword: '/v1/intranet/auth/forgot-password',
     reset_password: '/v1/intranet/auth/reset-password',
     logout: '/v1/intranet/auth/logout',
+    my_devices: '/v1/intranet/auth/my-devices',
+    revoke_my_device: (id: number) => `/v1/intranet/auth/my-devices/${id}`,
   }
 };

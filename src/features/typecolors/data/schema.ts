@@ -6,6 +6,10 @@ export type TypeColorStatus = z.infer<typeof typeColorStatusSchema>
 export const typeColorSchema = z.object({
   id: z.number(),
   name: z.string(),
+  code: z.string().nullable(),
+  hex: z.string().nullable(),
+  image: z.string().nullable(),
+  sortOrder: z.number(),
   description: z.string().nullable(),
   status: typeColorStatusSchema,
   statusLabel: z.string(),

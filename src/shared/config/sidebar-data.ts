@@ -26,6 +26,7 @@ import {
   ServerOff,
   Settings,
   ShieldCheck,
+  Smartphone,
   Sofa,
   Tag,
   UserCog,
@@ -177,10 +178,10 @@ export const sidebarData: SidebarData = {
           ],
         },
         {
-          title: 'Almacenamiento',
+          title: 'Servidor',
           icon: HardDrive,
           items: [
-            { title: 'Imágenes del servidor', url: '/images/storage', icon: HardDrive },
+            { title: 'Imágenes', url: '/images/storage', icon: ImageIcon },
           ],
         },
       ],
@@ -192,8 +193,9 @@ export const sidebarData: SidebarData = {
           title: 'Gestion Usuario',
           icon: ShieldCheck,
           items: [
-            { title: 'Usuarios', url: '/users',  icon: UserCog },
-            { title: 'Roles',    url: '/roles',  icon: ShieldCheck },
+            { title: 'Usuarios',     url: '/users',         icon: UserCog },
+            { title: 'Roles',        url: '/roles',         icon: ShieldCheck },
+            { title: 'Dispositivos', url: '/user-devices',  icon: Smartphone },
           ],
         },
         // {

@@ -6,7 +6,6 @@ type State = {
   options:   SectionApiItem[]
   isLoading: boolean
   isError:   boolean
-  hasLoaded: boolean
 }
 
 type Action = {
@@ -17,15 +16,14 @@ export const useSectionSelectStore = create<State & Action>((set, get) => ({
   options:   [],
   isLoading: false,
   isError:   false,
-  hasLoaded: false,
 
   load: async () => {
-    if (get().isLoading || get().hasLoaded) return
+    if (get().isLoading) return
     set({ isLoading: true, isError: false })
     try {
       const res = await sectionsService.getForSelect()
       if (res.success) {
-        set({ options: res.data.filter((o) => o.section_state === 1), isLoading: false, hasLoaded: true })
+        set({ options: res.data.filter((o) => o.section_state === 1), isLoading: false })
       } else {
         set({ isError: true, isLoading: false })
       }

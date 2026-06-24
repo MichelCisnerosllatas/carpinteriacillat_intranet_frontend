@@ -7,6 +7,24 @@ import { getStateOption } from '@/shared/config/entity-states'
 import type { TypeColor } from '../data/schema'
 import { TypeColorsRowActions } from './typecolors-row-actions'
 
+function ColorSwatch({ hex }: { hex: string | null }) {
+  if (!hex) {
+    return (
+      <div
+        className="size-10 flex-shrink-0 rounded-lg border border-dashed bg-muted"
+        title="Sin color definido"
+      />
+    )
+  }
+  return (
+    <div
+      className="size-10 flex-shrink-0 rounded-lg border shadow-sm"
+      style={{ backgroundColor: hex }}
+      title={hex}
+    />
+  )
+}
+
 export const typecolorsColumns: ColumnDef<TypeColor>[] = [
   {
     id: 'select',
@@ -33,16 +51,30 @@ export const typecolorsColumns: ColumnDef<TypeColor>[] = [
 
   {
     id: 'info',
-    accessorFn: (row) => `${row.name} ${row.description ?? ''}`,
+    accessorFn: (row) => `${row.name} ${row.code ?? ''} ${row.description ?? ''}`,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Color" />,
-    cell: ({ row }) => (
-      <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
-        {row.original.description && (
-          <span className="text-xs text-muted-foreground">{row.original.description}</span>
-        )}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const { name, code, hex, description } = row.original
+      return (
+        <div className="flex min-w-[220px] items-center gap-3 py-1.5">
+          <ColorSwatch hex={hex} />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm font-medium leading-none text-foreground">{name}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {code && (
+                <span className="font-mono text-xs text-muted-foreground">{code}</span>
+              )}
+              {hex && (
+                <span className="font-mono text-xs text-muted-foreground/70">{hex}</span>
+              )}
+            </div>
+            {description && (
+              <span className="truncate text-xs text-muted-foreground">{description}</span>
+            )}
+          </div>
+        </div>
+      )
+    },
     enableSorting: true,
     enableHiding: true,
   },

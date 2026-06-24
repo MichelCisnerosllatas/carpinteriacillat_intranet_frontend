@@ -7,7 +7,7 @@ import type { ImageUploadResponseDto } from '../model/imageupload.dto'
 export const imagesService = {
   getList: async (param: ImageListRequestDto): Promise<ImageListResponseDto> => {
     const params = Object.fromEntries(
-      Object.entries(param).filter(([, v]) => v !== undefined && v !== null && v !== '')
+      Object.entries(param).filter(([, v]) => v !== undefined && v !== null && v !== 0)
     )
     const { data } = await apiClient.get<ImageListResponseDto>(IMAGES_ENDPOINTS.v1.get, { params })
     return data
@@ -15,7 +15,7 @@ export const imagesService = {
 
   getForSelect: async (): Promise<ImageListResponseDto> => {
     const { data } = await apiClient.get<ImageListResponseDto>(IMAGES_ENDPOINTS.v1.get, {
-      params: { page: 1, per_page: 500 },
+      params: { page: 1, per_page: 100 },
     })
     return data
   },

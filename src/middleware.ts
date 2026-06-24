@@ -15,6 +15,7 @@ const PROTECTED_PREFIXES = [
   '/roles',
   '/permissions',
   '/profile',
+  '/user-devices',
 ]
 
 const ROUTE_ROLES: Record<string, string[]> = {
@@ -22,6 +23,7 @@ const ROUTE_ROLES: Record<string, string[]> = {
   '/users': ['1'],
   '/roles': ['1'],
   '/permissions': ['1'],
+  '/user-devices': ['1'],
 }
 
 function isPublicRoute(pathname: string) {

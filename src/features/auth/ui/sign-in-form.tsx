@@ -1,15 +1,12 @@
 // src/app/(auth)/sign-in/page.tsx
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircle, Loader2, LockKeyhole, LogIn, Mail } from 'lucide-react'
-import { toast } from 'sonner'
-import { cn, sleep } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
@@ -30,8 +27,7 @@ interface SignInFormProps extends React.HTMLAttributes<HTMLFormElement> {
 }
 
 export function SignInForm({ className, redirectTo, ...props }: SignInFormProps) {
-  const { login, loadingLogin, error, loginDataDTO } = useAuthStore();
-  const router = useRouter();
+  const { login, loadingLogin, error } = useAuthStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -56,7 +52,7 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
       `Has iniciado sesión exitosamente ${user?.person?.person_name ?? ''}`
     )
 
-    router.replace(redirectTo ?? '/dashboard')
+    window.location.replace(redirectTo ?? '/dashboard')
   }
 
   return (

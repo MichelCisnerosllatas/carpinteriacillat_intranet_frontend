@@ -14,7 +14,6 @@ type State = {
   options:   ImageSelectOption[]
   isLoading: boolean
   isError:   boolean
-  hasLoaded: boolean
 }
 
 type Action = {
@@ -33,15 +32,14 @@ export const useImageSelectStore = create<State & Action>((set, get) => ({
   options:   [],
   isLoading: false,
   isError:   false,
-  hasLoaded: false,
 
   load: async () => {
-    if (get().isLoading || get().hasLoaded) return
+    if (get().isLoading) return
     set({ isLoading: true, isError: false })
     try {
       const res = await imagesService.getForSelect()
       if (res.success) {
-        set({ options: res.data.map(mapOption), isLoading: false, hasLoaded: true })
+        set({ options: res.data.map(mapOption), isLoading: false })
       } else {
         set({ isError: true, isLoading: false })
       }
@@ -51,7 +49,7 @@ export const useImageSelectStore = create<State & Action>((set, get) => ({
   },
 
   reload: async () => {
-    set({ hasLoaded: false })
+    set({ isLoading: false })
     await get().load()
   },
 }))

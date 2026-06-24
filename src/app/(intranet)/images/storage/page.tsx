@@ -10,15 +10,15 @@ export default function ImageStoragePage() {
     <>
       <Header fixed title="Almacenamiento del Servidor" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        {/* <div>
+        <div>
           <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             <HardDrive className="size-6" />
-            Almacenamiento
+            Imagenes
           </h2>
           <p className="text-sm text-muted-foreground">
-            Gestiona los archivos físicos del servidor. Los cambios aquí son independientes de la base de datos.
+            Gestión de imagenes almacenadas en el servidor          
           </p>
-        </div> */}
+        </div>
         <StorageGallery />
       </main>
     </>

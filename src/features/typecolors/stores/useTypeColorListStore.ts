@@ -34,6 +34,10 @@ const mapFromApi = (item: TypeColorApiItem): TypeColor => {
   return {
     id: item.id_typecolor,
     name: item.typecolor_name,
+    code: item.typecolor_code,
+    hex: item.typecolor_hex,
+    image: item.typecolor_image,
+    sortOrder: item.typecolor_sort_order ?? 0,
     description: item.typecolor_description,
     status: item.typecolor_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
