@@ -7,6 +7,7 @@ import {
   Construction,
   FileText,
   FileX,
+  Folder,
   FolderOpen,
   GalleryVerticalEnd,
   HardDrive,
@@ -181,7 +182,8 @@ export const sidebarData: SidebarData = {
           title: 'Servidor',
           icon: HardDrive,
           items: [
-            { title: 'Imágenes', url: '/images/storage', icon: ImageIcon },
+            { title: 'Imágenes',  url: '/images/storage',  icon: ImageIcon },
+            { title: 'Carpetas',  url: '/storage/folders', icon: Folder },
           ],
         },
       ],

@@ -20,6 +20,7 @@ import {
 import { toastSuccess, toastError } from '@/shared/lib/toast'
 import { imagesService } from '@/features/images/services/images.service'
 import { useStorageGalleryStore } from '../stores/useStorageGalleryStore'
+import { FolderPicker } from '@/shared/ui/folder-picker'
 
 type FileStatus = 'pending' | 'uploading' | 'done' | 'error'
 
@@ -370,10 +371,11 @@ export function StorageUploadDialog({ open, onClose }: StorageUploadDialogProps)
                 Carpeta destino
                 <span className="ml-1 text-muted-foreground">(opcional · se aplica a todos)</span>
               </Label>
-              <Input
-                value={folder}
-                onChange={(e) => setFolder(e.target.value)}
-                placeholder="ej: muebles, muebles/sillas"
+              <FolderPicker
+                value={folder || undefined}
+                onChange={setFolder}
+                onClear={() => setFolder('')}
+                placeholder="Seleccionar carpeta destino..."
                 disabled={isUploading}
               />
             </div>

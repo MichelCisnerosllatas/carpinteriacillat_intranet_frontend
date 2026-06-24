@@ -12,6 +12,7 @@ import { useStorageActionStore } from '../stores/useStorageActionStore'
 import { useStorageGalleryStore } from '../stores/useStorageGalleryStore'
 import { enrichStorageFile } from '../data/schema'
 import type { EnrichedStorageFile } from '../data/schema'
+import { FolderPicker } from '@/shared/ui/folder-picker'
 
 interface StorageMoveDialogProps {
   file: EnrichedStorageFile | null
@@ -163,10 +164,11 @@ export function StorageMoveDialog({ file, open, onClose }: StorageMoveDialogProp
                 Nueva carpeta
                 <span className="text-muted-foreground">(opcional)</span>
               </Label>
-              <Input
-                value={newFolder}
-                onChange={(e) => setNewFolder(e.target.value)}
-                placeholder="ej: muebles/sillas"
+              <FolderPicker
+                value={newFolder || undefined}
+                onChange={setNewFolder}
+                onClear={() => setNewFolder('')}
+                placeholder="Seleccionar nueva carpeta..."
                 disabled={isActing}
               />
             </div>

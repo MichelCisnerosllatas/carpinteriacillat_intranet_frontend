@@ -13,6 +13,7 @@ import { AlertError } from '@/widgets/alerts_components'
 import { useImageUploadStore } from '../stores/useImageUploadStore'
 import { useImageSelectStore } from '../stores/useImageSelectStore'
 import { cn } from '@/shared/lib/utils'
+import { FolderPicker } from '@/shared/ui/folder-picker'
 
 export function ImageUploadForm() {
   const router = useRouter()
@@ -128,12 +129,12 @@ export function ImageUploadForm() {
 
           {/* Carpeta destino */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="img-folder">Carpeta destino <span className="text-xs text-muted-foreground">(opcional)</span></Label>
-            <Input
-              id="img-folder"
-              placeholder="Ej: furniture, banners, sections..."
-              value={folder}
-              onChange={(e) => setFolder(e.target.value)}
+            <Label>Carpeta destino <span className="text-xs text-muted-foreground">(opcional)</span></Label>
+            <FolderPicker
+              value={folder || undefined}
+              onChange={setFolder}
+              onClear={() => setFolder('')}
+              placeholder="Seleccionar carpeta destino..."
             />
           </div>
         </CardContent>
