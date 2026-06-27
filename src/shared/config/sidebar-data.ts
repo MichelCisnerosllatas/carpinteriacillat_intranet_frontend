@@ -164,7 +164,7 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
-      title: 'Catálogo',
+      title: 'Sitio Web',
       items: [
         {
           title: 'Muebles',
@@ -178,14 +178,7 @@ export const sidebarData: SidebarData = {
             { title: 'Secc. — Imágenes', url: '/section-images', icon: ImageIcon },
           ],
         },
-        {
-          title: 'Servidor',
-          icon: HardDrive,
-          items: [
-            { title: 'Imágenes',  url: '/images/storage',  icon: ImageIcon },
-            { title: 'Carpetas',  url: '/storage/folders', icon: Folder },
-          ],
-        },
+        
       ],
     },
     {
@@ -198,6 +191,14 @@ export const sidebarData: SidebarData = {
             { title: 'Usuarios',     url: '/users',         icon: UserCog },
             { title: 'Roles',        url: '/roles',         icon: ShieldCheck },
             { title: 'Dispositivos', url: '/user-devices',  icon: Smartphone },
+          ],
+        },
+        {
+          title: 'Servidor',
+          icon: HardDrive,
+          items: [
+            { title: 'Imágenes',  url: '/images/storage',  icon: ImageIcon },
+            { title: 'Carpetas',  url: '/storage/folders', icon: Folder },
           ],
         },
         // {
@@ -222,10 +223,10 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
-      title: 'Other',
+      title: 'Otros',
       items: [
         {
-          title: 'Settings',
+          title: 'Ajustes',
           icon: Settings,
           items: [
             { title: 'Apariencia',     url: '/settings/appearance',    icon: Palette },
@@ -233,11 +234,11 @@ export const sidebarData: SidebarData = {
             { title: 'Pantalla',       url: '/settings/display',       icon: Monitor },
           ],
         },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: HelpCircle,
-        },
+        // {
+        //   title: 'Help Center',
+        //   url: '/help-center',
+        //   icon: HelpCircle,
+        // },
         {
           title: 'UI Components',
           url: '/ui-components',

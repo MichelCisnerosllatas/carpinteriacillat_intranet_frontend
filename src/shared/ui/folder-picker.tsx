@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ChevronLeft, ChevronRight, Folder, FolderOpen,
   HardDrive, Loader2, X,
@@ -18,15 +18,16 @@ interface FolderPickerProps {
   placeholder?: string
   disabled?:    boolean
   className?:   string
+  rootPath?:    string
 }
 
 type BreadcrumbEntry = { name: string; path: string | null }
 
 export function FolderPicker({
-  value, onChange, onClear, placeholder = 'Seleccionar carpeta...', disabled, className,
+  value, onChange, onClear, placeholder = 'Seleccionar carpeta...', disabled, className, rootPath,
 }: FolderPickerProps) {
   const [open, setOpen]           = useState(false)
-  const [currentPath, setCurrentPath] = useState<string | null>(null)
+  const [currentPath, setCurrentPath] = useState<string | null>(rootPath ?? null)
   const [folders, setFolders]     = useState<StorageFolderItem[]>([])
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([{ name: 'Storage', path: null }])
   const [isLoading, setIsLoading] = useState(false)
@@ -49,7 +50,11 @@ export function FolderPicker({
       if (data.meta?.breadcrumb) {
         data.meta.breadcrumb.forEach((b) => crumbs.push({ name: b.name, path: b.path }))
       }
-      setBreadcrumb(crumbs)
+      // When rootPath is set, trim breadcrumb so it starts at rootPath (can't navigate above it)
+      const filteredCrumbs = rootPath
+        ? crumbs.filter((c) => c.path !== null && (c.path === rootPath || c.path.startsWith(rootPath + '/')))
+        : crumbs
+      setBreadcrumb(filteredCrumbs)
     } catch {
       setFolders([])
     } finally {
@@ -60,8 +65,9 @@ export function FolderPicker({
   // Reload when popover opens
   useEffect(() => {
     if (open) {
-      setCurrentPath(null)
-      void fetchFolders(null)
+      const initial = rootPath ?? null
+      setCurrentPath(initial)
+      void fetchFolders(initial)
     }
   }, [open])
 
@@ -70,15 +76,21 @@ export function FolderPicker({
     void fetchFolders(path)
   }
 
+  const toRelative = (path: string) => {
+    if (!rootPath) return path
+    if (path.startsWith(rootPath + '/')) return path.slice(rootPath.length + 1)
+    return path
+  }
+
   const handleSelect = () => {
     if (currentPath !== null) {
-      onChange(currentPath)
+      onChange(toRelative(currentPath))
     }
     setOpen(false)
   }
 
   const handleSelectFolder = (folder: StorageFolderItem) => {
-    onChange(folder.path)
+    onChange(toRelative(folder.path))
     setOpen(false)
   }
 
@@ -141,7 +153,7 @@ export function FolderPicker({
         </div>
 
         {/* Back button */}
-        {currentPath !== null && (
+        {currentPath !== null && (!rootPath || currentPath !== rootPath) && (
           <div className="px-2 pt-2">
             <button
               type="button"
@@ -207,7 +219,7 @@ export function FolderPicker({
             size="sm"
             className="h-7 text-xs shrink-0"
             onClick={handleSelect}
-            disabled={currentPath === null}
+            disabled={currentPath === null || (!!rootPath && currentPath === rootPath)}
           >
             Usar esta carpeta
           </Button>

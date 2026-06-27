@@ -41,7 +41,7 @@ type FormValues = z.infer<typeof schema>
 
 export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: string }) {
   const router   = useRouter()
-  const { currentItem, items }                                      = useFurnitureListStore()
+  const { currentItem, items, meta }                                = useFurnitureListStore()
   const { isSubmitting, error, fieldErrors, create, update, reset } = useFurnitureFormStore()
   const isEdit   = mode === 'edit'
   const resolved = currentItem ?? (id ? items.find((i) => i.id === Number(id)) ?? null : null)
@@ -102,6 +102,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
           furniture_largo:       values.furniture_largo,
           furniture_ancho:       values.furniture_ancho,
           furniture_state:       values.furniture_state,
+          furniture_order:       (meta?.total ?? 0) + 1,
           id_category:           values.id_category,
           id_typecolor:          values.id_typecolor,
           id_typewood:           values.id_typewood,

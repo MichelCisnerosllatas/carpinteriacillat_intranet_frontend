@@ -4,6 +4,7 @@ export type FurniturePostRequestDto = {
   furniture_largo?: number | null
   furniture_ancho?: number | null
   furniture_state: number
+  furniture_order: number
   id_category: number
   id_typecolor: number
   id_typewood: number

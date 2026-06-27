@@ -356,6 +356,7 @@ export function ImageUploadForm() {
                 onClear={() => setFolder('')}
                 placeholder="Seleccionar carpeta destino..."
                 disabled={isUploading}
+                rootPath="images"
               />
             </div>
           </CardContent>
