@@ -1,225 +1,23 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  CheckCircle2, ChevronLeft, ChevronRight, Eye, LoaderCircle,
-  MoreHorizontal, Pencil, Sofa, Trash2, XCircle,
-} from 'lucide-react'
+import { LoaderCircle, Sofa } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import { cn } from '@/shared/lib/utils'
-import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
-import { ENTITY_STATES, getStateOption } from '@/shared/config/entity-states'
+import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
-import { useFurnitureListStore } from '../stores/useFurnitureListStore'
-import { useFurnitureDeleteStore } from '../stores/useFurnitureDeleteStore'
-import type { Furniture } from '../data/schema'
-import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
-
-// ─── Stats ────────────────────────────────────────────────────────────────────
-
-function StatsBar({ total, active, inactive }: { total: number; active: number; inactive: number }) {
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {[
-        { label: 'Total',     value: total,    color: 'text-foreground' },
-        { label: 'Activos',   value: active,   color: 'text-teal-600 dark:text-teal-400' },
-        { label: 'Inactivos', value: inactive, color: 'text-neutral-500' },
-      ].map(({ label, value, color }) => (
-        <div key={label} className="flex flex-col items-center rounded-lg border bg-background p-3">
-          <span className={cn('text-2xl font-bold tabular-nums', color)}>{value}</span>
-          <span className="mt-0.5 text-xs text-muted-foreground">{label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
-
-function GridPagination({
-  meta,
-  onPageChange,
-  onPageSizeChange,
-}: {
-  meta: MetaPaginationType
-  onPageChange: (page: number) => void
-  onPageSizeChange: (size: number) => void
-}) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="text-sm text-muted-foreground">
-        Mostrando {meta.from ?? 0}–{meta.to ?? 0} de {meta.total ?? 0} registros
-      </p>
-      <div className="flex items-center gap-2">
-        <Select value={String(meta.per_page)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-          <SelectTrigger className="h-8 w-[90px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[8, 12, 24, 48].map((n) => (
-              <SelectItem key={n} value={String(n)}>{n} / pág.</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline" size="icon" className="h-8 w-8"
-            disabled={meta.current_page <= 1}
-            onClick={() => onPageChange(meta.current_page - 1)}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="min-w-[60px] text-center text-sm">
-            {meta.current_page} / {meta.last_page}
-          </span>
-          <Button
-            variant="outline" size="icon" className="h-8 w-8"
-            disabled={meta.current_page >= meta.last_page}
-            onClick={() => onPageChange(meta.current_page + 1)}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Card ─────────────────────────────────────────────────────────────────────
-
-function FurnitureCard({
-  item,
-  isSelected,
-  onToggleSelect,
-  onView,
-  onEdit,
-  onToggleState,
-  onDelete,
-}: {
-  item: Furniture
-  isSelected: boolean
-  onToggleSelect: () => void
-  onView: () => void
-  onEdit: () => void
-  onToggleState: () => void
-  onDelete: () => void
-}) {
-  const stateOpt = getStateOption(item.stateValue)
-  const isActive = item.stateValue === 1
-
-  return (
-    <div
-      className={cn(
-        'group relative flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:shadow-md',
-        isSelected && 'ring-2 ring-primary',
-      )}
-    >
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        {item.imageUrl ? (
-          <img
-            src={item.imageUrl}
-            alt={item.name}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2">
-            <Sofa className="size-10 text-muted-foreground/30" />
-            <span className="text-[11px] text-muted-foreground/50">Sin imagen</span>
-          </div>
-        )}
-
-        {/* Status badge */}
-        <div className="absolute right-2 top-2">
-          <Badge
-            variant="outline"
-            className={cn('bg-background/85 text-xs backdrop-blur-sm', stateOpt.badge)}
-          >
-            {stateOpt.label}
-          </Badge>
-        </div>
-
-        {/* Checkbox */}
-        <div className="absolute left-2 top-2">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onToggleSelect}
-            className="border-background/80 bg-background/85 backdrop-blur-sm"
-            aria-label="Seleccionar"
-          />
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        <div>
-          <h3 className="line-clamp-1 text-sm font-semibold leading-tight">{item.name}</h3>
-          {item.description && (
-            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-1">
-          <Badge variant="secondary" className="text-[10px] font-normal">{item.categoryName}</Badge>
-          <Badge variant="outline"   className="text-[10px] font-normal">{item.typecolorName}</Badge>
-          <Badge variant="outline"   className="text-[10px] font-normal">{item.typewoodName}</Badge>
-        </div>
-
-        {(item.largo != null || item.ancho != null) && (
-          <p className="text-[11px] text-muted-foreground/70">
-            {[
-              item.largo != null && `${item.largo} cm largo`,
-              item.ancho != null && `${item.ancho} cm ancho`,
-            ].filter(Boolean).join(' × ')}
-          </p>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t px-3 py-2">
-        <Button size="sm" variant="ghost" className="h-7 gap-1.5 px-2 text-xs" onClick={onView}>
-          <Eye className="size-3.5" /> Ver detalle
-        </Button>
-        <div className="flex items-center gap-0.5">
-          <Button size="icon" variant="ghost" className="size-7" onClick={onEdit} title="Editar">
-            <Pencil className="size-3.5" />
-          </Button>
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="size-7">
-                <MoreHorizontal className="size-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={onToggleState}>
-                {isActive
-                  ? <><XCircle className="mr-2 size-4 text-orange-500" />Desactivar</>
-                  : <><CheckCircle2 className="mr-2 size-4 text-teal-500" />Activar</>}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-red-500!">
-                <Trash2 className="mr-2 size-4" />Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
+import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
+import { useFurnitureDeleteStore } from '../../stores/useFurnitureDeleteStore'
+import type { Furniture } from '../../data/schema'
+import { FurnitureStatsBar } from './furniture-stats-bar'
+import { FurnitureGridPagination } from './furniture-grid-pagination'
+import { FurnitureCard } from './furniture-card'
 
 export function FurnituresTable() {
   const router = useRouter()
@@ -229,11 +27,11 @@ export function FurnituresTable() {
   } = useFurnitureListStore()
   const { toggleState, deleteItem, bulkToggleState, bulkDeleteItems } = useFurnitureDeleteStore()
 
-  const [selected, setSelected]   = useState<Set<number>>(new Set())
-  const [search, setSearch]       = useState(filters.search ?? '')
-  const [state, setState]         = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
-  const [dateFrom, setDateFrom]   = useState(filters.date_from ?? '')
-  const [dateTo, setDateTo]       = useState(filters.date_to ?? '')
+  const [selected, setSelected]         = useState<Set<number>>(new Set())
+  const [search, setSearch]             = useState(filters.search ?? '')
+  const [state, setState]               = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
+  const [dateFrom, setDateFrom]         = useState(filters.date_from ?? '')
+  const [dateTo, setDateTo]             = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
 
   useEffect(() => { void load() }, [])
@@ -246,7 +44,6 @@ export function FurnituresTable() {
     return () => window.clearTimeout(t)
   }, [search, state, dateFrom, dateTo])
 
-  // Clear selection when items change page
   useEffect(() => { setSelected(new Set()) }, [filters.page])
 
   const toggleSelect = (id: number) =>
@@ -258,9 +55,7 @@ export function FurnituresTable() {
 
   const allSelected  = items.length > 0 && items.every((i) => selected.has(i.id))
   const someSelected = items.some((i) => selected.has(i.id))
-
-  const toggleAll = () =>
-    setSelected(allSelected ? new Set() : new Set(items.map((i) => i.id)))
+  const toggleAll    = () => setSelected(allSelected ? new Set() : new Set(items.map((i) => i.id)))
 
   const resetFilters = () => {
     setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
@@ -346,7 +141,7 @@ export function FurnituresTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
-      <StatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
+      <FurnitureStatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
 
       {/* Fetching indicator */}
       {isFetching && (
@@ -430,7 +225,7 @@ export function FurnituresTable() {
 
       {/* Pagination */}
       {meta && (
-        <GridPagination
+        <FurnitureGridPagination
           meta={meta}
           onPageChange={(page) => void load({ page })}
           onPageSizeChange={(per_page) => void load({ per_page, page: 1 })}

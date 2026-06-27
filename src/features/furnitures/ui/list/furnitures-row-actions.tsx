@@ -12,9 +12,9 @@ import {
 } from '@/shared/ui/dropdown-menu'
 import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
-import { useFurnitureListStore } from '../stores/useFurnitureListStore'
-import { useFurnitureDeleteStore } from '../stores/useFurnitureDeleteStore'
-import type { Furniture } from '../data/schema'
+import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
+import { useFurnitureDeleteStore } from '../../stores/useFurnitureDeleteStore'
+import type { Furniture } from '../../data/schema'
 
 export function FurnituresRowActions({ row }: { row: Row<Furniture> }) {
   const router = useRouter()

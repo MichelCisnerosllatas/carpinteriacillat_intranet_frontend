@@ -3,14 +3,14 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Sofa, CalendarDays, Ruler } from 'lucide-react'
+import NProgress from 'nprogress'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
-import { useFurnitureListStore } from '../stores/useFurnitureListStore'
-import NProgress from 'nprogress'
+import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
 
 export function FurnitureDetail({ id }: { id: string }) {
   const router = useRouter()

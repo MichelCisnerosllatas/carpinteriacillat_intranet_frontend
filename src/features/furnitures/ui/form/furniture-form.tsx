@@ -22,8 +22,8 @@ import { CategorySelect } from '@/features/categories/ui/category-select'
 import { TypeColorSelect } from '@/features/typecolors/ui/typecolor-select'
 import { TypeWoodSelect } from '@/features/typewoods/ui/typewood-select'
 import { ImageSelect } from '@/features/images/ui/image-select'
-import { useFurnitureListStore } from '../stores/useFurnitureListStore'
-import { useFurnitureFormStore } from '../stores/useFurnitureFormStore'
+import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
+import { useFurnitureFormStore } from '../../stores/useFurnitureFormStore'
 
 const schema = z.object({
   furniture_name:        z.string().min(1, 'El nombre es requerido.').max(255),
@@ -138,9 +138,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
                   <FormLabel>Largo (cm)</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Ej: 120.50"
+                      type="number" step="0.01" placeholder="Ej: 120.50"
                       {...field}
                       value={field.value ?? ''}
                       onChange={(e) => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
@@ -155,9 +153,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
                   <FormLabel>Ancho (cm)</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Ej: 80.00"
+                      type="number" step="0.01" placeholder="Ej: 80.00"
                       {...field}
                       value={field.value ?? ''}
                       onChange={(e) => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}

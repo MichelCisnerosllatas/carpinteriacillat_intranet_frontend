@@ -4,7 +4,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
 import { getStateOption } from '@/shared/config/entity-states'
-import type { Furniture } from '../data/schema'
+import type { Furniture } from '../../data/schema'
 import { FurnituresRowActions } from './furnitures-row-actions'
 
 export const furnituresColumns: ColumnDef<Furniture>[] = [

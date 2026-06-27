@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { Plus } from 'lucide-react'
-import { FurnituresTable } from '@/features/furnitures/ui/furnitures-table'
+import { FurnituresTable } from '@/features/furnitures/ui/list/furnitures-table'
 
 export const metadata: Metadata = { title: 'Muebles' }
 

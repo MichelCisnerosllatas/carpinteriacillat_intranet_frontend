@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { FurnituresBreadcrumb } from '@/features/furnitures/ui/furnitures-breadcrumb'
-import { FurnitureForm } from '@/features/furnitures/ui/furniture-form'
+import { FurnitureForm } from '@/features/furnitures/ui/form/furniture-form'
 
 export const metadata: Metadata = { title: 'Nuevo Mueble' }
 
