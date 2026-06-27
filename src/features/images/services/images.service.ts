@@ -3,6 +3,7 @@ import { IMAGES_ENDPOINTS } from './images.endpoint'
 import type { ImageListRequestDto, ImageListResponseDto, ImageGetByIdResponseDto } from '../model/imageget.dto'
 import type { StorageListRequestDto, StorageListResponseDto, StorageDeleteResponseDto } from '../model/imagestorage.dto'
 import type { ImageUploadResponseDto } from '../model/imageupload.dto'
+import { ImagePostRequestDto, ImagePostResponseDto } from '../model/imagepost.dto'
 
 export const imagesService = {
   getList: async (param: ImageListRequestDto): Promise<ImageListResponseDto> => {
@@ -25,12 +26,36 @@ export const imagesService = {
     return data
   },
 
+  post: async (request: ImagePostRequestDto): Promise<ImagePostResponseDto> => {
+    const formData = new FormData();
+    if(request.image != null) formData.append("image", request.image);
+    formData.append("image_name", request.image_name);
+    formData.append("image_title", request.image_title);
+    formData.append("image_alt", request.image_alt);
+
+    if (request.folder?.trim()) {
+      formData.append("folder", request.folder.trim());
+    }
+
+    const { data } = await apiClient.post<ImagePostResponseDto>(
+      IMAGES_ENDPOINTS.v1.post,
+      formData,
+      { 
+        headers: { 
+          'Content-Type': 'multipart/form-data' 
+        } 
+      }
+    )
+    return data;  
+  },
+
   upload: async (formData: FormData, signal?: AbortSignal): Promise<ImageUploadResponseDto> => {
     const { data } = await apiClient.post<ImageUploadResponseDto>(
       IMAGES_ENDPOINTS.v1.upload,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' }, signal }
     )
+    
     return data
   },
 

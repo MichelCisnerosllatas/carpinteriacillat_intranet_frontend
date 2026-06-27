@@ -1,3 +1,4 @@
+// src/features/images/stores/useImageUploadStore.ts
 import { create } from 'zustand'
 import { imagesService } from '../services/images.service'
 
@@ -23,6 +24,8 @@ export const useImageUploadStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+
+
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
