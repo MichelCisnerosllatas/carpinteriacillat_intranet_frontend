@@ -52,9 +52,9 @@ export function TypeColorSelect({
         <button
           type="button"
           onClick={load}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
           Reintentar
         </button>
       </div>

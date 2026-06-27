@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, ChevronsUpDown, Loader2, AlertCircle } from 'lucide-react'
+import { Check, ChevronsUpDown, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/shared/ui/command'
@@ -41,10 +41,22 @@ export function NavigationSelect({
 
   if (isError) {
     return (
-      <Button variant="outline" disabled className="w-full justify-start font-normal text-destructive">
-        <AlertCircle className="mr-2 size-4" />
-        Error al cargar navegaciones
-      </Button>
+      <div className="grid grid-cols-2 h-9 w-full items-center rounded-md border border-destructive/40 bg-background px-3 text-sm">
+        <span className="flex items-center gap-1.5 text-destructive text-xs">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          Error al cargar
+        </span>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
+            Reintentar
+          </button>
+        </div>
+      </div>
     )
   }
 

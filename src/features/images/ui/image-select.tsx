@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronsUpDown, Loader2, AlertCircle, ImageOff, Search, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Check, ChevronsUpDown, Loader2, AlertCircle, ImageOff, Search, ChevronLeft, ChevronRight, X, RefreshCw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
@@ -181,8 +181,16 @@ export function ImageSelect({
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-muted-foreground">
-              <AlertCircle className="size-5" />
-              <p className="text-xs">Error al cargar imágenes</p>
+              <AlertCircle className="size-5 text-destructive" />
+              <p className="text-xs text-destructive">Error al cargar imágenes</p>
+              <button
+                type="button"
+                onClick={() => fetchPage(1, search)}
+                className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+              >
+                <RefreshCw className="size-3.5 transition-transform duration-300 group-hover:rotate-180" />
+                Reintentar
+              </button>
             </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-muted-foreground">
