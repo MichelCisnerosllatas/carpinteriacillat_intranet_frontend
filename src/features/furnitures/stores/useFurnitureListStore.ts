@@ -67,7 +67,10 @@ export const useFurnitureListStore = create<State & Action>((set, get) => ({
       const response = await furnituresService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
       set({
-        hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
+        hasLoaded: true, 
+        isInitialLoading: false, 
+        isFetching: false, 
+        isError: false,
         message: response.message,
         items: response.data.map(mapFromApi),
         links: response.links, meta: response.meta,
@@ -75,10 +78,26 @@ export const useFurnitureListStore = create<State & Action>((set, get) => ({
       })
       return true
     } catch (error: any) {
-      set({ hasLoaded: true, isInitialLoading: false, isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      set({ 
+        hasLoaded: true, 
+        isInitialLoading: false, 
+        isFetching: false, 
+        isError: true, 
+        message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' 
+      })
       return false
     }
   },
 
-  reset: () => set({ hasLoaded: false, isInitialLoading: false, isFetching: false, isError: false, message: null, items: [], links: null, meta: null, filters: defaultFilters }),
+  reset: () => set({ 
+    hasLoaded: false, 
+    isInitialLoading: false, 
+    isFetching: false, 
+    isError: false, 
+    message: null, 
+    items: [], 
+    links: null, 
+    meta: null, 
+    filters: defaultFilters 
+  }),
 }))

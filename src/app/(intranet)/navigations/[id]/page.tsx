@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { NavigationsBreadcrumb } from '@/features/navigations/ui/navigations-breadcrumb'
-import { NavigationDetail } from '@/features/navigations/ui/navigation-detail'
+import { NavigationDetail } from '@/features/navigations/ui/detail/navigation-detail'
 
 export const metadata: Metadata = { title: 'Detalle de Navegación' }
 

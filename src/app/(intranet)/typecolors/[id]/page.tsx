@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TypeColorsBreadcrumb } from '@/features/typecolors/ui/typecolors-breadcrumb'
-import { TypeColorDetail } from '@/features/typecolors/ui/typecolor-detail'
+import { TypeColorDetail } from '@/features/typecolors/ui/detail/typecolor-detail'
 
 export const metadata: Metadata = { title: 'Detalle de Color' }
 

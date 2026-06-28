@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { Plus } from 'lucide-react'
-import { NavigationsTable } from '@/features/navigations/ui/navigations-table'
+import { NavigationsTable } from '@/features/navigations/ui/list/navigations-table'
 
 export const metadata: Metadata = { title: 'Navegaciones' }
 

@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { Plus } from 'lucide-react'
-import { SectionImagesTable } from '@/features/sectionimages/ui/sectionimages-table'
+import { SectionImagesTable } from '@/features/sectionimages/ui/list/sectionimages-table'
 
 export const metadata: Metadata = { title: 'Sección — Imágenes' }
 

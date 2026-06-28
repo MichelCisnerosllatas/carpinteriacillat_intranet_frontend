@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { FolderPlus } from 'lucide-react'
-import { CategoriesTable } from '@/features/categories/ui/categories-table'
+import { CategoriesTable } from '@/features/categories/ui/list/categories-table'
 
 export const metadata: Metadata = { title: 'Categorías' }
 

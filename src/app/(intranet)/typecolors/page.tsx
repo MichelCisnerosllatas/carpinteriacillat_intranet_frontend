@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { ShieldPlus } from 'lucide-react'
-import { TypeColorsTable } from '@/features/typecolors/ui/typecolors-table'
+import { TypeColorsTable } from '@/features/typecolors/ui/list/typecolors-table'
 
 export const metadata: Metadata = { title: 'Tipos de Color' }
 

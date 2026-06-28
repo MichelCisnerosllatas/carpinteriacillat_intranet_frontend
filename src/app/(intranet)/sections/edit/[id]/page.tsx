@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { SectionsBreadcrumb } from '@/features/sections/ui/sections-breadcrumb'
-import { SectionForm } from '@/features/sections/ui/section-form'
+import { SectionForm } from '@/features/sections/ui/form/section-form'
 
 export const metadata: Metadata = { title: 'Editar Sección' }
 

@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { Layers } from 'lucide-react'
-import { TypeWoodsTable } from '@/features/typewoods/ui/typewoods-table'
+import { TypeWoodsTable } from '@/features/typewoods/ui/list/typewoods-table'
 
 export const metadata: Metadata = { title: 'Tipos de Madera' }
 

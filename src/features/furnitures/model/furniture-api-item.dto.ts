@@ -14,8 +14,21 @@ export type FurnitureApiItem = {
 }
 
 export type FurnitureJoinApiItem = FurnitureApiItem & {
-  category: { id_category: number; category_name: string }
-  typecolor: { id_typecolor: number; typecolor_name: string }
-  typewood:  { id_typewood: number; typewood_name: string }
-  image:     { id_image: number; image_name: string; image_url: string } | null
+  category: { 
+    id_category: number; 
+    category_name: string 
+  }
+  typecolor: { 
+    id_typecolor: number; 
+    typecolor_name: string 
+  }
+  typewood:  { 
+    id_typewood: number; 
+    typewood_name: string 
+  }
+  image: { 
+    id_image: number; 
+    image_name: string; 
+    image_url: string 
+  } | null
 }

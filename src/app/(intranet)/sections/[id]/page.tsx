@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { SectionsBreadcrumb } from '@/features/sections/ui/sections-breadcrumb'
-import { SectionDetail } from '@/features/sections/ui/section-detail'
+import { SectionDetail } from '@/features/sections/ui/detail/section-detail'
 
 export const metadata: Metadata = { title: 'Detalle de Sección' }
 

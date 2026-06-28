@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { CategoriesBreadcrumb } from '@/features/categories/ui/categories-breadcrumb'
-import { CategoryDetail } from '@/features/categories/ui/category-detail'
+import { CategoryDetail } from '@/features/categories/ui/detail/category-detail'
 
 export const metadata: Metadata = { title: 'Detalle de Categoría' }
 

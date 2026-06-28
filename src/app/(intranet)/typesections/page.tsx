@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { LayoutGrid } from 'lucide-react'
-import { TypeSectionsTable } from '@/features/typesections/ui/typesections-table'
+import { TypeSectionsTable } from '@/features/typesections/ui/list/typesections-table'
 
 export const metadata: Metadata = { title: 'Tipos de Sección' }
 

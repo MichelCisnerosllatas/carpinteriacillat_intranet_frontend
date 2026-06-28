@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TypeDocsBreadcrumb } from '@/features/typedocs/ui/typedocs-breadcrumb'
-import { TypeDocDetail } from '@/features/typedocs/ui/typedoc-detail'
+import { TypeDocDetail } from '@/features/typedocs/ui/detail/typedoc-detail'
 
 export const metadata: Metadata = { title: 'Detalle de Documento' }
 

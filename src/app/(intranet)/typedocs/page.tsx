@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { FileText } from 'lucide-react'
-import { TypeDocsTable } from '@/features/typedocs/ui/typedocs-table'
+import { TypeDocsTable } from '@/features/typedocs/ui/list/typedocs-table'
 
 export const metadata: Metadata = { title: 'Tipos de Documento' }
 

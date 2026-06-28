@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { RolesBreadcrumb } from '@/features/roles/ui/roles-breadcrumb'
-import { RoleForm } from '@/features/roles/ui/role-form'
+import { RoleForm } from '@/features/roles/ui/form/role-form'
 
 export const metadata: Metadata = { title: 'Editar Rol' }
 

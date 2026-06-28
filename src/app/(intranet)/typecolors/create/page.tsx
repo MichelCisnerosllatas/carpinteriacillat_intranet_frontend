@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TypeColorsBreadcrumb } from '@/features/typecolors/ui/typecolors-breadcrumb'
-import { TypeColorForm } from '@/features/typecolors/ui/typecolor-form'
+import { TypeColorForm } from '@/features/typecolors/ui/form/typecolor-form'
 
 export const metadata: Metadata = { title: 'Nuevo Color' }
 

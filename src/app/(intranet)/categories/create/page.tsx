@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { CategoriesBreadcrumb } from '@/features/categories/ui/categories-breadcrumb'
-import { CategoryForm } from '@/features/categories/ui/category-form'
+import { CategoryForm } from '@/features/categories/ui/form/category-form'
 
 export const metadata: Metadata = { title: 'Nueva Categoría' }
 

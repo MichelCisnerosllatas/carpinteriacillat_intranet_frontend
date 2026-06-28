@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { RolesPrimaryButtons } from '@/features/roles/ui/roles-primary-buttons'
-import { RolesTable } from '@/features/roles/ui/roles-table'
+import { RolesTable } from '@/features/roles/ui/list/roles-table'
 
 export const metadata: Metadata = { title: 'Roles' }
 

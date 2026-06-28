@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TypeWoodsBreadcrumb } from '@/features/typewoods/ui/typewoods-breadcrumb'
-import { TypeWoodForm } from '@/features/typewoods/ui/typewood-form'
+import { TypeWoodForm } from '@/features/typewoods/ui/form/typewood-form'
 
 export const metadata: Metadata = { title: 'Nueva Madera' }
 

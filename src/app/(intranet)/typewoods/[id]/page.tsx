@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TypeWoodsBreadcrumb } from '@/features/typewoods/ui/typewoods-breadcrumb'
-import { TypeWoodDetail } from '@/features/typewoods/ui/typewood-detail'
+import { TypeWoodDetail } from '@/features/typewoods/ui/detail/typewood-detail'
 
 export const metadata: Metadata = { title: 'Detalle de Madera' }
 

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { SectionImagesBreadcrumb } from '@/features/sectionimages/ui/sectionimages-breadcrumb'
-import { SectionImageForm } from '@/features/sectionimages/ui/sectionimage-form'
+import { SectionImageForm } from '@/features/sectionimages/ui/form/sectionimage-form'
 
 export const metadata: Metadata = { title: 'Editar Asignación' }
 
