@@ -46,13 +46,7 @@ export const useTypeColorFormStore = create<State & Action>((set) => ({
   update: async (id, data) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      const hasEmpty = Object.values(data).some((v) => v === null || v === undefined || v === '')
-      const res = hasEmpty
-        ? await typecolorsService.patch(
-          id, 
-          Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<TypeColorPutRequestDto>
-        )
-        : await typecolorsService.put(id, data)
+      const res = await typecolorsService.patch(id, data)
 
 
       if (!res.success) { 

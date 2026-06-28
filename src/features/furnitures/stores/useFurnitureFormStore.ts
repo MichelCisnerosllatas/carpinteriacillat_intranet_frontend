@@ -10,7 +10,7 @@ type State = {
 }
 
 type Action = {
-  create: (params: FurniturePostRequestDto) => Promise<boolean>
+  create: (params: FurniturePostRequestDto) => Promise<number | null>
   update: (id: number, data: FurniturePutRequestDto) => Promise<boolean>
   reset: () => void
 }
@@ -24,30 +24,24 @@ export const useFurnitureFormStore = create<State & Action>((set) => ({
       const res = await furnituresService.post(params)
       if (!res.success) {
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
-        return false
+        return null
       }
       set({ isSubmitting: false })
-      return true
+      return res.data.id_furniture
     } catch (error: any) {
       set({
         isSubmitting: false,
         error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.',
         fieldErrors: error?.response?.data?.errors ?? null,
       })
-      return false
+      return null
     }
   },
 
   update: async (id, data) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      const hasEmpty = Object.values(data).some((v) => v === null || v === undefined || v === '')
-      const res = hasEmpty
-        ? await furnituresService.patch(
-            id,
-            Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<FurniturePutRequestDto>
-          )
-        : await furnituresService.put(id, data)
+      const res = await furnituresService.patch(id, data)
 
       if (!res.success) {
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })

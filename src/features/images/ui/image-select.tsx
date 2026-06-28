@@ -26,15 +26,16 @@ export function ImageSelect({
   disabled    = false,
   showAll     = false,
 }: ImageSelectProps) {
-  const [open,      setOpen]      = useState(false)
-  const [search,    setSearch]    = useState('')
-  const [page,      setPage]      = useState(1)
-  const [lastPage,  setLastPage]  = useState(1)
-  const [total,     setTotal]     = useState(0)
-  const [items,     setItems]     = useState<ImageApiItem[]>([])
-  const [loading,   setLoading]   = useState(false)
-  const [error,     setError]     = useState(false)
-  const [selected,  setSelected]  = useState<ImageApiItem | null>(null)
+  const [open,            setOpen]            = useState(false)
+  const [search,          setSearch]          = useState('')
+  const [page,            setPage]            = useState(1)
+  const [lastPage,        setLastPage]        = useState(1)
+  const [total,           setTotal]           = useState(0)
+  const [items,           setItems]           = useState<ImageApiItem[]>([])
+  const [loading,         setLoading]         = useState(false)
+  const [loadingSelected, setLoadingSelected] = useState(false)
+  const [error,           setError]           = useState(false)
+  const [selected,        setSelected]        = useState<ImageApiItem | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Fetch a page of images
@@ -65,13 +66,13 @@ export function ImageSelect({
   // Fetch selected item details when value changes externally
   useEffect(() => {
     if (value == null) { setSelected(null); return }
-    // Check if already in current items list
     const found = items.find((i) => i.id_image === value)
     if (found) { setSelected(found); return }
-    // Fetch by id
-    imagesService.getById(value).then((res) => {
-      if (res.success && res.data) setSelected(res.data)
-    }).catch(() => {})
+    setLoadingSelected(true)
+    imagesService.getById(value)
+      .then((res) => { if (res.success && res.data) setSelected(res.data) })
+      .catch(() => {})
+      .finally(() => setLoadingSelected(false))
   }, [value])
 
   // Load images when popover opens
@@ -111,11 +112,16 @@ export function ImageSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          disabled={disabled}
+          disabled={disabled || loadingSelected}
           className="w-full h-auto min-h-[40px] justify-between font-normal py-1.5 px-3"
         >
           <span className="flex items-center gap-2 min-w-0 flex-1">
-            {selected ? (
+            {loadingSelected ? (
+              <>
+                <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Cargando imagen...</span>
+              </>
+            ) : selected ? (
               <>
                 <span className="size-7 rounded overflow-hidden border shrink-0 bg-muted">
                   <img

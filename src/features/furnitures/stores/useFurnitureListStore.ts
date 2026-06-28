@@ -1,3 +1,4 @@
+// src/features/furnitures/stores/useFurnitureListStore.ts
 import { create } from 'zustand'
 import { furnituresService } from '../services/furnitures.service'
 import { getStateOption } from '@/shared/config/entity-states'
@@ -6,6 +7,7 @@ import type { FurnitureJoinApiItem } from '../model/furniture-api-item.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
 import type { Furniture } from '../data/schema'
+import { buildImageUrl } from '@/shared/lib/images'
 
 type State = {
   hasLoaded: boolean
@@ -22,6 +24,7 @@ type State = {
 
 type Action = {
   load: (params?: FurnitureListRequestDto) => Promise<boolean>
+  loadById: (id: number) => Promise<boolean>
   setCurrentItem: (item: Furniture | null) => void
   reset: () => void
 }
@@ -34,17 +37,25 @@ const mapFromApi = (item: FurnitureJoinApiItem): Furniture => {
     id: item.id_furniture,
     name: item.furniture_name,
     description: item.furniture_description,
-    largo: item.furniture_largo,
-    ancho: item.furniture_ancho,
-    idCategory: item.id_category,
+    largo: item.furniture_largo !== null && item.furniture_largo !== undefined ? Number(item.furniture_largo) : null,
+    ancho: item.furniture_ancho !== null && item.furniture_ancho !== undefined ? Number(item.furniture_ancho) : null,
+    idCategory: Number(item.id_category),
     categoryName: item.category?.category_name ?? '',
-    idTypecolor: item.id_typecolor,
-    typecolorName: item.typecolor?.typecolor_name ?? '',
-    idTypewood: item.id_typewood,
-    typewoodName: item.typewood?.typewood_name ?? '',
-    idImage: item.id_image,
-    imageName: item.image?.image_name ?? null,
-    imageUrl: item.image?.image_url ?? null,
+    idTypecolor: item.type_color?.id_typecolor ?? 0,
+    typecolorName: item.type_color?.typecolor_name ?? '',
+
+    idTypewood: item.type_wood?.id_typewood ?? 0,
+    typewoodName: item.type_wood?.typewood_name ?? '',
+
+    idImage: item.images?.id_image ?? null,
+    imageName: item.images?.image_name ?? null,
+    imageUrl: buildImageUrl(item.images?.image_patch ?? null),
+    galleryImages: (item.gallery_images ?? []).map((g) => ({
+      id: g.id_furniture_image,
+      imageId: g.image?.id_image ?? 0,
+      imageUrl: buildImageUrl(g.image?.image_patch ?? null),
+      imageName: g.image?.image_name ?? null,
+    })),
     status: item.furniture_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.furniture_state,
@@ -59,6 +70,20 @@ export const useFurnitureListStore = create<State & Action>((set, get) => ({
   filters: defaultFilters, currentItem: null,
 
   setCurrentItem: (item) => set({ currentItem: item }),
+
+  loadById: async (id) => {
+    set({ isFetching: true, isError: false, message: null })
+    try {
+      const response = await furnituresService.getById(id)
+      if (!response.success) throw new Error(response.message)
+      const mapped = mapFromApi(response.data)
+      set({ isFetching: false, currentItem: mapped, hasLoaded: true })
+      return true
+    } catch (error: any) {
+      set({ isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      return false
+    }
+  },
 
   load: async (params = {}) => {
     const nextFilters = { ...get().filters, ...params }

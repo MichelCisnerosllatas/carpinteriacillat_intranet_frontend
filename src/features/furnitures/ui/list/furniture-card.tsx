@@ -1,6 +1,10 @@
 'use client'
 
-import { Eye, MoreHorizontal, Pencil, CheckCircle2, XCircle, Trash2, Sofa } from 'lucide-react'
+import { useState } from 'react'
+import { Eye, MoreHorizontal, Pencil, CheckCircle2, XCircle, Trash2, Sofa, Images } from 'lucide-react'
+import Lightbox from 'yet-another-react-lightbox'
+import Zoom from 'yet-another-react-lightbox/plugins/zoom'
+import 'yet-another-react-lightbox/styles.css'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -31,8 +35,20 @@ export function FurnitureCard({
   onToggleState,
   onDelete,
 }: FurnitureCardProps) {
-  const stateOpt = getStateOption(item.stateValue)
-  const isActive = item.stateValue === 1
+  const stateOpt       = getStateOption(item.stateValue)
+  const isActive       = item.stateValue === 1
+  const [lbIdx, setLbIdx] = useState(-1)
+
+  // Slides: cover + gallery (max 10 in lightbox)
+  const slides = [
+    ...(item.imageUrl ? [{ src: item.imageUrl, alt: item.imageName ?? item.name }] : []),
+    ...item.galleryImages
+      .filter((g) => g.imageUrl)
+      .map((g) => ({ src: g.imageUrl!, alt: g.imageName ?? '' })),
+  ]
+
+  const galleryPreview = item.galleryImages.filter((g) => g.imageUrl).slice(0, 3)
+  const extraCount     = item.galleryImages.length > 3 ? item.galleryImages.length - 3 : 0
 
   return (
     <div
@@ -41,14 +57,20 @@ export function FurnitureCard({
         isSelected && 'ring-2 ring-primary',
       )}
     >
-      {/* Image */}
+      {/* Cover Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {item.imageUrl ? (
-          <img
-            src={item.imageUrl}
-            alt={item.name}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <button
+            type="button"
+            onClick={() => setLbIdx(0)}
+            className="h-full w-full cursor-zoom-in"
+          >
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </button>
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-2">
             <Sofa className="size-10 text-muted-foreground/30" />
@@ -56,7 +78,6 @@ export function FurnitureCard({
           </div>
         )}
 
-        {/* Status badge */}
         <div className="absolute right-2 top-2">
           <Badge
             variant="outline"
@@ -66,7 +87,6 @@ export function FurnitureCard({
           </Badge>
         </div>
 
-        {/* Checkbox */}
         <div className="absolute left-2 top-2">
           <Checkbox
             checked={isSelected}
@@ -82,7 +102,9 @@ export function FurnitureCard({
         <div>
           <h3 className="line-clamp-1 text-sm font-semibold leading-tight">{item.name}</h3>
           {item.description && (
-            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
+            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground" title={item.description}>
+              {item.description}
+            </p>
           )}
         </div>
 
@@ -99,6 +121,39 @@ export function FurnitureCard({
               item.ancho != null && `${item.ancho} cm ancho`,
             ].filter(Boolean).join(' × ')}
           </p>
+        )}
+
+        {/* Gallery thumbnails strip */}
+        {galleryPreview.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <Images className="size-3 shrink-0 text-muted-foreground/60" />
+            <div className="flex gap-1">
+              {galleryPreview.map((g, idx) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setLbIdx(item.imageUrl ? idx + 1 : idx)}
+                  className="size-7 overflow-hidden rounded border transition-transform hover:scale-110 cursor-zoom-in"
+                >
+                  <img
+                    src={g.imageUrl!}
+                    alt={g.imageName ?? ''}
+                    className="size-full object-cover"
+                    onError={(e) => { ;(e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                </button>
+              ))}
+              {extraCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setLbIdx(item.imageUrl ? galleryPreview.length + 1 : galleryPreview.length)}
+                  className="flex size-7 items-center justify-center rounded border bg-muted text-[10px] font-semibold text-muted-foreground hover:bg-muted/80 transition-colors"
+                >
+                  +{extraCount}
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -132,6 +187,20 @@ export function FurnitureCard({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {slides.length > 0 && (
+        <Lightbox
+          open={lbIdx >= 0}
+          close={() => setLbIdx(-1)}
+          index={lbIdx}
+          slides={slides}
+          plugins={[Zoom]}
+          controller={{ closeOnBackdropClick: true }}
+          zoom={{ maxZoomPixelRatio: 4 }}
+          styles={{ root: { '--yarl__color_backdrop': 'rgba(0,0,0,0.94)', zIndex: 9999 } }}
+        />
+      )}
     </div>
   )
 }

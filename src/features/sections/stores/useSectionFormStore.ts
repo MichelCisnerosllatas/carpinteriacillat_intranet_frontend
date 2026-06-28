@@ -41,13 +41,7 @@ export const useSectionFormStore = create<State & Action>((set) => ({
   update: async (id, data) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      const hasEmpty = Object.values(data).some((v) => v === null || v === undefined || v === '')
-      const res = hasEmpty
-        ? await sectionsService.patch(
-            id,
-            Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<SectionPutRequestDto>
-          )
-        : await sectionsService.put(id, data)
+      const res = await sectionsService.patch(id, data)
 
       if (!res.success) {
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })

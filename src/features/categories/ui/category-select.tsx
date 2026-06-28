@@ -29,15 +29,7 @@ export function CategorySelect({
   useEffect(() => { void load() }, [])
 
   const selected = value != null ? options.find((o) => o.id_category === value) : null
-
-  if (isLoading) {
-    return (
-      <Button variant="outline" disabled className="w-full justify-start font-normal">
-        <Loader2 className="mr-2 size-4 animate-spin" />
-        Cargando categorías...
-      </Button>
-    )
-  }
+  const label    = selected ? selected.category_name : placeholder
 
   if (isError) {
     return (
@@ -67,12 +59,19 @@ export function CategorySelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           className="w-full justify-between font-normal"
         >
-          <span className="truncate">
-            {selected ? selected.category_name : <span className="text-muted-foreground">{placeholder}</span>}
-          </span>
+          {isLoading ? (
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Cargando...
+            </span>
+          ) : (
+            <span className={cn('truncate', !selected && 'text-muted-foreground')}>
+              {label}
+            </span>
+          )}
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

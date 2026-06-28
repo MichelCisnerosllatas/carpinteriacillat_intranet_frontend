@@ -34,10 +34,7 @@ export const useTypeSectionFormStore = create<State & Action>((set) => ({
   update: async (id, data) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      const hasEmpty = Object.values(data).some((v) => v === null || v === undefined || v === '')
-      const res = hasEmpty
-        ? await typesectionsService.patch(id, Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<TypeSectionPutRequestDto>)
-        : await typesectionsService.put(id, data)
+      const res = await typesectionsService.patch(id, data)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
       set({ isSubmitting: false })
       return true
