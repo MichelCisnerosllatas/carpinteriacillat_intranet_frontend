@@ -7,11 +7,11 @@ import { useStorageFolderActionStore } from '../stores/useStorageFolderActionSto
 import { useStorageFileListStore } from '@/features/storage-files/stores/useStorageFileListStore'
 import { useStorageFileActionStore } from '@/features/storage-files/stores/useStorageFileActionStore'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
-import { FolderTree } from './folder-tree'
-import { StorageExplorer } from './storage-explorer'
-import { FolderNewModal } from './folder-new-modal'
-import { FolderRenameModal } from './folder-rename-modal'
-import { FolderDeleteDialog } from './folder-delete-dialog'
+import { FolderTree } from './tree/folder-tree'
+import { StorageExplorer } from './explorer/storage-explorer'
+import { FolderNewModal } from './modals/folder-new-modal'
+import { FolderRenameModal } from './modals/folder-rename-modal'
+import { FolderDeleteDialog } from './modals/folder-delete-dialog'
 import type { StorageFolder } from '../data/schema'
 
 type DragPayload = { kind: 'file' | 'folder'; paths: string[]; encodeds: string[] }

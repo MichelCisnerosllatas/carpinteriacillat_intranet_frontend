@@ -67,7 +67,7 @@ export function NavigationForm({ mode, id }: { mode: 'create' | 'edit'; id?: str
       ? await update(resolved!.id, {
           navigation_name:       values.navigation_name,
           navigation_url:        values.navigation_url ?? '',
-          navigation_order:      values.navigation_order ?? undefined,
+          navigation_order:      values.navigation_order ?? 1,
           navigation_state:      values.navigation_state,
           navigation_updated_at: formatDatetime(),
         })

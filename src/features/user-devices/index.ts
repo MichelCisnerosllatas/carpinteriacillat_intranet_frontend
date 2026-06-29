@@ -12,9 +12,9 @@ export type { UserDeviceType }                          from './model/userdevice
 export type { UserDeviceListRequestDto }                from './model/userdeviceget.dto'
 
 // UI
-export { UserDevicesTable }           from './ui/user-devices-table'
-export { UserDevicesAccordionTable }  from './ui/user-devices-accordion-table'
-export { MyDevicesList }              from './ui/my-devices-list'
+export { UserDevicesTable }           from './ui/list/user-devices-table'
+export { UserDevicesAccordionTable }  from './ui/list/user-devices-accordion-table'
+export { MyDevicesList }              from './ui/profile/my-devices-list'
 export { UserDevicesBreadcrumb }      from './ui/user-devices-breadcrumb'
 export { UserDevicesError }           from './ui/user-devices-error'
-export { UserDeviceDetail }           from './ui/user-device-detail'
+export { UserDeviceDetail }           from './ui/detail/user-device-detail'

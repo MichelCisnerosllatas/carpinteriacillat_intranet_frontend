@@ -6,24 +6,7 @@ import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
 import { getStateOption } from '@/shared/config/entity-states'
 import type { TypeColor } from '../../data/schema'
 import { TypeColorsRowActions } from './typecolors-row-actions'
-
-function ColorSwatch({ hex }: { hex: string | null }) {
-  if (!hex) {
-    return (
-      <div
-        className="size-10 flex-shrink-0 rounded-lg border border-dashed bg-muted"
-        title="Sin color definido"
-      />
-    )
-  }
-  return (
-    <div
-      className="size-10 flex-shrink-0 rounded-lg border shadow-sm"
-      style={{ backgroundColor: hex }}
-      title={hex}
-    />
-  )
-}
+import { ColorSwatch } from './color-swatch'
 
 export const typecolorsColumns: ColumnDef<TypeColor>[] = [
   {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { ImagesBreadcrumb } from '@/features/images/ui/images-breadcrumb'
-import { ImageUploadForm } from '@/features/images/ui/image-upload-form'
+import { ImageUploadForm } from '@/features/images/ui/form/image-upload-form'
 
 export const metadata: Metadata = { title: 'Subir Imagen' }
 

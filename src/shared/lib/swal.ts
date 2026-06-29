@@ -40,23 +40,35 @@ function getThemeOptions(): Partial<SweetAlertOptions> {
 
   return isDark
     ? {
-        background: 'oklch(0.14 0.04 259.21)',       // --card dark
-        color: 'oklch(0.984 0.003 247.858)',           // --foreground dark
-        confirmButtonColor: 'oklch(0.929 0.013 255.508)', // --primary dark
-        cancelButtonColor: 'oklch(0.279 0.041 260.031)',  // --muted dark
+        background: '#1e2535',
+        color: '#e2e8f0',
+        // Colores oscuros para que el texto blanco de SweetAlert2 sea legible
+        confirmButtonColor: '#3b5bdb',   // azul medio — texto blanco visible
+        cancelButtonColor: '#374151',    // gris oscuro — texto blanco visible
       }
     : {
-        background: 'oklch(1 0 0)',                   // --card light
-        color: 'oklch(0.129 0.042 264.695)',           // --foreground light
-        confirmButtonColor: 'oklch(0.208 0.042 265.755)', // --primary light
-        cancelButtonColor: 'oklch(0.554 0.046 257.417)',  // --muted-foreground light
+        background: 'oklch(1 0 0)',
+        color: 'oklch(0.129 0.042 264.695)',
+        confirmButtonColor: 'oklch(0.208 0.042 265.755)',
+        cancelButtonColor: 'oklch(0.554 0.046 257.417)',
       }
+}
+
+// ─── Scroll lock helpers ──────────────────────────────────────────────────────
+function lockScroll() {
+  document.body.style.overflow = 'hidden'
+}
+
+function unlockScroll() {
+  document.body.style.overflow = ''
 }
 
 // ─── Base instance ────────────────────────────────────────────────────────────
 export function baseSwal<T = any>(
   options: SweetAlertOptions
 ): Promise<SweetAlertResult<T>> {
+  const { willOpen, didClose, customClass, ...rest } = options
+
   const finalOptions = {
     ...getThemeOptions(),
     customClass: {
@@ -65,9 +77,17 @@ export function baseSwal<T = any>(
       htmlContainer: 'text-muted-foreground text-sm',
       confirmButton: 'rounded-md px-4 py-2 text-sm font-medium',
       cancelButton: 'rounded-md px-4 py-2 text-sm font-medium',
-      ...(options.customClass ?? {}),
+      ...(customClass ?? {}),
     },
-    ...options,
+    willOpen: () => {
+      lockScroll()
+      willOpen?.()
+    },
+    didClose: () => {
+      unlockScroll()
+      didClose?.()
+    },
+    ...rest,
   } as SweetAlertOptions
 
   return Swal.fire(finalOptions) as Promise<SweetAlertResult<T>>

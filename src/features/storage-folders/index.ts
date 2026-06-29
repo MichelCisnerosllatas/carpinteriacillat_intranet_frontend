@@ -1,5 +1,5 @@
 export { StorageFoldersPage } from './ui/storage-folders-page'
-export { StorageExplorer } from './ui/storage-explorer'
+export { StorageExplorer } from './ui/explorer/storage-explorer'
 export { useStorageFolderListStore } from './stores/useStorageFolderListStore'
 export { useStorageFolderTreeStore } from './stores/useStorageFolderTreeStore'
 export { useStorageFolderActionStore } from './stores/useStorageFolderActionStore'

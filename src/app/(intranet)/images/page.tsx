@@ -3,7 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { Upload } from 'lucide-react'
-import { ImagesGrid } from '@/features/images/ui/images-grid'
+import { ImagesGrid } from '@/features/images/ui/list/images-grid'
 
 export const metadata: Metadata = { title: 'Imágenes' }
 

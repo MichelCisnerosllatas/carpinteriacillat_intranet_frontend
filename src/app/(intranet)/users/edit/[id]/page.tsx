@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { UsersBreadcrumb } from '@/features/users/ui/users-breadcrumb'
-import { UserForm } from '@/features/users/ui/user-form'
+import { UserForm } from '@/features/users/ui/form/user-form'
 
 export const metadata: Metadata = { title: 'Editar Usuario' }
 

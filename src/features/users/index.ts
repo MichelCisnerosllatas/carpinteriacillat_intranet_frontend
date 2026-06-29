@@ -12,8 +12,8 @@ export type { UserPostRequestDto, UserPostResponseDto } from './model/userpost.d
 export type { UserPatchRequestDto, UserPatchResponseDto } from './model/userpatch.dto'
 export type { UserJoinType } from './model/userjoin.type'
 
-export { UsersTable } from './ui/users-table'
+export { UsersTable } from './ui/list/users-table'
 export { UsersPrimaryButtons } from './ui/users-primary-buttons'
 export { UsersError } from './ui/users-error'
 export { UsersBreadcrumb } from './ui/users-breadcrumb'
-export { UserForm } from './ui/user-form'
+export { UserForm } from './ui/form/user-form'
