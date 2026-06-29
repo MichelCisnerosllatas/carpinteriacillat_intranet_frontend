@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { furnituresService } from '../services/furnitures.service'
 import type { FurniturePostRequestDto } from '../model/furniturepost.dto'
 import type { FurniturePutRequestDto } from '../model/furnitureput.dto'
+import { useFurnitureListStore } from '@/features/furnitures/stores/useFurnitureListStore'
 
 type State = {
   isSubmitting: boolean
@@ -26,6 +27,7 @@ export const useFurnitureFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return null
       }
+      await useFurnitureListStore.getState().load()
       set({ isSubmitting: false })
       return res.data.id_furniture
     } catch (error: any) {
@@ -47,6 +49,7 @@ export const useFurnitureFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useFurnitureListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

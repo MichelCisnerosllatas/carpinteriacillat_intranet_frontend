@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { sectionImagesService } from '../services/sectionimages.service'
 import type { SectionImagePostRequestDto } from '../model/sectionimagepost.dto'
 import type { SectionImagePutRequestDto } from '../model/sectionimageput.dto'
+import { useSectionImageListStore } from '@/features/sectionimages/stores/useSectionImageListStore'
 
 type State = {
   isSubmitting: boolean
@@ -26,6 +27,7 @@ export const useSectionImageFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useSectionImageListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -46,6 +48,7 @@ export const useSectionImageFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useSectionImageListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

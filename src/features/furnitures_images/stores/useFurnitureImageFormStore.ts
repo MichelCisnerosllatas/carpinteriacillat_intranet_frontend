@@ -124,21 +124,21 @@ export const useFurnitureImageFormStore = create<State & Action>((set) => ({
   },
 
   bulkReorder: async (items) => {
-    set({ isSubmitting: true, error: null })
+    set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      await Promise.all(
-        items.map((item) =>
-          furnitureImagesService.patch(item.furnitureImageId, {
-            furnitureimage_order: item.order,
-            furnitureimage_updated_at: formatDatetime(),
-          })
-        )
+      if (items.length === 0) return true
+      await furnitureImagesService.reorder(
+        items.map((i) => ({ id_furniture_image: i.furnitureImageId, furnitureimage_order: i.order }))
       )
-      set({ isSubmitting: false })
       return true
     } catch (error: any) {
-      set({ isSubmitting: false, error: error?.response?.data?.message ?? 'Error al reordenar imágenes.' })
+      set({
+        error: error?.response?.data?.message ?? 'Error al reordenar imágenes.',
+        fieldErrors: error?.response?.data?.errors ?? null,
+      })
       return false
+    } finally {
+      set({ isSubmitting: false })
     }
   },
 

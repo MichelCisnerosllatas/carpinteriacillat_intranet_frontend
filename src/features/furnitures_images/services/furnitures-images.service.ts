@@ -40,6 +40,10 @@ export const furnitureImagesService = {
     return data
   },
 
+  reorder: async (items: { id_furniture_image: number; furnitureimage_order: number }[]): Promise<void> => {
+    await apiClient.post(FURNITURE_IMAGES_ENDPOINTS.v1.reorder, { items })
+  },
+
   delete: async (id: number): Promise<boolean> => {
     const { data } = await apiClient.delete(FURNITURE_IMAGES_ENDPOINTS.v1.delete(id))
     return data.success

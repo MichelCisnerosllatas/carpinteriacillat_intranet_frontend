@@ -39,7 +39,7 @@ const mapFromApi = (item: FurnitureJoinApiItem): Furniture => {
     description: item.furniture_description,
     largo: item.furniture_largo !== null && item.furniture_largo !== undefined ? Number(item.furniture_largo) : null,
     ancho: item.furniture_ancho !== null && item.furniture_ancho !== undefined ? Number(item.furniture_ancho) : null,
-    idCategory: Number(item.id_category),
+    idCategory: item.category?.id_category ?? 0,
     categoryName: item.category?.category_name ?? '',
     idTypecolor: item.type_color?.id_typecolor ?? 0,
     typecolorName: item.type_color?.typecolor_name ?? '',

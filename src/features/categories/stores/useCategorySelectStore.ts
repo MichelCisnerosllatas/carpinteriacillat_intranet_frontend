@@ -18,7 +18,7 @@ export const useCategorySelectStore = create<State & Action>((set, get) => ({
   isError:   false,
 
   load: async () => {
-    if (get().isLoading) return
+    if (get().isLoading || get().options.length > 0) return
     set({ isLoading: true, isError: false })
     try {
       const res = await categoriesService.getForSelect()

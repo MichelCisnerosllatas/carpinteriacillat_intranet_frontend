@@ -7,6 +7,7 @@ import type { PersonPostRequestDto } from '@/entities/person/model/personpost.dt
 import type { PersonPatchRequestDto } from '@/entities/person/model/personpatch.dto'
 import type { UserPostRequestDto } from '@/features/users/model/userpost.dto'
 import type { UserPatchRequestDto } from '@/features/users/model/userpatch.dto'
+import { useUserListStore } from '@/features/users/stores/useUserListStore'
 
 type ApiFieldErrors = Record<string, string[]>
 
@@ -68,6 +69,7 @@ export const useUserFormStore = create<State & Action>((set) => ({
         return false
       }
 
+      await useUserListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -103,6 +105,7 @@ export const useUserFormStore = create<State & Action>((set) => ({
         return false
       }
 
+      await useUserListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

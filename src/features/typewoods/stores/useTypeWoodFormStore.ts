@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { typewoodsService } from '../services/typewoods.service'
 import type { TypeWoodPostRequestDto } from '../model/typewoodpost.dto'
 import type { TypeWoodPutRequestDto } from '../model/typewoodput.dto'
+import { useTypeWoodListStore } from '@/features/typewoods/stores/useTypeWoodListStore'
 
 type State = {
   isSubmitting: boolean
@@ -23,6 +24,7 @@ export const useTypeWoodFormStore = create<State & Action>((set) => ({
     try {
       const res = await typewoodsService.post(params)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useTypeWoodListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -36,6 +38,7 @@ export const useTypeWoodFormStore = create<State & Action>((set) => ({
     try {
       const res = await typewoodsService.patch(id, data)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useTypeWoodListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { typedocsService } from '../services/typedocs.service'
 import type { TypeDocPostRequestDto } from '../model/typedocpost.dto'
 import type { TypeDocPutRequestDto } from '../model/typedocput.dto'
+import { useTypeDocListStore } from '@/features/typedocs/stores/useTypeDocListStore'
 
 type State = {
   isSubmitting: boolean
@@ -23,6 +24,7 @@ export const useTypeDocFormStore = create<State & Action>((set) => ({
     try {
       const res = await typedocsService.post(params)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useTypeDocListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -36,6 +38,7 @@ export const useTypeDocFormStore = create<State & Action>((set) => ({
     try {
       const res = await typedocsService.patch(id, data)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useTypeDocListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

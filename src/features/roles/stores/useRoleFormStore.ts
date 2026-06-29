@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { rolesService } from '@/features/roles/services/roles.service'
 import type { RolePostRequestDto } from '@/features/roles/model/rolepost.dto'
 import type { RolePutRequestDto } from '@/features/roles/model/roleput.dto'
+import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
 
 type ApiFieldErrors = Record<string, string[]>
 
@@ -44,6 +45,7 @@ export const useRoleFormStore = create<State & Action>((set) => ({
         return false
       }
 
+      await useRoleListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -71,6 +73,7 @@ export const useRoleFormStore = create<State & Action>((set) => ({
         return false
       }
 
+      await useRoleListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { typesectionsService } from '../services/typesections.service'
 import type { TypeSectionPostRequestDto } from '../model/typesectionpost.dto'
 import type { TypeSectionPutRequestDto } from '../model/typesectionput.dto'
+import { useTypeSectionListStore } from '@/features/typesections/stores/useTypeSectionListStore'
 
 type State = {
   isSubmitting: boolean
@@ -23,6 +24,7 @@ export const useTypeSectionFormStore = create<State & Action>((set) => ({
     try {
       const res = await typesectionsService.post(params)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useTypeSectionListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -36,6 +38,7 @@ export const useTypeSectionFormStore = create<State & Action>((set) => ({
     try {
       const res = await typesectionsService.patch(id, data)
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useTypeSectionListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

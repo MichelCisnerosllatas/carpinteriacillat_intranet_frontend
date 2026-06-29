@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +14,7 @@ import { Separator } from '@/shared/ui/separator'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
+import { toastError } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
@@ -43,15 +44,17 @@ type FormValues = z.infer<typeof schema>
 
 export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: string }) {
   const router   = useRouter()
-  const { currentItem, items, meta, loadById }                      = useFurnitureListStore()
+  const { currentItem, items, meta, loadById, setCurrentItem }      = useFurnitureListStore()
   const { isSubmitting, error, fieldErrors, create, update, reset } = useFurnitureFormStore()
-  const { bulkCreate, bulkReorder, bulkRemove }                     = useFurnitureImageFormStore()
+  const { bulkCreate, bulkReorder, bulkRemove, error: galleryError, fieldErrors: galleryFieldErrors, isSubmitting: isGallerySubmitting } = useFurnitureImageFormStore()
+  const isBusy   = isSubmitting || isGallerySubmitting
   const isEdit   = mode === 'edit'
   const resolved = currentItem ?? (id ? items.find((i) => i.id === Number(id)) ?? null : null)
 
-  const [pendingGalleryItems,   setPendingGalleryItems]   = useState<PendingGalleryItem[]>([])
-  const [removedGalleryIds,     setRemovedGalleryIds]     = useState<number[]>([])
-  const [reorderedGalleryItems, setReorderedGalleryItems] = useState<ReorderedGalleryItem[]>([])
+  // Refs: only needed at submit time, not for rendering
+  const pendingGalleryItemsRef   = useRef<PendingGalleryItem[]>([])
+  const removedGalleryIdsRef     = useRef<number[]>([])
+  const reorderedGalleryItemsRef = useRef<ReorderedGalleryItem[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -63,12 +66,12 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
     },
   })
 
-  // Load furniture if coming directly to edit URL
+  // Always fetch fresh data when opening edit form
   useEffect(() => {
-    if (isEdit && id && !resolved) {
+    if (isEdit && id) {
       void loadById(Number(id))
     }
-  }, [isEdit, id, !!resolved])
+  }, [isEdit, id])
 
   useEffect(() => {
     if (isEdit && resolved) {
@@ -86,7 +89,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
     }
   }, [isEdit, resolved?.id])
 
-  useEffect(() => () => reset(), [])
+  useEffect(() => () => { reset(); setCurrentItem(null) }, [])
 
   // Map resolved gallery to GalleryEntry[]
   const initialGallery: GalleryEntry[] = (resolved?.galleryImages ?? []).map((g) => ({
@@ -120,9 +123,23 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
         furniture_updated_at:  formatDatetime(),
       })
       if (ok) {
-        if (pendingGalleryItems.length > 0)   await bulkCreate(resolved!.id, pendingGalleryItems)
-        if (removedGalleryIds.length > 0)     await bulkRemove(removedGalleryIds)
-        if (reorderedGalleryItems.length > 0) await bulkReorder(reorderedGalleryItems)
+        const pending   = pendingGalleryItemsRef.current
+        const removed   = removedGalleryIdsRef.current
+        const reordered = reorderedGalleryItemsRef.current
+        console.log('[FurnitureForm] gallery submit →', { pending, removed, reordered })
+
+        if (pending.length > 0) {
+          const ok2 = await bulkCreate(resolved!.id, pending)
+          if (!ok2) { toastError('Error al agregar imágenes de galería'); return }
+        }
+        if (removed.length > 0) {
+          const ok3 = await bulkRemove(removed)
+          if (!ok3) { toastError('Error al eliminar imágenes de galería'); return }
+        }
+        if (reordered.length > 0) {
+          const ok4 = await bulkReorder(reordered)
+          if (!ok4) { toastError('Error al guardar el orden de la galería'); return }
+        }
         await swalSuccess('Actualizado', values.furniture_name)
         router.push('/furnitures')
       } else {
@@ -143,7 +160,11 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
         furniture_created_at:  formatDatetime(),
       })
       if (createdId !== null) {
-        if (pendingGalleryItems.length > 0) await bulkCreate(createdId, pendingGalleryItems)
+        const pending = pendingGalleryItemsRef.current
+        if (pending.length > 0) {
+          const ok2 = await bulkCreate(createdId, pending)
+          if (!ok2) { toastError('Error al agregar imágenes de galería'); return }
+        }
         await swalSuccess('Creado', values.furniture_name)
         router.push('/furnitures')
       } else {
@@ -255,7 +276,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
                   <FormLabel>Categoría <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <CategorySelect
-                      key={`cat-${field.value ?? 'none'}`}
                       value={field.value ?? null}
                       onValueChange={(v) => field.onChange(v)}
                       placeholder="Seleccionar categoría"
@@ -270,7 +290,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
                   <FormLabel>Tipo de Color <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <TypeColorSelect
-                      key={`tc-${field.value ?? 'none'}`}
                       value={field.value ?? null}
                       onValueChange={(v) => field.onChange(v)}
                       placeholder="Seleccionar color"
@@ -285,7 +304,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
                   <FormLabel>Tipo de Madera <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <TypeWoodSelect
-                      key={`tw-${field.value ?? 'none'}`}
                       value={field.value ?? null}
                       onValueChange={(v) => field.onChange(v)}
                       placeholder="Seleccionar madera"
@@ -330,10 +348,10 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
             <FurnitureGalleryManager
               key={resolved?.id ?? 'new'}
               initialGallery={initialGallery}
-              onPendingItemsChange={setPendingGalleryItems}
-              onRemovedIdsChange={setRemovedGalleryIds}
-              onReorderedItemsChange={setReorderedGalleryItems}
-              disabled={isSubmitting}
+              onPendingItemsChange={(items) => { pendingGalleryItemsRef.current = items }}
+              onRemovedIdsChange={(ids) => { removedGalleryIdsRef.current = ids }}
+              onReorderedItemsChange={(items) => { reorderedGalleryItemsRef.current = items }}
+              disabled={isBusy}
             />
           </CardContent>
         </Card>
@@ -346,17 +364,24 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
             apiError={fieldErrors ? { errors: fieldErrors } : undefined}
           />
         )}
+        {galleryError && (
+          <AlertError
+            title="Error en galería de imágenes"
+            message={galleryError}
+            apiError={galleryFieldErrors ? { errors: galleryFieldErrors } : undefined}
+          />
+        )}
         <div className="flex items-center justify-end gap-3">
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push('/furnitures')}
-            disabled={isSubmitting}
+            disabled={isBusy}
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="min-w-28">
-            {isSubmitting
+          <Button type="submit" disabled={isBusy} className="min-w-28">
+            {isBusy
               ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isEdit ? 'Guardando...' : 'Creando...'}</>
               : isEdit ? 'Guardar cambios' : 'Crear mueble'}
           </Button>

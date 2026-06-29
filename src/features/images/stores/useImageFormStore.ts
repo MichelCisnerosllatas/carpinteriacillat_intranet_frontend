@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import type { ImagePostRequestDto } from "../model/imagepost.dto";
 import { imagesService } from "../services/images.service";
+import { useImageListStore } from '@/features/images/stores/useImageListStore'
 
 type State = {
   isSubmitting: boolean;
@@ -84,6 +85,7 @@ export const useImageFormStore = create<State & Action>((set) => ({
         return false;
       }
 
+      await useImageListStore.getState().load()
       set({
         isSubmitting: false,
         error: null,

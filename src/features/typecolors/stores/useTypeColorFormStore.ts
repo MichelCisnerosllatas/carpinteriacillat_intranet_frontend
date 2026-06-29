@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { typecolorsService } from '../services/typecolors.service'
 import type { TypeColorPostRequestDto } from '../model/typecolorpost.dto'
 import type { TypeColorPutRequestDto } from '../model/typecolorput.dto'
+import { useTypeColorListStore } from '@/features/typecolors/stores/useTypeColorListStore'
 
 type State = {
   isSubmitting: boolean
@@ -31,13 +32,14 @@ export const useTypeColorFormStore = create<State & Action>((set) => ({
         return false 
       }
 
+      await useTypeColorListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
-      set({ 
-        isSubmitting: false, 
-        error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.', 
-        fieldErrors: error?.response?.data?.errors ?? null 
+      set({
+        isSubmitting: false,
+        error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.',
+        fieldErrors: error?.response?.data?.errors ?? null
       })
       return false
     }
@@ -59,13 +61,14 @@ export const useTypeColorFormStore = create<State & Action>((set) => ({
         return false 
       }
 
+      await useTypeColorListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
-      set({ 
-        isSubmitting: false, 
-        error: error?.response?.data?.message ?? error?.message ?? 'Error al actualizar.', 
-        fieldErrors: error?.response?.data?.errors ?? null 
+      set({
+        isSubmitting: false,
+        error: error?.response?.data?.message ?? error?.message ?? 'Error al actualizar.',
+        fieldErrors: error?.response?.data?.errors ?? null
       })
       return false
     }

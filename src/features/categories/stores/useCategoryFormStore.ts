@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { categoriesService } from '../services/categories.service'
 import type { CategoryPostRequestDto } from '../model/categorypost.dto'
 import type { CategoryPutRequestDto } from '../model/categoryput.dto'
+import { useCategoryListStore } from '@/features/categories/stores/useCategoryListStore'
 
 type State = {
   isSubmitting: boolean
@@ -26,6 +27,7 @@ export const useCategoryFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useCategoryListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -46,6 +48,7 @@ export const useCategoryFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useCategoryListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { navigationsService } from '../services/navigations.service'
 import type { NavigationPostRequestDto } from '../model/navigationpost.dto'
 import type { NavigationPutRequestDto } from '../model/navigationput.dto'
+import { useNavigationListStore } from '@/features/navigations/stores/useNavigationListStore'
 
 type State = {
   isSubmitting: boolean
@@ -26,6 +27,7 @@ export const useNavigationFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useNavigationListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -47,6 +49,7 @@ export const useNavigationFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useNavigationListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

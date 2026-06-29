@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { sectionsService } from '../services/sections.service'
 import type { SectionPostRequestDto } from '../model/sectionpost.dto'
 import type { SectionPutRequestDto } from '../model/sectionput.dto'
+import { useSectionListStore } from '@/features/sections/stores/useSectionListStore'
 
 type State = {
   isSubmitting: boolean
@@ -26,6 +27,7 @@ export const useSectionFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useSectionListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
@@ -47,6 +49,7 @@ export const useSectionFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useSectionListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {

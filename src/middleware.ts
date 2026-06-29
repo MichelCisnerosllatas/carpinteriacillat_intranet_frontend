@@ -16,6 +16,23 @@ const PROTECTED_PREFIXES = [
   '/permissions',
   '/profile',
   '/user-devices',
+  '/furnitures',
+  '/furniture-images',
+  '/categories',
+  '/images',
+  '/navigations',
+  '/sections',
+  '/section-images',
+  '/typecolors',
+  '/typedocs',
+  '/typesections',
+  '/typewoods',
+  '/storage',
+  '/tasks',
+  '/apps',
+  '/chats',
+  '/help-center',
+  '/ui-components',
 ]
 
 const ROUTE_ROLES: Record<string, string[]> = {
