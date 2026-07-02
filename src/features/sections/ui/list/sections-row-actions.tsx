@@ -10,7 +10,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
-import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionDeleteStore } from '../../stores/useSectionDeleteStore'
@@ -38,27 +38,39 @@ export function SectionsRowActions({ row }: { row: Row<Section> }) {
   const handleToggleState = async () => {
     const newState = isActive ? 0 : 1
     const actionLabel = newState === 1 ? 'Activar' : 'Desactivar'
-    const confirmed = await swalConfirm({
+    const resultLabel = newState === 1 ? 'activada' : 'desactivada'
+    await swalConfirmAction({
       title: `¿${actionLabel} esta sección?`,
       text: row.original.name,
       confirmText: 'Sí, continuar',
       cancelText: 'Cancelar',
+      loading: { title: newState === 1 ? 'Activando...' : 'Desactivando...' },
+      action: async ({ close, showError }) => {
+        const ok = await toggleState(row.original.id, newState)
+        if (ok) {
+          toastSuccess(`Sección ${resultLabel}`, `"${row.original.name}" fue ${resultLabel}.`)
+          close()
+        } else {
+          showError('No se pudo cambiar el estado.')
+        }
+      },
     })
-    if (!confirmed) return
-    const resultLabel = newState === 1 ? 'activada' : 'desactivada'
-    const ok = await toggleState(row.original.id, newState)
-    if (ok) toastSuccess(`Sección ${resultLabel}`, `"${row.original.name}" fue ${resultLabel}.`)
-    else toastError('Error', 'No se pudo cambiar el estado.')
   }
 
   const handleDelete = async () => {
-    const confirmed = await swalDeleteConfirm(
-      `¿Eliminar "${row.original.name}"?`, 'Esta acción no se puede deshacer.'
+    await swalDeleteConfirm(
+      `¿Eliminar "${row.original.name}"?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await deleteItem(row.original.id)
+        if (ok) {
+          toastSuccess('Sección eliminada', `"${row.original.name}" fue eliminada.`)
+          close()
+        } else {
+          showError('No se pudo eliminar el registro.')
+        }
+      },
+      { title: 'Eliminando...' }
     )
-    if (!confirmed) return
-    const ok = await deleteItem(row.original.id)
-    if (ok) toastSuccess('Sección eliminada', `"${row.original.name}" fue eliminada.`)
-    else toastError('Error al eliminar', 'No se pudo eliminar el registro.')
   }
 
   return (

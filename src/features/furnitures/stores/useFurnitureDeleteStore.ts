@@ -24,8 +24,11 @@ export const useFurnitureDeleteStore = create<State & Action>((set) => ({
       await furnituresService.patch(id, { furniture_state: newState })
       await useFurnitureListStore.getState().load()
       return true
-    } catch {
-      set({ error: 'No se pudo cambiar el estado.' })
+    } catch (error: any) {
+      set({ 
+        // error: 'No se pudo cambiar el estado.' 
+        error: error?.response?.data?.message ?? 'No se pudo cambiar el estado.'
+      })
       return false
     } finally {
       set({ isLoading: false })

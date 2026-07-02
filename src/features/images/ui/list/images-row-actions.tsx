@@ -29,13 +29,19 @@ export function ImagesRowActions({ row }: { row: Row<ImageItem> }) {
 
   const handleDelete = async () => {
     const displayName = row.original.name ?? row.original.patch.split('/').pop() ?? row.original.patch
-    const confirmed = await swalDeleteConfirm(
-      `¿Eliminar "${displayName}"?`, 'Esta acción no se puede deshacer.'
+    await swalDeleteConfirm(
+      `¿Eliminar "${displayName}"?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await deleteItem(row.original.id)
+        if (ok) {
+          toastSuccess('Imagen eliminada', `"${displayName}" fue eliminada.`)
+          close()
+        } else {
+          showError('No se pudo eliminar la imagen.')
+        }
+      },
+      { title: 'Eliminando...' }
     )
-    if (!confirmed) return
-    const ok = await deleteItem(row.original.id)
-    if (ok) toastSuccess('Imagen eliminada', `"${displayName}" fue eliminada.`)
-    else toastError('Error al eliminar', 'No se pudo eliminar la imagen.')
   }
 
   return (

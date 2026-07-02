@@ -10,7 +10,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
-import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
 import { useSectionImageDeleteStore } from '../../stores/useSectionImageDeleteStore'
@@ -39,25 +39,38 @@ export function SectionImagesRowActions({ row }: { row: Row<SectionImage> }) {
   const handleToggleState = async () => {
     const newState = isActive ? 0 : 1
     const actionLabel = newState === 1 ? 'Activar' : 'Desactivar'
-    const confirmed = await swalConfirm({
+    const resultLabel = newState === 1 ? 'activado' : 'desactivado'
+    await swalConfirmAction({
       title: `¿${actionLabel} este registro?`,
       text: label,
       confirmText: 'Sí, continuar',
       cancelText: 'Cancelar',
+      loading: { title: newState === 1 ? 'Activando...' : 'Desactivando...' },
+      action: async ({ close, showError }) => {
+        const ok = await toggleState(row.original.id, newState)
+        if (ok) {
+          toastSuccess(`Registro ${resultLabel}`, label)
+          close()
+        } else {
+          showError('No se pudo cambiar el estado.')
+        }
+      },
     })
-    if (!confirmed) return
-    const resultLabel = newState === 1 ? 'activado' : 'desactivado'
-    const ok = await toggleState(row.original.id, newState)
-    if (ok) toastSuccess(`Registro ${resultLabel}`, label)
-    else toastError('Error', 'No se pudo cambiar el estado.')
   }
 
   const handleDelete = async () => {
-    const confirmed = await swalDeleteConfirm(`¿Eliminar este registro?`, 'Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    const ok = await deleteItem(row.original.id)
-    if (ok) toastSuccess('Registro eliminado', label)
-    else toastError('Error al eliminar', 'No se pudo eliminar el registro.')
+    await swalDeleteConfirm(`¿Eliminar este registro?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await deleteItem(row.original.id)
+        if (ok) {
+          toastSuccess('Registro eliminado', label)
+          close()
+        } else {
+          showError('No se pudo eliminar el registro.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   return (

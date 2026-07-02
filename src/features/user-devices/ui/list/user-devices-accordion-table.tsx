@@ -45,7 +45,7 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { cn } from '@/shared/lib/utils'
-import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { UserDevicesError } from '../user-devices-error'
@@ -145,41 +145,61 @@ function UserDeviceGroup({ group }: { group: UserGroup }) {
 
   const handleDeleteOne = async (device: UserDevice) => {
     const label = device.deviceName ?? device.browser ?? `Dispositivo #${device.id}`
-    const confirmed = await swalDeleteConfirm('¿Eliminar dispositivo?', `Se eliminará "${label}".`)
-    if (!confirmed) return
-    const ok = await deleteDevice(device.id)
-    if (ok) toastSuccess('Eliminado', `"${label}" fue eliminado.`)
-    else toastError('Error', 'No se pudo eliminar.')
+    await swalDeleteConfirm(
+      '¿Eliminar dispositivo?', `Se eliminará "${label}".`,
+      async ({ close, showError }) => {
+        const ok = await deleteDevice(device.id)
+        if (ok) {
+          toastSuccess('Eliminado', `"${label}" fue eliminado.`)
+          close()
+        } else {
+          showError('No se pudo eliminar.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   const handleRevokeAll = async () => {
     if (activeSessions.length === 0) return
-    const confirmed = await swalConfirm({
+    await swalConfirmAction({
       title: `¿Revocar ${activeSessions.length} sesión${activeSessions.length > 1 ? 'es' : ''}?`,
       text: `Se cerrarán todas las sesiones activas de ${group.userName}.`,
       confirmText: 'Sí, revocar todas',
       cancelText: 'Cancelar',
       danger: true,
+      loading: { title: 'Revocando...' },
+      action: async ({ close, showError }) => {
+        setBusyRevoke(true)
+        const ok = await revokeAllByUser(group.userId)
+        setBusyRevoke(false)
+        if (ok) {
+          toastSuccess('Sesiones revocadas', `Todas las sesiones de ${group.userName} fueron cerradas.`)
+          close()
+        } else {
+          showError('Algunas sesiones no pudieron ser revocadas.')
+        }
+      },
     })
-    if (!confirmed) return
-    setBusyRevoke(true)
-    const ok = await revokeAllByUser(group.userId)
-    setBusyRevoke(false)
-    if (ok) toastSuccess('Sesiones revocadas', `Todas las sesiones de ${group.userName} fueron cerradas.`)
-    else toastError('Error', 'Algunas sesiones no pudieron ser revocadas.')
   }
 
   const handleDeleteAll = async () => {
-    const confirmed = await swalDeleteConfirm(
+    await swalDeleteConfirm(
       `¿Eliminar ${group.devices.length} dispositivo${group.devices.length > 1 ? 's' : ''}?`,
-      `Se eliminarán todos los registros de ${group.userName}.`
+      `Se eliminarán todos los registros de ${group.userName}.`,
+      async ({ close, showError }) => {
+        setBusyDelete(true)
+        const ok = await deleteAllByUser(group.userId)
+        setBusyDelete(false)
+        if (ok) {
+          toastSuccess('Eliminados', `Todos los dispositivos de ${group.userName} fueron eliminados.`)
+          close()
+        } else {
+          showError('Algunos dispositivos no pudieron ser eliminados.')
+        }
+      },
+      { title: 'Eliminando...' }
     )
-    if (!confirmed) return
-    setBusyDelete(true)
-    const ok = await deleteAllByUser(group.userId)
-    setBusyDelete(false)
-    if (ok) toastSuccess('Eliminados', `Todos los dispositivos de ${group.userName} fueron eliminados.`)
-    else toastError('Error', 'Algunos dispositivos no pudieron ser eliminados.')
   }
 
   return (

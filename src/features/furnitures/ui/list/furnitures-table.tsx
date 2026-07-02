@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
-import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
 import { useFurnitureDeleteStore } from '../../stores/useFurnitureDeleteStore'
 import type { Furniture } from '../../data/schema'
@@ -72,18 +72,35 @@ export function FurnituresTable() {
   const handleToggleState = async (item: Furniture) => {
     const newState    = item.stateValue === 1 ? 0 : 1
     const actionLabel = newState === 1 ? 'Activar' : 'Desactivar'
-    const confirmed   = await swalConfirm({ title: `¿${actionLabel} este mueble?`, text: item.name, confirmText: 'Sí, continuar', cancelText: 'Cancelar' })
-    if (!confirmed) return
-    const ok = await toggleState(item.id, newState)
-    if (ok) toastSuccess(`Mueble ${newState === 1 ? 'activado' : 'desactivado'}`, `"${item.name}" fue ${newState === 1 ? 'activado' : 'desactivado'}.`)
-    else    toastError('Error', 'No se pudo cambiar el estado.')
+    const resultLabel = newState === 1 ? 'activado' : 'desactivado'
+    await swalConfirmAction({
+      title: `¿${actionLabel} este mueble?`, text: item.name, confirmText: 'Sí, continuar', cancelText: 'Cancelar',
+      loading: { title: newState === 1 ? 'Activando...' : 'Desactivando...' },
+      action: async ({ close, showError }) => {
+        const ok = await toggleState(item.id, newState)
+        if (ok) {
+          toastSuccess(`Mueble ${resultLabel}`, `"${item.name}" fue ${resultLabel}.`)
+          close()
+        } else {
+          showError('No se pudo cambiar el estado.')
+        }
+      },
+    })
   }
   const handleDelete = async (item: Furniture) => {
-    const confirmed = await swalDeleteConfirm(`¿Eliminar "${item.name}"?`, 'Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    const ok = await deleteItem(item.id)
-    if (ok) toastSuccess('Mueble eliminado', `"${item.name}" fue eliminado.`)
-    else    toastError('Error al eliminar', 'No se pudo eliminar el registro.')
+    await swalDeleteConfirm(
+      `¿Eliminar "${item.name}"?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await deleteItem(item.id)
+        if (ok) {
+          toastSuccess('Mueble eliminado', `"${item.name}" fue eliminado.`)
+          close()
+        } else {
+          showError('No se pudo eliminar el registro.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   // ── Bulk actions ──
@@ -107,14 +124,20 @@ export function FurnituresTable() {
     } finally { setIsBulkLoading(false) }
   }
   const handleBulkDelete = async () => {
-    const confirmed = await swalDeleteConfirm(`¿Eliminar ${selectedCount} mueble(s)?`, 'Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    setIsBulkLoading(true)
-    try {
-      const ok = await bulkDeleteItems(selectedIds)
-      if (ok) { toastSuccess('Eliminados', `${selectedCount} mueble(s) eliminado(s).`); setSelected(new Set()) }
-      else toastError('Error', 'No se pudieron eliminar todos los registros.')
-    } finally { setIsBulkLoading(false) }
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} mueble(s)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await bulkDeleteItems(selectedIds)
+        if (ok) {
+          toastSuccess('Eliminados', `${selectedCount} mueble(s) eliminado(s).`)
+          setSelected(new Set())
+          close()
+        } else {
+          showError('No se pudieron eliminar todos los registros.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   // ── Loading / error states ──

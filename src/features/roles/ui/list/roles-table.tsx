@@ -104,15 +104,21 @@ export function RolesTable() {
   }
 
   const handleBulkDelete = async () => {
-    const confirmed = await swalDeleteConfirm(`¿Eliminar ${selectedCount} rol(es)?`, 'Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    setIsBulkLoading(true)
-    try {
-      const ids = selectedRows.map((r) => r.original.id)
-      const ok = await bulkDeleteItems(ids)
-      if (ok) { toastSuccess('Roles eliminados', `${selectedCount} rol(es) eliminado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron eliminar todos los roles.')
-    } finally { setIsBulkLoading(false) }
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} rol(es)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ids = selectedRows.map((r) => r.original.id)
+        const ok = await bulkDeleteItems(ids)
+        if (ok) {
+          toastSuccess('Roles eliminados', `${selectedCount} rol(es) eliminado(s).`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError('No se pudieron eliminar todos los roles.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   if (!hasLoaded && !isInitialLoading) {

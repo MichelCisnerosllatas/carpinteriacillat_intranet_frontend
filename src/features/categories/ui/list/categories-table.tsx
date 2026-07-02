@@ -103,15 +103,21 @@ export function CategoriesTable() {
   }
 
   const handleBulkDelete = async () => {
-    const confirmed = await swalDeleteConfirm(`¿Eliminar ${selectedCount} categoría(s)?`, 'Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    setIsBulkLoading(true)
-    try {
-      const ids = selectedRows.map((r) => r.original.id)
-      const ok = await bulkDeleteItems(ids)
-      if (ok) { toastSuccess('Eliminadas', `${selectedCount} categoría(s) eliminada(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron eliminar todas las categorías.')
-    } finally { setIsBulkLoading(false) }
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} categoría(s)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ids = selectedRows.map((r) => r.original.id)
+        const ok = await bulkDeleteItems(ids)
+        if (ok) {
+          toastSuccess('Eliminadas', `${selectedCount} categoría(s) eliminada(s).`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError('No se pudieron eliminar todas las categorías.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   if (!hasLoaded && !isInitialLoading) {

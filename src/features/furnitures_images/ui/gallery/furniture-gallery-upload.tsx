@@ -4,6 +4,8 @@ import { useRef, useState } from 'react'
 import { CheckCircle2, ImagePlus, Loader2, Upload, X, XCircle } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Label } from '@/shared/ui/label'
+import { FolderPicker } from '@/shared/ui/folder-picker'
 import { cn } from '@/shared/lib/utils'
 import { imagesService } from '@/features/images/services/images.service'
 import { getImageUrl } from '@/features/images/lib/image-url'
@@ -35,6 +37,7 @@ export function FurnitureGalleryUpload({
   onUploaded,
 }: FurnitureGalleryUploadProps) {
   const [entries, setEntries]       = useState<UploadEntry[]>([])
+  const [folder, setFolder]         = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [dragOver, setDragOver]     = useState(false)
   const inputRef                    = useRef<HTMLInputElement>(null)
@@ -77,7 +80,7 @@ export function FurnitureGalleryUpload({
           image_name:  name,
           image_title: name,
           image_alt:   name,
-          folder:      'furnitures',
+          folder:      folder.trim() || undefined,
         })
         if (res.success && res.data) {
           const url = getImageUrl(res.data.image_patch)
@@ -113,10 +116,12 @@ export function FurnitureGalleryUpload({
     if (isUploading) return
     entries.forEach((e) => URL.revokeObjectURL(e.preview))
     setEntries([])
+    setFolder('')
     onOpenChange(false)
   }
 
   const pendingCount = entries.filter((e) => e.status === 'pending').length
+  const canUpload   = pendingCount > 0 && folder.trim().length > 0
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -124,6 +129,26 @@ export function FurnitureGalleryUpload({
         <DialogHeader>
           <DialogTitle>Subir imágenes a la galería</DialogTitle>
         </DialogHeader>
+
+        {/* ── Carpeta destino (obligatoria) ── */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs">
+            Carpeta destino <span className="text-destructive">*</span>
+          </Label>
+          <FolderPicker
+            value={folder || undefined}
+            onChange={setFolder}
+            onClear={() => setFolder('')}
+            placeholder="Seleccionar carpeta destino..."
+            disabled={isUploading}
+            rootPath="images"
+          />
+          {!folder && (
+            <p className="text-[11px] text-muted-foreground">
+              Selecciona una carpeta antes de subir.
+            </p>
+          )}
+        </div>
 
         {entries.length === 0 ? (
           <div
@@ -239,7 +264,7 @@ export function FurnitureGalleryUpload({
           </Button>
           <Button
             type="button"
-            disabled={pendingCount === 0 || isUploading}
+            disabled={!canUpload || isUploading}
             onClick={handleUpload}
           >
             {isUploading ? (

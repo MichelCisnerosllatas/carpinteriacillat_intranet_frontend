@@ -13,7 +13,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
-import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import type { UserDevice } from '../../data/schema'
@@ -32,28 +32,40 @@ export function UserDevicesRowActions({ row }: { row: Row<UserDevice> }) {
   }
 
   const handleRevoke = async () => {
-    const confirmed = await swalConfirm({
+    await swalConfirmAction({
       title: '¿Revocar sesión?',
       text: `Se cerrará la sesión de "${deviceLabel}". El usuario deberá iniciar sesión nuevamente.`,
       confirmText: 'Sí, revocar',
       cancelText: 'Cancelar',
       danger: true,
+      loading: { title: 'Revocando...' },
+      action: async ({ close, showError }) => {
+        const ok = await revoke(device.id)
+        if (ok) {
+          toastSuccess('Sesión revocada', `La sesión de "${deviceLabel}" fue cerrada.`)
+          close()
+        } else {
+          showError('No se pudo revocar la sesión.')
+        }
+      },
     })
-    if (!confirmed) return
-    const ok = await revoke(device.id)
-    if (ok) toastSuccess('Sesión revocada', `La sesión de "${deviceLabel}" fue cerrada.`)
-    else toastError('Error', 'No se pudo revocar la sesión.')
   }
 
   const handleDelete = async () => {
-    const confirmed = await swalDeleteConfirm(
+    await swalDeleteConfirm(
       '¿Eliminar dispositivo?',
-      `Se eliminará permanentemente el registro de "${deviceLabel}".`
+      `Se eliminará permanentemente el registro de "${deviceLabel}".`,
+      async ({ close, showError }) => {
+        const ok = await deleteDevice(device.id)
+        if (ok) {
+          toastSuccess('Dispositivo eliminado', `"${deviceLabel}" fue eliminado.`)
+          close()
+        } else {
+          showError('No se pudo eliminar el dispositivo.')
+        }
+      },
+      { title: 'Eliminando...' }
     )
-    if (!confirmed) return
-    const ok = await deleteDevice(device.id)
-    if (ok) toastSuccess('Dispositivo eliminado', `"${deviceLabel}" fue eliminado.`)
-    else toastError('Error', 'No se pudo eliminar el dispositivo.')
   }
 
   return (

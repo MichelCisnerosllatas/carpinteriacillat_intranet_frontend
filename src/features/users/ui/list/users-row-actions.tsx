@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
-import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import { useUserDeleteStore } from '../../stores/useUserDeleteStore'
@@ -35,38 +35,42 @@ export function UsersRowActions({ row }: { row: Row<User> }) {
   const handleToggleState = async () => {
     const newState = isActive ? 0 : 1
     const actionLabel = isActive ? 'desactivar' : 'activar'
-    const confirmed = await swalConfirm({
+    await swalConfirmAction({
       title: `¿${isActive ? 'Desactivar' : 'Activar'} usuario?`,
       text: `¿Deseas ${actionLabel} a ${row.original.firstName} ${row.original.lastName}?`,
       confirmText: `Sí, ${actionLabel}`,
       cancelText: 'Cancelar',
+      loading: { title: newState === 1 ? 'Activando...' : 'Desactivando...' },
+      action: async ({ close, showError }) => {
+        const ok = await toggleState(row.original.id, newState)
+        if (ok) {
+          toastSuccess(
+            isActive ? 'Usuario desactivado' : 'Usuario activado',
+            `${row.original.firstName} ${row.original.lastName} fue ${isActive ? 'desactivado' : 'activado'}.`
+          )
+          close()
+        } else {
+          showError('No se pudo cambiar el estado del usuario.')
+        }
+      },
     })
-    if (!confirmed) return
-
-    const ok = await toggleState(row.original.id, newState)
-    if (ok) {
-      toastSuccess(
-        isActive ? 'Usuario desactivado' : 'Usuario activado',
-        `${row.original.firstName} ${row.original.lastName} fue ${isActive ? 'desactivado' : 'activado'}.`
-      )
-    } else {
-      toastError('Error', 'No se pudo cambiar el estado del usuario.')
-    }
   }
 
   const handleDelete = async () => {
-    const confirmed = await swalDeleteConfirm(
+    await swalDeleteConfirm(
       `¿Eliminar a ${row.original.firstName} ${row.original.lastName}?`,
-      'Esta acción no se puede deshacer.'
+      'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await deleteItem(row.original.id)
+        if (ok) {
+          toastSuccess('Usuario eliminado', `${row.original.firstName} ${row.original.lastName} fue eliminado.`)
+          close()
+        } else {
+          showError('No se pudo eliminar el usuario. Intenta nuevamente.')
+        }
+      },
+      { title: 'Eliminando...' }
     )
-    if (!confirmed) return
-
-    const ok = await deleteItem(row.original.id)
-    if (ok) {
-      toastSuccess('Usuario eliminado', `${row.original.firstName} ${row.original.lastName} fue eliminado.`)
-    } else {
-      toastError('Error al eliminar', 'No se pudo eliminar el usuario. Intenta nuevamente.')
-    }
   }
 
   return (

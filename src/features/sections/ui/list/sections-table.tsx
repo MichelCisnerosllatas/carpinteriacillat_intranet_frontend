@@ -102,15 +102,21 @@ export function SectionsTable() {
   }
 
   const handleBulkDelete = async () => {
-    const confirmed = await swalDeleteConfirm(`¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    setIsBulkLoading(true)
-    try {
-      const ids = selectedRows.map((r) => r.original.id)
-      const ok  = await bulkDeleteItems(ids)
-      if (ok) { toastSuccess('Eliminados', `${selectedCount} registro(s) eliminado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron eliminar todos los registros.')
-    } finally { setIsBulkLoading(false) }
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ids = selectedRows.map((r) => r.original.id)
+        const ok  = await bulkDeleteItems(ids)
+        if (ok) {
+          toastSuccess('Eliminados', `${selectedCount} registro(s) eliminado(s).`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError('No se pudieron eliminar todos los registros.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
   }
 
   if (!hasLoaded && !isInitialLoading) {
