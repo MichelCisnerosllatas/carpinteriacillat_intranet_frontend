@@ -57,7 +57,7 @@ export function FileUploadModal({ open, currentPath, onClose, onUploaded }: File
 
     abortRef.current = new AbortController()
     const { signal } = abortRef.current
-    const { storageFilesService } = await import('../services/storage-files.service')
+    const { storageFilesService } = await import('../../services/storage-files.service')
 
     setIsUploading(true)
     let done = 0; let errors = 0

@@ -3,9 +3,13 @@ import {
   AudioWaveform,
   Bell,
   Bug,
+  Building2,
   Command,
   Construction,
+  CreditCard,
+  FileStack,
   FileText,
+  FileType,
   FileX,
   Folder,
   FolderOpen,
@@ -24,14 +28,18 @@ import {
   Navigation2,
   Package,
   Palette,
+  PenTool,
   Rows3,
   ServerOff,
   Settings,
+  Settings2,
   ShieldCheck,
   Smartphone,
   Sofa,
   Tag,
+  Type,
   UserCog,
+  Users2,
   UserX,
 } from 'lucide-react'
 import type { SidebarData } from './nav-types'
@@ -156,10 +164,11 @@ export const sidebarData: SidebarData = {
           title: 'Catálogo de Tipos',
           icon: FolderOpen,
           items: [
-            { title: 'Colores',    url: '/typecolors',   icon: Palette },
-            { title: 'Documentos', url: '/typedocs',     icon: FileText },
-            { title: 'Secciones',  url: '/typesections', icon: LayoutGrid },
-            { title: 'Maderas',    url: '/typewoods',    icon: Layers },
+            { title: 'Colores',      url: '/typecolors',   icon: Palette },
+            { title: 'Documentos',   url: '/typedocs',     icon: FileText },
+            { title: 'Secciones',    url: '/typesections', icon: LayoutGrid },
+            { title: 'Maderas',      url: '/typewoods',    icon: Layers },
+            { title: 'Tipografías',  url: '/typefonts',    icon: Type },
           ],
         },
       ],
@@ -181,6 +190,38 @@ export const sidebarData: SidebarData = {
           ],
         },
         
+      ],
+    },
+    {
+      title: 'Gestión Documentaria',
+      items: [
+        {
+          title: 'Comercial',
+          icon: Users2,
+          items: [
+            { title: 'Clientes',              url: '/clients',           icon: Users2 },
+            { title: 'Productos y Servicios', url: '/products-services', icon: Package },
+          ],
+        },
+        {
+          title: 'Proformas',
+          icon: FileStack,
+          items: [
+            { title: 'Proformas',           url: '/proformas',           icon: FileStack },
+            { title: 'Plantillas',          url: '/proforma-templates',  icon: FileText },
+            { title: 'Tipos de Proforma',   url: '/proforma-types',      icon: FileType },
+          ],
+        },
+        {
+          title: 'Datos de la Empresa',
+          icon: Building2,
+          items: [
+            { title: 'Configuración',    url: '/company-settings',       icon: Settings2 },
+            { title: 'Sucursales',       url: '/company-branches',       icon: Building2 },
+            { title: 'Cuentas Bancarias', url: '/company-bank-accounts', icon: CreditCard },
+            { title: 'Firmas',           url: '/company-signatures',     icon: PenTool },
+          ],
+        },
       ],
     },
     {

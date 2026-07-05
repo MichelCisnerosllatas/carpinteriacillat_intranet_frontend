@@ -1,0 +1,51 @@
+import { create } from 'zustand'
+import { companySignaturesService } from '../services/company-signatures.service'
+import type { CompanySignaturePostRequestDto } from '../model/companysignaturepost.dto'
+import type { CompanySignaturePutRequestDto } from '../model/companysignatureput.dto'
+import { useCompanySignatureListStore } from '@/features/company-signatures/stores/useCompanySignatureListStore'
+
+type State = {
+  isSubmitting: boolean
+  error: string | null
+  fieldErrors: Record<string, string[]> | null
+}
+
+type Action = {
+  create: (params: CompanySignaturePostRequestDto) => Promise<boolean>
+  update: (id: number, data: CompanySignaturePutRequestDto) => Promise<boolean>
+  reset: () => void
+}
+
+export const useCompanySignatureFormStore = create<State & Action>((set) => ({
+  isSubmitting: false, error: null, fieldErrors: null,
+
+  create: async (params) => {
+    set({ isSubmitting: true, error: null, fieldErrors: null })
+    try {
+      const res = await companySignaturesService.post(params)
+      if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useCompanySignatureListStore.getState().load()
+      set({ isSubmitting: false })
+      return true
+    } catch (error: any) {
+      set({ isSubmitting: false, error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.', fieldErrors: error?.response?.data?.errors ?? null })
+      return false
+    }
+  },
+
+  update: async (id, data) => {
+    set({ isSubmitting: true, error: null, fieldErrors: null })
+    try {
+      const res = await companySignaturesService.patch(id, data)
+      if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      await useCompanySignatureListStore.getState().load()
+      set({ isSubmitting: false })
+      return true
+    } catch (error: any) {
+      set({ isSubmitting: false, error: error?.response?.data?.message ?? error?.message ?? 'Error al actualizar.', fieldErrors: error?.response?.data?.errors ?? null })
+      return false
+    }
+  },
+
+  reset: () => set({ isSubmitting: false, error: null, fieldErrors: null }),
+}))

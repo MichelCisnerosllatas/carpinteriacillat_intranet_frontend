@@ -36,13 +36,9 @@ export function FileRenameModal({ open, file, onClose }: FileRenameModalProps) {
     const trimmed = name.trim()
     if (!trimmed || trimmed === nameWithoutExt) return
 
-    const res = await import('../services/storage-files.service')
     const ok = await rename({ path_encoded: file.path_encoded, new_name: trimmed })
     if (ok) {
       toastSuccess('Archivo renombrado', `"${file.name}" → "${trimmed}.${ext}"`)
-      void import('../services/storage-files.service').then(async () => {
-        // Reload will be triggered by parent via onClose
-      })
       onClose()
     } else {
       toastError('Error', error ?? 'No se pudo renombrar.')

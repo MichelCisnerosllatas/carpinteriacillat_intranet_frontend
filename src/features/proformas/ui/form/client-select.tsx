@@ -1,0 +1,138 @@
+'use client'
+
+// Combobox liviano de clientes para el formulario de proformas.
+// `clients` no tiene select store propio — hacemos fetch directo aquí en vez de un store global.
+import { useEffect, useState } from 'react'
+import { AlertCircle, Check, ChevronsUpDown, Loader2, RefreshCw } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/shared/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui/popover'
+import { clientsService } from '@/features/clients/services/clients.service'
+import type { ClientJoinApiItem } from '@/features/clients/model/clientget.dto'
+
+interface ClientSelectProps {
+  value?: number | null
+  onValueChange: (value: number | null) => void
+  placeholder?: string
+  disabled?: boolean
+  showAll?: boolean
+}
+
+export function ClientSelect({
+  value,
+  onValueChange,
+  placeholder = 'Seleccionar cliente...',
+  disabled,
+  showAll = false,
+}: ClientSelectProps) {
+  const [open, setOpen] = useState(false)
+  const [options, setOptions] = useState<ClientJoinApiItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
+
+  const load = async () => {
+    setIsLoading(true)
+    setIsError(false)
+    try {
+      const res = await clientsService.getList({ per_page: 100, status: 1 })
+      if (res.success) setOptions(res.data)
+      else setIsError(true)
+    } catch {
+      setIsError(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  const selected = value != null ? options.find((o) => o.id === value) : null
+  const label = selected ? selected.business_name : value === null && showAll ? 'Todos' : placeholder
+
+  if (isError) return (
+    <div className="grid grid-cols-2 h-9 w-full items-center rounded-md border border-destructive/40 bg-background px-3 text-sm">
+      <span className="flex items-center gap-1.5 text-destructive text-xs">
+        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        Error al cargar
+      </span>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={load}
+          className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
+          Reintentar
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          disabled={disabled || isLoading}
+          className="w-full justify-between font-normal"
+        >
+          {isLoading ? (
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Cargando...
+            </span>
+          ) : (
+            <span className={cn('truncate', !selected && value !== null && 'text-muted-foreground')}>
+              {label}
+            </span>
+          )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar cliente..." />
+          <CommandList>
+            <CommandEmpty>Sin resultados.</CommandEmpty>
+            <CommandGroup>
+              {showAll && (
+                <CommandItem
+                  value="__all__"
+                  onSelect={() => { onValueChange(null); setOpen(false) }}
+                >
+                  <Check className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')} />
+                  Todos
+                </CommandItem>
+              )}
+              {options.map((opt) => (
+                <CommandItem
+                  key={opt.id}
+                  value={opt.business_name}
+                  onSelect={() => { onValueChange(opt.id); setOpen(false) }}
+                >
+                  <Check className={cn('mr-2 h-4 w-4', value === opt.id ? 'opacity-100' : 'opacity-0')} />
+                  {opt.business_name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
