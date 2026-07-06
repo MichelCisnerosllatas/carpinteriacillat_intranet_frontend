@@ -30,7 +30,12 @@ type Action = {
 }
 
 const defaultFilters: ProformaTemplateListRequestDto = {
-  page: 1, per_page: 10, search: '', status: undefined, module: PDF_TEMPLATE_MODULE, module_type_id: undefined,
+  page: 1,
+  per_page: 10,
+  search: '',
+  status: undefined,
+  module: PDF_TEMPLATE_MODULE,
+  module_type_id: undefined,
 }
 
 // PdfTemplate no anida el nombre/código del module_type — se resuelve por cruce con
@@ -89,7 +94,12 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
     stateValue: item.status,
     textsCount: item.texts?.length ?? 0,
     texts: (item.texts ?? []).map((t) => ({
-      id: t.id, key: t.key, title: t.title, content: t.content, visible: t.visible, order: t.order,
+      id: t.id,
+      key: t.key,
+      title: t.title,
+      content: t.content,
+      visible: t.visible,
+      order: t.order,
     })),
     createdAt: item.created_at,
     updatedAt: item.updated_at ?? '',
@@ -97,9 +107,16 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
 }
 
 export const useProformaTemplateListStore = create<State & Action>((set, get) => ({
-  hasLoaded: false, isInitialLoading: false, isFetching: false,
-  isError: false, message: null, items: [], links: null, meta: null,
-  filters: defaultFilters, currentItem: null,
+  hasLoaded: false,
+  isInitialLoading: false,
+  isFetching: false,
+  isError: false,
+  message: null,
+  items: [],
+  links: null,
+  meta: null,
+  filters: defaultFilters,
+  currentItem: null,
 
   setCurrentItem: (item) => set({ currentItem: item }),
 
@@ -112,7 +129,11 @@ export const useProformaTemplateListStore = create<State & Action>((set, get) =>
       set({ isFetching: false, hasLoaded: true, currentItem: mapped })
       return true
     } catch (error: any) {
-      set({ isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      set({
+        isFetching: false,
+        isError: true,
+        message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.',
+      })
       return false
     }
   },
@@ -124,18 +145,43 @@ export const useProformaTemplateListStore = create<State & Action>((set, get) =>
       const response = await proformaTemplatesService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
       set({
-        hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
+        hasLoaded: true,
+        isInitialLoading: false,
+        isFetching: false,
+        isError: false,
         message: response.message,
         items: response.data.map(mapProformaTemplateFromApi),
-        links: response.links, meta: response.meta,
-        filters: { ...nextFilters, page: response.meta?.current_page ?? nextFilters.page, per_page: response.meta?.per_page ?? nextFilters.per_page },
+        links: response.links,
+        meta: response.meta,
+        filters: {
+          ...nextFilters,
+          page: response.meta?.current_page ?? nextFilters.page,
+          per_page: response.meta?.per_page ?? nextFilters.per_page,
+        },
       })
       return true
     } catch (error: any) {
-      set({ hasLoaded: true, isInitialLoading: false, isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      set({
+        hasLoaded: true,
+        isInitialLoading: false,
+        isFetching: false,
+        isError: true,
+        message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.',
+      })
       return false
     }
   },
 
-  reset: () => set({ hasLoaded: false, isInitialLoading: false, isFetching: false, isError: false, message: null, items: [], links: null, meta: null, filters: defaultFilters }),
+  reset: () =>
+    set({
+      hasLoaded: false,
+      isInitialLoading: false,
+      isFetching: false,
+      isError: false,
+      message: null,
+      items: [],
+      links: null,
+      meta: null,
+      filters: defaultFilters,
+    }),
 }))

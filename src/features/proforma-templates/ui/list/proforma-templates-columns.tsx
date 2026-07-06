@@ -12,7 +12,9 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     id: 'select',
     header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
         onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
         aria-label="Seleccionar todos"
         className="translate-y-0.5"
@@ -37,9 +39,11 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Plantilla" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <span className="text-foreground text-sm leading-none font-medium">
+          {row.original.name}
+        </span>
         {row.original.proformaTypeName && (
-          <span className="text-xs text-muted-foreground">{row.original.proformaTypeName}</span>
+          <span className="text-muted-foreground text-xs">{row.original.proformaTypeName}</span>
         )}
       </div>
     ),
@@ -52,10 +56,20 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     header: 'Colores',
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        {[row.original.headerBgColor, row.original.bodyTextColor, row.original.bodyBorderColor, row.original.footerBgColor]
+        {[
+          row.original.headerBgColor,
+          row.original.bodyTextColor,
+          row.original.bodyBorderColor,
+          row.original.footerBgColor,
+        ]
           .filter(Boolean)
           .map((c, i) => (
-            <span key={i} className="size-4 rounded-full border" style={{ backgroundColor: c as string }} title={c as string} />
+            <span
+              key={i}
+              className="size-4 rounded-full border"
+              style={{ backgroundColor: c as string }}
+              title={c as string}
+            />
           ))}
       </div>
     ),
@@ -68,7 +82,7 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     id: 'texts',
     header: 'Textos',
     cell: ({ row }) => (
-      <span className="text-xs text-muted-foreground">{row.original.textsCount} bloque(s)</span>
+      <span className="text-muted-foreground text-xs">{row.original.textsCount} bloque(s)</span>
     ),
     enableSorting: false,
     enableHiding: true,
@@ -97,13 +111,19 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     cell: ({ row }) => (
       <div className="flex flex-col gap-0.5 text-xs">
         <div className="flex flex-col">
-          <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Registro</span>
+          <span className="text-muted-foreground/60 text-[10px] font-medium tracking-wide uppercase">
+            Registro
+          </span>
           <span className="text-muted-foreground">{row.original.createdAt}</span>
         </div>
         {row.original.updatedAt && (
-          <div className="flex flex-col mt-0.5">
-            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Actualización</span>
-            <span className="text-[11px] text-muted-foreground opacity-70">{row.original.updatedAt}</span>
+          <div className="mt-0.5 flex flex-col">
+            <span className="text-muted-foreground/60 text-[10px] font-medium tracking-wide uppercase">
+              Actualización
+            </span>
+            <span className="text-muted-foreground text-[11px] opacity-70">
+              {row.original.updatedAt}
+            </span>
           </div>
         )}
       </div>

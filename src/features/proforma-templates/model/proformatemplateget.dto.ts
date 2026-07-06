@@ -1,6 +1,9 @@
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
-import type { ProformaTemplateApiItem, ProformaTemplateJoinApiItem } from './proformatemplate-api-item.dto'
+import type {
+  ProformaTemplateApiItem,
+  ProformaTemplateJoinApiItem,
+} from './proformatemplate-api-item.dto'
 
 export type { ProformaTemplateApiItem, ProformaTemplateJoinApiItem }
 

@@ -7,8 +7,12 @@ import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
@@ -59,7 +63,8 @@ export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate
 
   const handleDelete = async () => {
     await swalDeleteConfirm(
-      `¿Eliminar "${row.original.name}"?`, 'Esta acción no se puede deshacer.',
+      `¿Eliminar "${row.original.name}"?`,
+      'Esta acción no se puede deshacer.',
       async ({ close, showError }) => {
         const ok = await deleteItem(row.original.id)
         if (ok) {
@@ -76,27 +81,48 @@ export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+        <Button variant="ghost" className="data-[state=open]:bg-muted flex h-8 w-8 p-0">
           <DotsHorizontalIcon className="h-4 w-4" />
           <span className="sr-only">Abrir menú</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          Ver detalle{' '}
+          <DropdownMenuShortcut>
+            <Eye size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleEdit}>
-          Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
+          Editar{' '}
+          <DropdownMenuShortcut>
+            <Pencil size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void handleToggleState()}>
-          {isActive
-            ? <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
-            : <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
+          {isActive ? (
+            <>
+              Desactivar{' '}
+              <DropdownMenuShortcut>
+                <XCircle size={16} />
+              </DropdownMenuShortcut>
+            </>
+          ) : (
+            <>
+              Activar{' '}
+              <DropdownMenuShortcut>
+                <CheckCircle2 size={16} />
+              </DropdownMenuShortcut>
+            </>
+          )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+          Eliminar{' '}
+          <DropdownMenuShortcut>
+            <Trash2 size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -3,8 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
-  type PaginationState, type SortingState, type VisibilityState,
-  flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
+  type PaginationState,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
@@ -24,24 +29,41 @@ import { proformaTemplatesColumns } from './proforma-templates-columns'
 import { ProformaTemplateStatsBar } from './proforma-template-stats-bar'
 
 export function ProformaTemplatesTable() {
-  const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
-    useProformaTemplateListStore()
+  const {
+    items,
+    meta,
+    filters,
+    hasLoaded,
+    isInitialLoading,
+    isFetching,
+    isError,
+    message,
+    load,
+    reset,
+  } = useProformaTemplateListStore()
   const { bulkToggleState, bulkDeleteItems } = useProformaTemplateDeleteStore()
   const { load: loadProformaTypes } = useProformaTypeSelectStore()
 
-  const [rowSelection, setRowSelection]         = useState({})
+  const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting]                   = useState<SortingState>([])
-  const [search, setSearch]                     = useState(filters.search ?? '')
-  const [status, setStatus]                     = useState<string>(filters.status !== undefined ? String(filters.status) : 'all')
-  const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [search, setSearch] = useState(filters.search ?? '')
+  const [status, setStatus] = useState<string>(
+    filters.status !== undefined ? String(filters.status) : 'all'
+  )
+  const [isBulkLoading, setIsBulkLoading] = useState(false)
 
-  const pagination = useMemo<PaginationState>(() => ({
-    pageIndex: Math.max((filters.page ?? 1) - 1, 0),
-    pageSize: filters.per_page ?? 10,
-  }), [filters.page, filters.per_page])
+  const pagination = useMemo<PaginationState>(
+    () => ({
+      pageIndex: Math.max((filters.page ?? 1) - 1, 0),
+      pageSize: filters.per_page ?? 10,
+    }),
+    [filters.page, filters.per_page]
+  )
 
-  useEffect(() => { void loadProformaTypes().then(() => load()) }, [])
+  useEffect(() => {
+    void loadProformaTypes().then(() => load())
+  }, [])
 
   useEffect(() => {
     if (!hasLoaded) return
@@ -72,35 +94,51 @@ export function ProformaTemplatesTable() {
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
 
-  const activeCount   = items.filter((i) => i.stateValue === 1).length
+  const activeCount = items.filter((i) => i.stateValue === 1).length
   const inactiveCount = items.filter((i) => i.stateValue !== 1).length
 
   const resetFilters = () => {
-    setSearch(''); setStatus('all')
+    setSearch('')
+    setStatus('all')
     void load({ search: '', status: undefined, page: 1 })
   }
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
     try {
-      const ok = await bulkToggleState(selectedRows.map((r) => r.original.id), 1)
-      if (ok) { toastSuccess('Activados', `${selectedCount} registro(s) activado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron activar todos los registros.')
-    } finally { setIsBulkLoading(false) }
+      const ok = await bulkToggleState(
+        selectedRows.map((r) => r.original.id),
+        1
+      )
+      if (ok) {
+        toastSuccess('Activados', `${selectedCount} registro(s) activado(s).`)
+        table.resetRowSelection()
+      } else toastError('Error', 'No se pudieron activar todos los registros.')
+    } finally {
+      setIsBulkLoading(false)
+    }
   }
 
   const handleBulkDeactivate = async () => {
     setIsBulkLoading(true)
     try {
-      const ok = await bulkToggleState(selectedRows.map((r) => r.original.id), 0)
-      if (ok) { toastSuccess('Desactivados', `${selectedCount} registro(s) desactivado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron desactivar todos los registros.')
-    } finally { setIsBulkLoading(false) }
+      const ok = await bulkToggleState(
+        selectedRows.map((r) => r.original.id),
+        0
+      )
+      if (ok) {
+        toastSuccess('Desactivados', `${selectedCount} registro(s) desactivado(s).`)
+        table.resetRowSelection()
+      } else toastError('Error', 'No se pudieron desactivar todos los registros.')
+    } finally {
+      setIsBulkLoading(false)
+    }
   }
 
   const handleBulkDelete = async () => {
     await swalDeleteConfirm(
-      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
+      `¿Eliminar ${selectedCount} registro(s)?`,
+      'Esta acción no se puede deshacer.',
       async ({ close, showError }) => {
         const ids = selectedRows.map((r) => r.original.id)
         const ok = await bulkDeleteItems(ids)
@@ -119,8 +157,8 @@ export function ProformaTemplatesTable() {
   if (!hasLoaded && !isInitialLoading) {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando plantillas de proforma...</p>
+        <LoaderCircle className="text-muted-foreground mb-3 size-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">Cargando plantillas de proforma...</p>
       </div>
     )
   }
@@ -129,20 +167,34 @@ export function ProformaTemplatesTable() {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
         <p className="text-sm font-semibold">Error al cargar plantillas de proforma</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
+        {message && <p className="text-muted-foreground text-xs">{message}</p>}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            reset()
+            void load()
+          }}
+        >
+          Reintentar
+        </Button>
       </div>
     )
   }
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
-      <ProformaTemplateStatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
+      <ProformaTemplateStatsBar
+        total={meta?.total ?? 0}
+        active={activeCount}
+        inactive={inactiveCount}
+      />
 
       {isFetching && (
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
+          <div className="bg-background text-muted-foreground mt-2 flex items-center gap-2 rounded-full border px-3 py-1 text-xs shadow-sm">
+            <LoaderCircle className="size-3.5 animate-spin" />
+            Actualizando...
           </div>
         </div>
       )}
@@ -150,21 +202,35 @@ export function ProformaTemplatesTable() {
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Buscar</span>
-            <Input placeholder="Nombre o familia tipográfica..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[240px]" />
+            <span className="text-muted-foreground text-xs">Buscar</span>
+            <Input
+              placeholder="Nombre o familia tipográfica..."
+              value={search}
+              disabled={isFetching}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 w-full sm:w-[240px]"
+            />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Estado</span>
+            <span className="text-muted-foreground text-xs">Estado</span>
             <Select value={status} disabled={isFetching} onValueChange={setStatus}>
-              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
-                {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+                {ENTITY_STATES.map((s) => (
+                  <SelectItem key={s.value} value={String(s.value)}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
+              Limpiar
+            </Button>
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -176,7 +242,14 @@ export function ProformaTemplatesTable() {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((h) => (
-                  <TableHead key={h.id} colSpan={h.colSpan} className={cn('bg-muted/50 text-xs', (h.column.columnDef.meta as any)?.className)}>
+                  <TableHead
+                    key={h.id}
+                    colSpan={h.colSpan}
+                    className={cn(
+                      'bg-muted/50 text-xs',
+                      (h.column.columnDef.meta as any)?.className
+                    )}
+                  >
                     {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
                   </TableHead>
                 ))}
@@ -189,10 +262,16 @@ export function ProformaTemplatesTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={cn('transition-colors', selectedCount > 0 && !row.getIsSelected() && 'opacity-50')}
+                  className={cn(
+                    'transition-colors',
+                    selectedCount > 0 && !row.getIsSelected() && 'opacity-50'
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -200,7 +279,10 @@ export function ProformaTemplatesTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={proformaTemplatesColumns.length} className="h-20 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={proformaTemplatesColumns.length}
+                  className="text-muted-foreground h-20 text-center text-sm"
+                >
                   No hay plantillas de proforma para mostrar.
                 </TableCell>
               </TableRow>
@@ -209,8 +291,14 @@ export function ProformaTemplatesTable() {
         </Table>
       </div>
 
-      <DataTablePagination table={table} className="mt-auto"
-        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
+      <DataTablePagination
+        table={table}
+        className="mt-auto"
+        summary={
+          meta
+            ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros`
+            : 'Sin registros'
+        }
       />
 
       <DataTableBulkActions

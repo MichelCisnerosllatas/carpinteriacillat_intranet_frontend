@@ -3,9 +3,9 @@ import { proformaTemplatesService } from '../services/proforma-templates.service
 import type { ProformaTemplateApiItem } from '../model/proformatemplateget.dto'
 
 type State = {
-  options:   ProformaTemplateApiItem[]
+  options: ProformaTemplateApiItem[]
   isLoading: boolean
-  isError:   boolean
+  isError: boolean
 }
 
 type Action = {
@@ -13,9 +13,9 @@ type Action = {
 }
 
 export const useProformaTemplateSelectStore = create<State & Action>((set, get) => ({
-  options:   [],
+  options: [],
   isLoading: false,
-  isError:   false,
+  isError: false,
 
   load: async () => {
     if (get().isLoading || get().options.length > 0) return

@@ -1,4 +1,8 @@
-import type { ProformaTemplateApiItem, PdfTemplateHeaderLayout, PdfTemplateSections } from './proformatemplate-api-item.dto'
+import type {
+  ProformaTemplateApiItem,
+  PdfTemplateHeaderLayout,
+  PdfTemplateSections,
+} from './proformatemplate-api-item.dto'
 
 export type ProformaTemplatePostRequestDto = {
   module: string

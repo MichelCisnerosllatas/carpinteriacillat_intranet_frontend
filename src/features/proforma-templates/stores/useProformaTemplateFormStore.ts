@@ -2,7 +2,10 @@ import { create } from 'zustand'
 import { proformaTemplatesService } from '../services/proforma-templates.service'
 import type { ProformaTemplatePostRequestDto } from '../model/proformatemplatepost.dto'
 import type { ProformaTemplatePutRequestDto } from '../model/proformatemplateput.dto'
-import { useProformaTemplateListStore, mapProformaTemplateFromApi } from './useProformaTemplateListStore'
+import {
+  useProformaTemplateListStore,
+  mapProformaTemplateFromApi,
+} from './useProformaTemplateListStore'
 import type { ProformaTemplate } from '../data/schema'
 
 type State = {
@@ -18,18 +21,27 @@ type Action = {
 }
 
 export const useProformaTemplateFormStore = create<State & Action>((set) => ({
-  isSubmitting: false, error: null, fieldErrors: null,
+  isSubmitting: false,
+  error: null,
+  fieldErrors: null,
 
   create: async (params) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
       const res = await proformaTemplatesService.post(params)
-      if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return null }
+      if (!res.success) {
+        set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
+        return null
+      }
       await useProformaTemplateListStore.getState().load()
       set({ isSubmitting: false })
       return mapProformaTemplateFromApi({ ...res.data, texts: [] })
     } catch (error: any) {
-      set({ isSubmitting: false, error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.', fieldErrors: error?.response?.data?.errors ?? null })
+      set({
+        isSubmitting: false,
+        error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.',
+        fieldErrors: error?.response?.data?.errors ?? null,
+      })
       return null
     }
   },
@@ -38,12 +50,19 @@ export const useProformaTemplateFormStore = create<State & Action>((set) => ({
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
       const res = await proformaTemplatesService.patch(id, data)
-      if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return false }
+      if (!res.success) {
+        set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
+        return false
+      }
       await useProformaTemplateListStore.getState().load()
       set({ isSubmitting: false })
       return true
     } catch (error: any) {
-      set({ isSubmitting: false, error: error?.response?.data?.message ?? error?.message ?? 'Error al actualizar.', fieldErrors: error?.response?.data?.errors ?? null })
+      set({
+        isSubmitting: false,
+        error: error?.response?.data?.message ?? error?.message ?? 'Error al actualizar.',
+        fieldErrors: error?.response?.data?.errors ?? null,
+      })
       return false
     }
   },
