@@ -207,7 +207,7 @@ export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) 
               {isSubmitting && savingRow === row.localId
                 ? <Loader2 className="mr-1 size-4 animate-spin" />
                 : <Save className="mr-1 size-4" />}
-              Guardar
+              Guardar bloque
             </Button>
           </div>
         </div>

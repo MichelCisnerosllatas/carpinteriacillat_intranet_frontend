@@ -1,4 +1,5 @@
-const BASE = '/v1/intranet/proforma-template-texts'
+// Módulo genérico PdfTemplateText (/v1/intranet/pdf-template-texts).
+const BASE = '/v1/intranet/pdf-template-texts'
 
 export const PROFORMA_TEMPLATE_TEXTS_ENDPOINTS = {
   v1: {

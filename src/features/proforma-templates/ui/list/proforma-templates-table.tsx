@@ -17,6 +17,7 @@ import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { useProformaTypeSelectStore } from '@/features/proforma-types'
 import { useProformaTemplateListStore } from '../../stores/useProformaTemplateListStore'
 import { useProformaTemplateDeleteStore } from '../../stores/useProformaTemplateDeleteStore'
 import { proformaTemplatesColumns } from './proforma-templates-columns'
@@ -26,6 +27,7 @@ export function ProformaTemplatesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
     useProformaTemplateListStore()
   const { bulkToggleState, bulkDeleteItems } = useProformaTemplateDeleteStore()
+  const { load: loadProformaTypes } = useProformaTypeSelectStore()
 
   const [rowSelection, setRowSelection]         = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -39,7 +41,7 @@ export function ProformaTemplatesTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => { void loadProformaTypes().then(() => load()) }, [])
 
   useEffect(() => {
     if (!hasLoaded) return

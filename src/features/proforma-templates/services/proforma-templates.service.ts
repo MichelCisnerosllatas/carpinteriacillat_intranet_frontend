@@ -1,5 +1,6 @@
 import apiClient from '@/shared/api/apiClient'
 import { PROFORMA_TEMPLATES_ENDPOINTS } from './proforma-templates.endpoint'
+import { PDF_TEMPLATE_MODULE } from '../data/data'
 import type {
   ProformaTemplateListRequestDto,
   ProformaTemplateListResponseDto,
@@ -12,7 +13,9 @@ import type { ProformaTemplatePutRequestDto, ProformaTemplatePutResponseDto } fr
 export const proformaTemplatesService = {
   getList: async (param: ProformaTemplateListRequestDto): Promise<ProformaTemplateJoinListResponseDto> => {
     const params = Object.fromEntries(
-      Object.entries(param).filter(([, v]) => v !== undefined && v !== null && v !== '')
+      Object.entries({ ...param, module: param.module ?? PDF_TEMPLATE_MODULE }).filter(
+        ([, v]) => v !== undefined && v !== null && v !== ''
+      )
     )
     const { data } = await apiClient.get<ProformaTemplateJoinListResponseDto>(PROFORMA_TEMPLATES_ENDPOINTS.v1.getJoin, { params })
     return data
@@ -25,7 +28,7 @@ export const proformaTemplatesService = {
 
   getForSelect: async (): Promise<ProformaTemplateListResponseDto> => {
     const { data } = await apiClient.get<ProformaTemplateListResponseDto>(PROFORMA_TEMPLATES_ENDPOINTS.v1.get, {
-      params: { page: 1, per_page: 100 },
+      params: { module: PDF_TEMPLATE_MODULE, page: 1, per_page: 100 },
     })
     return data
   },

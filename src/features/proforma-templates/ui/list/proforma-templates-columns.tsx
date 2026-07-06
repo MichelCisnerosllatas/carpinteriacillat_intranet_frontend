@@ -52,7 +52,7 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     header: 'Colores',
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        {[row.original.colorPrimary, row.original.colorSecondary, row.original.colorText, row.original.colorBorder]
+        {[row.original.headerBgColor, row.original.bodyTextColor, row.original.bodyBorderColor, row.original.footerBgColor]
           .filter(Boolean)
           .map((c, i) => (
             <span key={i} className="size-4 rounded-full border" style={{ backgroundColor: c as string }} title={c as string} />

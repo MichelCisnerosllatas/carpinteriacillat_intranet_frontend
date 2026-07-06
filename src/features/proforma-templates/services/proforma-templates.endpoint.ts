@@ -1,4 +1,5 @@
-const BASE = '/v1/intranet/proforma-templates'
+// Módulo genérico PdfTemplate — esta feature lo consume filtrado por module="proforma".
+const BASE = '/v1/intranet/pdf-templates'
 
 export const PROFORMA_TEMPLATES_ENDPOINTS = {
   v1: {

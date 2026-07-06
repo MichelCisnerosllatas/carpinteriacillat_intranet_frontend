@@ -45,7 +45,7 @@ export function ProformaDetail({ id }: { id: string }) {
     const setLoading = download ? setIsDownloading : setIsViewing
     setLoading(true)
     try {
-      const blob = await proformasService.downloadPdf(item.id, download)
+      const blob = download ? await proformasService.downloadPdf(item.id) : await proformasService.viewPdf(item.id)
       const url = URL.createObjectURL(blob)
       if (download) {
         const a = document.createElement('a')

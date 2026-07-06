@@ -43,11 +43,43 @@ export const proformasService = {
     return data.success
   },
 
-  // GET /proformas/{id}/pdf — devuelve el PDF binario directo, no usa el sobre JSON estándar.
-  downloadPdf: async (id: number, download = false): Promise<Blob> => {
-    const { data } = await apiClient.get(PROFORMAS_ENDPOINTS.v1.pdf(id), {
-      params: download ? { download: 1 } : {},
+  // GET /proformas/{id}/pdf — PDF binario en línea, no usa el sobre JSON estándar.
+  viewPdf: async (id: number): Promise<Blob> => {
+    const { data } = await apiClient.get(PROFORMAS_ENDPOINTS.v1.pdf(id), { responseType: 'blob' })
+    return data
+  },
+
+  // GET /proformas/{id}/pdfdownload — PDF binario forzando descarga (Content-Disposition: attachment).
+  downloadPdf: async (id: number): Promise<Blob> => {
+    const { data } = await apiClient.get(PROFORMAS_ENDPOINTS.v1.pdfDownload(id), { responseType: 'blob' })
+    return data
+  },
+
+  // PATCH /proformas/{id}/pdf-path — corrección manual de la ruta guardada del PDF.
+  updatePdfPath: async (id: number, pdfPath: string): Promise<ProformaPutResponseDto> => {
+    const { data } = await apiClient.patch<ProformaPutResponseDto>(PROFORMAS_ENDPOINTS.v1.pdfPath(id), { pdf_path: pdfPath })
+    return data
+  },
+
+  // GET /proformas/preview-style/{templateId}/url — URL firmada (30 min) para previsualizar una plantilla
+  // YA GUARDADA (ej. desde el listado, sin pasar por el formulario de edición).
+  getPreviewStyleUrl: async (templateId: number): Promise<string> => {
+    const { data } = await apiClient.get<{ success: boolean; status: number; message: string; data: { url: string } }>(
+      PROFORMAS_ENDPOINTS.v1.previewStyleUrl(templateId)
+    )
+    return data.data.url
+  },
+
+  // POST /proformas/preview-style — PDF de vista previa al vuelo a partir de estilos sin guardar
+  // (no persiste nada). Es el mecanismo recomendado para el formulario de edición de plantillas:
+  // se llama en cada cambio, con o sin id de plantilla. La generación del PDF puede tardar más
+  // que el timeout default del cliente (15s), por eso se sube a 30s; y acepta un AbortSignal
+  // para poder cancelar una llamada anterior si el usuario sigue editando.
+  getPreviewStylePdf: async (styles: Record<string, unknown>, signal?: AbortSignal): Promise<Blob> => {
+    const { data } = await apiClient.post(PROFORMAS_ENDPOINTS.v1.previewStyle, styles, {
       responseType: 'blob',
+      timeout: 30000,
+      signal,
     })
     return data
   },

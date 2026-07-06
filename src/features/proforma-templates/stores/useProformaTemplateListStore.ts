@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { proformaTemplatesService } from '../services/proforma-templates.service'
 import { getStateOption } from '@/shared/config/entity-states'
+import { useProformaTypeSelectStore } from '@/features/proforma-types'
+import { PDF_TEMPLATE_MODULE } from '../data/data'
 import type { ProformaTemplateListRequestDto } from '../model/proformatemplateget.dto'
 import type { ProformaTemplateJoinApiItem } from '../model/proformatemplate-api-item.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
@@ -28,38 +30,60 @@ type Action = {
 }
 
 const defaultFilters: ProformaTemplateListRequestDto = {
-  page: 1, per_page: 10, search: '', status: undefined, proforma_type_id: undefined,
+  page: 1, per_page: 10, search: '', status: undefined, module: PDF_TEMPLATE_MODULE, module_type_id: undefined,
+}
+
+// PdfTemplate no anida el nombre/código del module_type — se resuelve por cruce con
+// las opciones ya cargadas de ProformaType (ver pdf-templates.md, esquema del objeto).
+const resolveProformaType = (moduleTypeId: number | null) => {
+  if (moduleTypeId == null) return null
+  return useProformaTypeSelectStore.getState().options.find((o) => o.id === moduleTypeId) ?? null
 }
 
 export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): ProformaTemplate => {
   const stateOpt = getStateOption(item.status)
+  const type = resolveProformaType(item.module_type_id)
+  const sections = item.sections ?? {}
   return {
     id: item.id,
-    proformaTypeId: item.proforma_type_id,
-    proformaTypeName: item.proforma_type?.name ?? null,
-    proformaTypeCode: item.proforma_type?.code ?? null,
+    moduleTypeId: item.module_type_id,
+    proformaTypeId: item.module_type_id,
+    proformaTypeName: type?.name ?? null,
+    proformaTypeCode: type?.code ?? null,
     name: item.name,
-    colorPrimary: item.color_primary,
-    colorSecondary: item.color_secondary,
-    colorText: item.color_text,
-    colorBorder: item.color_border,
-    fontFamily: item.font_family,
-    titleSize: item.title_size,
-    subtitleSize: item.subtitle_size,
-    textSize: item.text_size,
-    tableSize: item.table_size,
-    headerHeight: item.header_height,
-    logoWidth: item.logo_width,
-    logoHeight: item.logo_height,
-    showLogo: !!item.show_logo,
-    showDate: !!item.show_date,
-    showCompanyData: !!item.show_company_data,
-    showBranches: !!item.show_branches,
-    showPaymentMethod: !!item.show_payment_method,
-    showBankAccounts: !!item.show_bank_accounts,
-    showSignature: !!item.show_signature,
-    showFooter: !!item.show_footer,
-    footerText: item.footer_text,
+
+    headerBgColor: item.header.background_color,
+    headerTextColor: item.header.text_color,
+    headerTitleSize: item.header.title_size,
+    headerHeight: item.header.height,
+    headerLogoWidth: item.header.logo_width,
+    headerLogoHeight: item.header.logo_height,
+    headerLayout: item.header.layout,
+
+    bodyBgColor: item.body.background_color,
+    bodyTextColor: item.body.text_color,
+    bodyBorderColor: item.body.border_color,
+    bodyFontFamily: item.body.font_family,
+    bodySubtitleSize: item.body.subtitle_size,
+    bodyTextSize: item.body.text_size,
+    bodyTableSize: item.body.table_size,
+
+    footerBgColor: item.footer.background_color,
+    footerTextColor: item.footer.text_color,
+    footerTextSize: item.footer.text_size,
+    footerText: item.footer.text,
+
+    sections: {
+      showLogo: sections.show_logo ?? true,
+      showDate: sections.show_date ?? true,
+      showCompanyData: sections.show_company_data ?? true,
+      showBranches: sections.show_branches ?? true,
+      showPaymentMethod: sections.show_payment_method ?? true,
+      showBankAccounts: sections.show_bank_accounts ?? true,
+      showSignature: sections.show_signature ?? true,
+      showFooter: sections.show_footer ?? true,
+    },
+
     status: item.status === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.status,

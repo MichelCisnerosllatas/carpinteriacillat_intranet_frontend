@@ -1,29 +1,28 @@
-import type { ProformaTemplateApiItem } from './proformatemplate-api-item.dto'
+import type { ProformaTemplateApiItem, PdfTemplateHeaderLayout, PdfTemplateSections } from './proformatemplate-api-item.dto'
 
 export type ProformaTemplatePostRequestDto = {
-  proforma_type_id?: number | null
+  module: string
+  module_type_id?: number | null
   name: string
-  color_primary?: string
-  color_secondary?: string
-  color_text?: string
-  color_border?: string
-  font_family?: string
-  title_size?: number
-  subtitle_size?: number
-  text_size?: number
-  table_size?: number
+  header_bg_color?: string
+  header_text_color?: string
+  header_title_size?: number
   header_height?: number
-  logo_width?: number
-  logo_height?: number
-  show_logo?: number
-  show_date?: number
-  show_company_data?: number
-  show_branches?: number
-  show_payment_method?: number
-  show_bank_accounts?: number
-  show_signature?: number
-  show_footer?: number
+  header_logo_width?: number
+  header_logo_height?: number
+  header_layout?: PdfTemplateHeaderLayout
+  body_bg_color?: string
+  body_text_color?: string
+  body_border_color?: string
+  body_font_family?: string
+  body_subtitle_size?: number
+  body_text_size?: number
+  body_table_size?: number
+  footer_bg_color?: string
+  footer_text_color?: string
+  footer_text_size?: number
   footer_text?: string
+  sections?: PdfTemplateSections
   status?: number
 }
 

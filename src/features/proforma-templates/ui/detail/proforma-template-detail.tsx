@@ -9,18 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
+import { useProformaTypeSelectStore } from '@/features/proforma-types'
 import { useProformaTemplateListStore } from '../../stores/useProformaTemplateListStore'
 import NProgress from 'nprogress'
 
 export function ProformaTemplateDetail({ id }: { id: string }) {
   const router = useRouter()
   const { currentItem, items, setCurrentItem, loadById } = useProformaTemplateListStore()
+  const { load: loadProformaTypes } = useProformaTypeSelectStore()
 
   useEffect(() => {
     if (!currentItem || String(currentItem.id) !== id) {
       const found = items.find((i) => String(i.id) === id)
       if (found) setCurrentItem(found)
-      else void loadById(Number(id))
+      else void loadProformaTypes().then(() => loadById(Number(id)))
     }
   }, [id, currentItem, items])
 
@@ -53,10 +55,11 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Palette className="size-4" />Colores</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-4 text-sm">
           {[
-            { label: 'Primario', value: item.colorPrimary },
-            { label: 'Secundario', value: item.colorSecondary },
-            { label: 'Texto', value: item.colorText },
-            { label: 'Borde', value: item.colorBorder },
+            { label: 'Fondo header', value: item.headerBgColor },
+            { label: 'Texto header', value: item.headerTextColor },
+            { label: 'Texto body', value: item.bodyTextColor },
+            { label: 'Borde body', value: item.bodyBorderColor },
+            { label: 'Fondo footer', value: item.footerBgColor },
           ].map(({ label, value }) => value && (
             <div key={label} className="flex items-center gap-2">
               <span className="size-5 rounded-full border" style={{ backgroundColor: value }} />
@@ -72,9 +75,10 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><TypeIcon className="size-4" />Tipografía y secciones</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-2 gap-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Fuente</span><span className="font-medium">{item.fontFamily}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Títulos / subtítulos</span><span className="font-medium">{item.titleSize}px / {item.subtitleSize}px</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Textos / tabla</span><span className="font-medium">{item.textSize}px / {item.tableSize}px</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Fuente</span><span className="font-medium">{item.bodyFontFamily}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Título / subtítulo</span><span className="font-medium">{item.headerTitleSize}px / {item.bodySubtitleSize}px</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Texto / tabla</span><span className="font-medium">{item.bodyTextSize}px / {item.bodyTableSize}px</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Distribución header</span><span className="font-medium">{item.headerLayout === 'logo_izquierda' ? 'Logo izquierda' : 'Logo derecha'}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Bloques de texto</span><span className="font-medium">{item.textsCount}</span></div>
         </CardContent>
       </Card>

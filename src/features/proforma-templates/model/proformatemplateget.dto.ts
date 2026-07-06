@@ -7,7 +7,8 @@ export type { ProformaTemplateApiItem, ProformaTemplateJoinApiItem }
 export type ProformaTemplateListRequestDto = {
   search?: string
   status?: number
-  proforma_type_id?: number
+  module?: string
+  module_type_id?: number
   per_page?: number
   page?: number
 }

@@ -27,7 +27,7 @@ export const useProformaTemplateFormStore = create<State & Action>((set) => ({
       if (!res.success) { set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null }); return null }
       await useProformaTemplateListStore.getState().load()
       set({ isSubmitting: false })
-      return mapProformaTemplateFromApi({ ...res.data, proforma_type: null, texts: [] })
+      return mapProformaTemplateFromApi({ ...res.data, texts: [] })
     } catch (error: any) {
       set({ isSubmitting: false, error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.', fieldErrors: error?.response?.data?.errors ?? null })
       return null

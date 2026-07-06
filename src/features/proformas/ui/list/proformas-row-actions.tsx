@@ -39,7 +39,7 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
   const handleDownloadPdf = async () => {
     setIsDownloading(true)
     try {
-      const blob = await proformasService.downloadPdf(row.original.id, true)
+      const blob = await proformasService.downloadPdf(row.original.id)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

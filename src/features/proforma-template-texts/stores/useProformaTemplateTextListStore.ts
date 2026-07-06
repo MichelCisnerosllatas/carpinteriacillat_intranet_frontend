@@ -41,6 +41,8 @@ export const useProformaTemplateTextListStore = create<State & Action>((set) => 
       set({ hasLoaded: true, isFetching: false, isError: false, message: response.message, items })
       return true
     } catch (error: any) {
+      // TEMP: log para diagnosticar por qué falla la carga de textos.
+      console.error('[pdf-template-texts] error al cargar:', error)
       set({ hasLoaded: true, isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
       return false
     }
