@@ -4,10 +4,6 @@ export type CompanySettingApiItem = {
   trade_name: string | null
   tax_id: string | null
   tax_address: string | null
-  phone: string | null
-  email: string | null
-  facebook: string | null
-  website: string | null
   logo: string | null
   status: number
   created_at: string

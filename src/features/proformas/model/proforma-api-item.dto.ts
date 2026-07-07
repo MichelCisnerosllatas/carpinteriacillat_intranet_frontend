@@ -45,10 +45,6 @@ export type ProformaApiItem = {
   company_trade_name: string | null
   company_tax_id: string | null
   company_tax_address: string | null
-  company_phone: string | null
-  company_email: string | null
-  company_facebook: string | null
-  company_website: string | null
   company_logo: string | null
   intro_text: string | null
   final_text: string | null

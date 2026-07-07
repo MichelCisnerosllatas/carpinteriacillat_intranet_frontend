@@ -11,7 +11,7 @@ type State = {
 }
 
 type Action = {
-  create: (params: ProformaPostRequestDto) => Promise<boolean>
+  create: (params: ProformaPostRequestDto) => Promise<number | null>
   update: (id: number, data: ProformaPutRequestDto) => Promise<boolean>
   reset: () => void
 }
@@ -27,18 +27,18 @@ export const useProformaFormStore = create<State & Action>((set) => ({
       const res = await proformasService.post(params)
       if (!res.success) {
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
-        return false
+        return null
       }
       await useProformaListStore.getState().load()
       set({ isSubmitting: false })
-      return true
+      return res.data.id
     } catch (error: any) {
       set({
         isSubmitting: false,
         error: error?.response?.data?.message ?? error?.message ?? 'Error al crear.',
         fieldErrors: error?.response?.data?.errors ?? null,
       })
-      return false
+      return null
     }
   },
 

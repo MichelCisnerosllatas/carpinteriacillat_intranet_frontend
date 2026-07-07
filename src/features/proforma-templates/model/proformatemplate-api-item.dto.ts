@@ -9,6 +9,8 @@ export type PdfTemplateSections = {
   show_branches?: boolean
   show_payment_method?: boolean
   show_bank_accounts?: boolean
+  show_company_social_networks?: boolean
+  show_company_contacts?: boolean
   show_signature?: boolean
   show_footer?: boolean
 }

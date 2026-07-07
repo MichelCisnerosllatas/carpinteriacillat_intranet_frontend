@@ -5,7 +5,8 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, Share2, Phone as PhoneIcon, ArrowRight } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
@@ -25,10 +26,6 @@ const schema = z.object({
   trade_name:    z.string().max(255).optional(),
   tax_id:        z.string().max(20).optional(),
   tax_address:   z.string().optional(),
-  phone:         z.string().max(100).optional(),
-  email:         z.string().max(150).optional(),
-  facebook:      z.string().max(255).optional(),
-  website:       z.string().max(255).optional(),
   logo:          z.string().max(255).optional(),
   status:        z.number(),
 })
@@ -42,7 +39,7 @@ export function CompanySettingForm() {
     resolver: zodResolver(schema),
     defaultValues: {
       business_name: '', trade_name: '', tax_id: '', tax_address: '',
-      phone: '', email: '', facebook: '', website: '', logo: undefined, status: 1,
+      logo: undefined, status: 1,
     },
   })
 
@@ -53,10 +50,6 @@ export function CompanySettingForm() {
         trade_name:    data.tradeName ?? '',
         tax_id:        data.taxId ?? '',
         tax_address:   data.taxAddress ?? '',
-        phone:         data.phone ?? '',
-        email:         data.email ?? '',
-        facebook:      data.facebook ?? '',
-        website:       data.website ?? '',
         logo:          data.logo ?? undefined,
         status:        data.statusValue,
       })
@@ -77,10 +70,6 @@ export function CompanySettingForm() {
       trade_name:    values.trade_name || undefined,
       tax_id:        values.tax_id || undefined,
       tax_address:   values.tax_address || undefined,
-      phone:         values.phone || undefined,
-      email:         values.email || undefined,
-      facebook:      values.facebook || undefined,
-      website:       values.website || undefined,
       logo:          values.logo || undefined,
       status:        values.status,
     }
@@ -167,45 +156,17 @@ export function CompanySettingForm() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Contacto</CardTitle>
+            <CardTitle>Contactos, sitio web y redes sociales</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField control={form.control} name="phone" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Teléfono</FormLabel>
-                <FormControl><Input placeholder="Ej: 999 999 999" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Correo electrónico</FormLabel>
-                <FormControl><Input placeholder="Ej: contacto@cillat.com" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Redes y sitio web</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField control={form.control} name="facebook" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Facebook</FormLabel>
-                <FormControl><Input placeholder="Ej: https://facebook.com/cillat" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="website" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sitio web</FormLabel>
-                <FormControl><Input placeholder="Ej: https://cillat.com" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+          <CardContent className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/company-contacts" className="flex flex-1 items-center justify-between gap-2 rounded-lg border p-3 text-sm hover:bg-muted/50">
+              <span className="flex items-center gap-2"><PhoneIcon className="size-4 text-muted-foreground" />Gestionar teléfonos y correos</span>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </Link>
+            <Link href="/company-social-networks" className="flex flex-1 items-center justify-between gap-2 rounded-lg border p-3 text-sm hover:bg-muted/50">
+              <span className="flex items-center gap-2"><Share2 className="size-4 text-muted-foreground" />Gestionar sitio web y redes sociales</span>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </Link>
           </CardContent>
         </Card>
 

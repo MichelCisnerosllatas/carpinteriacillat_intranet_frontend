@@ -36,6 +36,8 @@ const PROTECTED_PREFIXES = [
   '/company-branches',
   '/company-bank-accounts',
   '/company-signatures',
+  '/company-contacts',
+  '/company-social-networks',
   '/storage',
   '/tasks',
   '/apps',

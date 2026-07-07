@@ -87,6 +87,8 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
       showBranches: sections.show_branches ?? true,
       showPaymentMethod: sections.show_payment_method ?? true,
       showBankAccounts: sections.show_bank_accounts ?? true,
+      showCompanySocialNetworks: sections.show_company_social_networks ?? true,
+      showCompanyContacts: sections.show_company_contacts ?? true,
       showSignature: sections.show_signature ?? true,
       showFooter: sections.show_footer ?? true,
     },

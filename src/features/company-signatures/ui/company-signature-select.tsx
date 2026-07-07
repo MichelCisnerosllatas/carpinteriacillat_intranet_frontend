@@ -1,7 +1,5 @@
 'use client'
 
-// Combobox liviano de clientes para el formulario de proformas.
-// `clients` no tiene select store propio — hacemos fetch directo aquí en vez de un store global.
 import { useEffect, useState } from 'react'
 import { AlertCircle, Check, ChevronsUpDown, Loader2, RefreshCw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -15,10 +13,9 @@ import {
   CommandList,
 } from '@/shared/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
-import { clientsService } from '@/features/clients/services/clients.service'
-import type { ClientJoinApiItem } from '@/features/clients/model/clientget.dto'
+import { useCompanySignatureSelectStore } from '../stores/useCompanySignatureSelectStore'
 
-interface ClientSelectProps {
+interface CompanySignatureSelectProps {
   value?: number | null
   onValueChange: (value: number | null) => void
   placeholder?: string
@@ -26,42 +23,20 @@ interface ClientSelectProps {
   showAll?: boolean
 }
 
-export function ClientSelect({
+export function CompanySignatureSelect({
   value,
   onValueChange,
-  placeholder = 'Seleccionar cliente...',
+  placeholder = 'Seleccionar firma...',
   disabled,
   showAll = false,
-}: ClientSelectProps) {
+}: CompanySignatureSelectProps) {
   const [open, setOpen] = useState(false)
-  const [options, setOptions] = useState<ClientJoinApiItem[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isError, setIsError] = useState(false)
+  const { options, isLoading, isError, load } = useCompanySignatureSelectStore()
 
-  const load = async () => {
-    setIsLoading(true)
-    setIsError(false)
-    try {
-      const res = await clientsService.getList({ per_page: 100, status: 1 })
-      if (res.success) setOptions(res.data)
-      else setIsError(true)
-    } catch {
-      setIsError(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    void load()
-  }, [])
+  useEffect(() => { load() }, [])
 
   const selected = value != null ? options.find((o) => o.id === value) : null
-  const label = selected
-    ? selected.business_name
-    : value === null && showAll
-      ? 'Todos'
-      : placeholder
+  const label = selected ? selected.signer_name : value === null && showAll ? 'Todos' : placeholder
 
   if (isError)
     return (
@@ -100,9 +75,7 @@ export function ClientSelect({
               Cargando...
             </span>
           ) : (
-            <span
-              className={cn('truncate', !selected && value !== null && 'text-muted-foreground')}
-            >
+            <span className={cn('truncate', !selected && value !== null && 'text-muted-foreground')}>
               {label}
             </span>
           )}
@@ -111,37 +84,24 @@ export function ClientSelect({
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Buscar cliente..." />
+          <CommandInput placeholder="Buscar firma..." />
           <CommandList>
             <CommandEmpty>Sin resultados.</CommandEmpty>
             <CommandGroup>
               {showAll && (
-                <CommandItem
-                  value="__all__"
-                  onSelect={() => {
-                    onValueChange(null)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')}
-                  />
+                <CommandItem value="__all__" onSelect={() => { onValueChange(null); setOpen(false) }}>
+                  <Check className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')} />
                   Todos
                 </CommandItem>
               )}
               {options.map((opt) => (
                 <CommandItem
                   key={opt.id}
-                  value={opt.business_name}
-                  onSelect={() => {
-                    onValueChange(opt.id)
-                    setOpen(false)
-                  }}
+                  value={opt.signer_name}
+                  onSelect={() => { onValueChange(opt.id); setOpen(false) }}
                 >
-                  <Check
-                    className={cn('mr-2 h-4 w-4', value === opt.id ? 'opacity-100' : 'opacity-0')}
-                  />
-                  {opt.business_name}
+                  <Check className={cn('mr-2 h-4 w-4', value === opt.id ? 'opacity-100' : 'opacity-0')} />
+                  {opt.signer_name}
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -1,19 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
-import { swalConfirmAction, swalWarning } from '@/shared/lib/swal'
-import { toastSuccess } from '@/shared/lib/toast'
+import { swalWarning } from '@/shared/lib/swal'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { AlertError } from '@/widgets/alerts_components'
 import { ProformaTypeSelect, useProformaTypeSelectStore } from '@/features/proforma-types'
@@ -21,24 +21,13 @@ import {
   ProformaTemplateSelect,
   useProformaTemplateSelectStore,
 } from '@/features/proforma-templates'
-import { ClientSelect } from './client-select'
-import { SignatureSelect } from './signature-select'
+import { ClientSelect, useClientSelectStore } from '@/features/clients'
+import { CompanySignatureSelect, useCompanySignatureSelectStore } from '@/features/company-signatures'
 import { ProformaDetailLines } from './proforma-detail-lines'
 import { useProformaListStore } from '../../stores/useProformaListStore'
 import { useProformaFormStore } from '../../stores/useProformaFormStore'
 import { PROFORMA_CURRENCIES } from '../../data/data'
 import type { ProformaPostRequestDto } from '../../model/proformapost.dto'
-import { clientsService } from '@/features/clients/services/clients.service'
-import { companySignaturesService } from '@/features/company-signatures/services/company-signatures.service'
-
-const detailSchema = z.object({
-  productServiceId: z.number().nullable().optional(),
-  description: z.string().min(1, 'La descripción es requerida.'),
-  unit: z.string().optional(),
-  quantity: z.number().min(0.01, 'Debe ser mayor a 0.'),
-  unitPrice: z.number().min(0, 'Debe ser 0 o mayor.'),
-  tax: z.number().optional(),
-})
 
 const schema = z
   .object({
@@ -54,7 +43,6 @@ const schema = z
     delivery_time: z.string().optional(),
     currency: z.string().optional(),
     observation: z.string().optional(),
-    details: z.array(detailSchema),
   })
   // superRefine en vez de .refine() por campo: agrega los issues sin cambiar el tipo
   // inferido de cada campo (sigue siendo `number | null`, como espera el resto del form).
@@ -74,6 +62,26 @@ const schema = z
 
 export type ProformaFormValues = z.infer<typeof schema>
 
+const buildHeaderPayload = (values: ProformaFormValues, isEdit: boolean): ProformaPostRequestDto => {
+  const payload: ProformaPostRequestDto = {
+    client_id: values.client_id ?? undefined,
+    proforma_type_id: values.proforma_type_id ?? undefined,
+    template_id: values.template_id ?? undefined,
+    signature_id: values.signature_id ?? undefined,
+    series: values.series || undefined,
+    issue_date: values.issue_date,
+    due_date: values.due_date || undefined,
+    place_of_issue: values.place_of_issue || undefined,
+    client_attention: values.client_attention || undefined,
+    delivery_time: values.delivery_time || undefined,
+    currency: values.currency || undefined,
+    observation: values.observation || undefined,
+  }
+  // En creación, series no debería enviarse si el usuario no la editó — el servidor la genera.
+  if (!isEdit && !values.series) delete payload.series
+  return payload
+}
+
 export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: string }) {
   const router = useRouter()
   const { currentItem, items, loadOne } = useProformaListStore()
@@ -86,6 +94,13 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
         ? (items.find((i) => String(i.id) === id) ?? null)
         : null
 
+  // En edición, la proforma ya existe desde el montaje. En creación, nace en null y se
+  // completa sola en cuanto la cabecera queda válida (ver efecto de auto-creación abajo) —
+  // recién ahí se habilitan las líneas de detalle, que ya viven en su propio CRUD
+  // (/proforma-details) y no se envían anidadas en este formulario.
+  const [proformaId, setProformaId] = useState<number | null>(isEdit && id ? Number(id) : null)
+  const hasAutoCreated = useRef(false)
+
   const form = useForm<ProformaFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -96,14 +111,11 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
       series: '',
       issue_date: new Date().toISOString().slice(0, 10),
       due_date: '',
-      // Solo aplican en creación — en edición, el efecto de abajo los sobreescribe
-      // con los valores reales de la proforma cargada.
       place_of_issue: 'Iquitos',
       client_attention: '',
       delivery_time: '15 días hábiles',
       currency: 'PEN',
       observation: '',
-      details: [],
     },
   })
 
@@ -117,30 +129,30 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
   // en edición nunca se toca (el efecto de `form.reset` con los datos reales corre después
   // y siempre gana). El guard `getValues(...) == null` evita pisar una elección manual del
   // usuario si vuelve a dispararse el efecto.
-  //
-  // Para Tipo/Plantilla se lee del store compartido que ya usan sus selects (así no se
-  // duplica el fetch). Cliente/Firma no tienen store propio — se pide directo al servicio,
-  // igual que hace su combobox por dentro, para no depender de un callback disparado desde
-  // un componente hijo (más simple y sin sorpresas de timing).
   const { options: typeOptions, load: loadTypes } = useProformaTypeSelectStore()
   const { options: templateOptions, load: loadTemplates } = useProformaTemplateSelectStore()
+  const { options: clientOptions, load: loadClients } = useClientSelectStore()
+  const { options: signatureOptions, load: loadSignatures } = useCompanySignatureSelectStore()
 
   useEffect(() => {
     if (isEdit) return
     void loadTypes()
     void loadTemplates()
-
-    void clientsService.getList({ per_page: 1, status: 1 }).then((res) => {
-      if (res.success && res.data.length > 0 && form.getValues('client_id') == null) {
-        form.setValue('client_id', res.data[0].id)
-      }
-    })
-    void companySignaturesService.getList({ per_page: 1, status: 1 }).then((res) => {
-      if (res.success && res.data.length > 0 && form.getValues('signature_id') == null) {
-        form.setValue('signature_id', res.data[0].id)
-      }
-    })
+    void loadClients()
+    void loadSignatures()
   }, [isEdit])
+
+  useEffect(() => {
+    if (!isEdit && clientOptions.length > 0 && form.getValues('client_id') == null) {
+      form.setValue('client_id', clientOptions[0].id)
+    }
+  }, [isEdit, clientOptions])
+
+  useEffect(() => {
+    if (!isEdit && signatureOptions.length > 0 && form.getValues('signature_id') == null) {
+      form.setValue('signature_id', signatureOptions[0].id)
+    }
+  }, [isEdit, signatureOptions])
 
   useEffect(() => {
     if (!isEdit && typeOptions.length > 0 && form.getValues('proforma_type_id') == null) {
@@ -169,77 +181,55 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
         delivery_time: resolved.deliveryTime ?? '',
         currency: resolved.currency,
         observation: resolved.observation ?? '',
-        details: resolved.details.map((d) => ({
-          productServiceId: d.productServiceId,
-          description: d.description,
-          unit: d.unit ?? '',
-          quantity: d.quantity,
-          unitPrice: d.unitPrice,
-          tax: d.tax ?? 0,
-        })),
       })
     }
   }, [isEdit, resolved?.id])
 
   useEffect(() => () => reset(), [])
 
-  // El modal queda abierto (con loader) durante toda la petición — el registro/actualización
-  // regenera el PDF real en el servidor y puede tardar, así que no tiene sentido cerrar el
-  // modal de inmediato y recién ahí mostrar un error de timeout suelto.
-  const onSubmit = async (values: ProformaFormValues) => {
-    const payload: ProformaPostRequestDto = {
-      client_id: values.client_id ?? undefined,
-      proforma_type_id: values.proforma_type_id ?? undefined,
-      template_id: values.template_id ?? undefined,
-      signature_id: values.signature_id ?? undefined,
-      series: values.series || undefined,
-      issue_date: values.issue_date,
-      due_date: values.due_date || undefined,
-      place_of_issue: values.place_of_issue || undefined,
-      client_attention: values.client_attention || undefined,
-      delivery_time: values.delivery_time || undefined,
-      currency: values.currency || undefined,
-      observation: values.observation || undefined,
-      details:
-        values.details.length > 0
-          ? values.details.map((d) => ({
-              product_service_id: d.productServiceId ?? undefined,
-              description: d.description,
-              unit: d.unit || undefined,
-              quantity: d.quantity,
-              unit_price: d.unitPrice,
-              tax: d.tax || undefined,
-            }))
-          : undefined,
-    }
+  // Auto-creación de la cabecera: en cuanto los 4 selects requeridos + la fecha de emisión
+  // son válidos, se crea la proforma en segundo plano (una sola vez) sin que el usuario
+  // tenga que enviar el formulario. Recién con el id devuelto se habilitan las líneas.
+  const watchedRequired = form.watch(['client_id', 'proforma_type_id', 'template_id', 'signature_id', 'issue_date'])
+  const [autoCreateFailed, setAutoCreateFailed] = useState(false)
 
-    // En creación, series no debería enviarse si el usuario no la editó ya que el servidor la genera.
-    if (!isEdit && !values.series) delete payload.series
+  const attemptAutoCreate = () => {
+    if (isEdit || proformaId !== null || hasAutoCreated.current) return
+    const [clientId, proformaTypeId, templateId, signatureId, issueDate] = form.getValues([
+      'client_id', 'proforma_type_id', 'template_id', 'signature_id', 'issue_date',
+    ])
+    if (clientId == null || proformaTypeId == null || templateId == null || signatureId == null || !issueDate) return
 
-    await swalConfirmAction({
-      title: isEdit ? '¿Guardar cambios?' : '¿Crear proforma?',
-      text: values.series ? `${values.series} — ${values.issue_date}` : values.issue_date,
-      confirmText: isEdit ? 'Sí, guardar' : 'Sí, crear',
-      cancelText: 'Cancelar',
-      loading: {
-        title: isEdit ? 'Guardando...' : 'Creando...',
-        text: 'Puede tardar unos segundos mientras se genera el PDF.',
-      },
-      action: async ({ close, showError }) => {
-        const success = isEdit ? await update(resolved!.id, payload) : await create(payload)
-        if (success) {
-          toastSuccess(
-            isEdit ? 'Proforma actualizada' : 'Proforma creada',
-            values.series || values.issue_date
-          )
-          close()
-          router.push('/proformas')
-        } else {
-          applyApiErrors(form, fieldErrors)
-          showError(useProformaFormStore.getState().error ?? 'No se pudo guardar la proforma.')
-        }
-      },
+    hasAutoCreated.current = true
+    setAutoCreateFailed(false)
+    const payload = buildHeaderPayload(form.getValues(), false)
+    void create(payload).then((newId) => {
+      if (newId) {
+        setProformaId(newId)
+        toastSuccess('Cabecera creada', 'Ya puedes agregar líneas de detalle.')
+      } else {
+        hasAutoCreated.current = false
+        setAutoCreateFailed(true)
+        toastError('Error', useProformaFormStore.getState().error ?? 'No se pudo crear la cabecera.')
+      }
     })
+  }
+
+  useEffect(() => { attemptAutoCreate() }, [isEdit, proformaId, watchedRequired])
+
+  // Una vez creada (o en edición), cualquier cambio en la cabecera se guarda con el botón
+  // de abajo — ya no acepta `details`, esas líneas se gestionan aparte y se persisten solas.
+  const onSubmit = async (values: ProformaFormValues) => {
+    if (!proformaId) return
+    const payload = buildHeaderPayload(values, true)
+    const success = await update(proformaId, payload)
+    if (success) {
+      toastSuccess('Proforma guardada', values.series || values.issue_date)
+      router.push('/proformas')
+    } else {
+      applyApiErrors(form, fieldErrors)
+      toastError('Error', useProformaFormStore.getState().error ?? 'No se pudo guardar la proforma.')
+    }
   }
 
   // Si falta completar algún campo requerido, react-hook-form no llama a onSubmit —
@@ -256,8 +246,30 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-4">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Cabecera</CardTitle>
+            {!isEdit && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {proformaId ? (
+                  <>
+                    <CheckCircle2 className="size-3.5 text-teal-600" />
+                    Cabecera creada — puedes agregar líneas
+                  </>
+                ) : autoCreateFailed ? (
+                  <>
+                    No se pudo crear la cabecera
+                    <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={attemptAutoCreate}>
+                      Reintentar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Completa los campos requeridos para crearla
+                  </>
+                )}
+              </span>
+            )}
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FormField
@@ -322,7 +334,7 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
                   <FormLabel>
                     Firma <span className="text-destructive">*</span>
                   </FormLabel>
-                  <SignatureSelect
+                  <CompanySignatureSelect
                     value={field.value ?? null}
                     onValueChange={field.onChange}
                     disabled={isSubmitting}
@@ -343,7 +355,7 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
                       placeholder={
                         isEdit ? undefined : 'Ej: PF26, se genera automático si se deja vacío'
                       }
-                      disabled={isSubmitting || isEdit}
+                      disabled={isSubmitting || isEdit || Boolean(proformaId)}
                       {...field}
                     />
                   </FormControl>
@@ -476,7 +488,11 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
             <CardTitle>Líneas de detalle</CardTitle>
           </CardHeader>
           <CardContent>
-            <ProformaDetailLines form={form} control={form.control} disabled={isSubmitting} />
+            <ProformaDetailLines
+              proformaId={proformaId}
+              currency={form.watch('currency') || 'PEN'}
+              disabled={isSubmitting}
+            />
           </CardContent>
         </Card>
 
@@ -495,20 +511,20 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
             onClick={() => router.push('/proformas')}
             disabled={isSubmitting}
           >
-            Cancelar
+            {proformaId ? 'Finalizar' : 'Cancelar'}
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="min-w-28">
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isEdit ? 'Guardando...' : 'Creando...'}
-              </>
-            ) : isEdit ? (
-              'Guardar'
-            ) : (
-              'Crear'
-            )}
-          </Button>
+          {proformaId && (
+            <Button type="submit" disabled={isSubmitting} className="min-w-28">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar cabecera'
+              )}
+            </Button>
+          )}
         </div>
       </form>
     </Form>

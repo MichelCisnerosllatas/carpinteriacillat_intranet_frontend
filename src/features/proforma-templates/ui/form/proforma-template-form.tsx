@@ -77,6 +77,8 @@ export function ProformaTemplateForm({ mode, id }: { mode: 'create' | 'edit'; id
         showBranches: resolved.sections.showBranches,
         showPaymentMethod: resolved.sections.showPaymentMethod,
         showBankAccounts: resolved.sections.showBankAccounts,
+        showCompanySocialNetworks: resolved.sections.showCompanySocialNetworks,
+        showCompanyContacts: resolved.sections.showCompanyContacts,
         showSignature: resolved.sections.showSignature,
         showFooter: resolved.sections.showFooter,
         status: resolved.stateValue,

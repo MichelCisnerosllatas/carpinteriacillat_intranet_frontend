@@ -1,0 +1,224 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { LoaderCircle } from 'lucide-react'
+import {
+  type PaginationState, type SortingState, type VisibilityState,
+  flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
+} from '@tanstack/react-table'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { DataTablePagination } from '@/shared/ui/data-table/pagination'
+import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { useCompanySocialNetworkListStore } from '../../stores/useCompanySocialNetworkListStore'
+import { useCompanySocialNetworkDeleteStore } from '../../stores/useCompanySocialNetworkDeleteStore'
+import { companySocialNetworksColumns } from './company-social-networks-columns'
+import { CompanySocialNetworkStatsBar } from './company-social-network-stats-bar'
+
+export function CompanySocialNetworksTable() {
+  const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
+    useCompanySocialNetworkListStore()
+  const { bulkToggleState, bulkDeleteItems } = useCompanySocialNetworkDeleteStore()
+
+  const [rowSelection, setRowSelection] = useState({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [search, setSearch] = useState(filters.search ?? '')
+  const [status, setStatus] = useState<string>(filters.status !== undefined ? String(filters.status) : 'all')
+  const [isBulkLoading, setIsBulkLoading] = useState(false)
+
+  const pagination = useMemo<PaginationState>(() => ({
+    pageIndex: Math.max((filters.page ?? 1) - 1, 0),
+    pageSize: filters.per_page ?? 10,
+  }), [filters.page, filters.per_page])
+
+  useEffect(() => { void load() }, [])
+
+  useEffect(() => {
+    if (!hasLoaded) return
+    const t = window.setTimeout(() => {
+      void load({ search, status: status === 'all' ? undefined : Number(status), page: 1 })
+    }, 500)
+    return () => window.clearTimeout(t)
+  }, [search, status])
+
+  const table = useReactTable({
+    data: items,
+    columns: companySocialNetworksColumns,
+    pageCount: meta?.last_page ?? 1,
+    manualPagination: true,
+    state: { sorting, pagination, rowSelection, columnVisibility },
+    enableRowSelection: true,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+    },
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
+  const activeCount = items.filter((i) => i.statusValue === 1).length
+  const onWebsiteCount = items.filter((i) => i.showOnWebsite).length
+
+  const resetFilters = () => {
+    setSearch(''); setStatus('all')
+    void load({ search: '', status: undefined, page: 1 })
+  }
+
+  const handleBulkActivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const ok = await bulkToggleState(selectedRows.map((r) => r.original.id), 1)
+      if (ok) { toastSuccess('Activados', `${selectedCount} registro(s) activado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron activar todos los registros.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDeactivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const ok = await bulkToggleState(selectedRows.map((r) => r.original.id), 0)
+      if (ok) { toastSuccess('Desactivados', `${selectedCount} registro(s) desactivado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron desactivar todos los registros.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDelete = async () => {
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ids = selectedRows.map((r) => r.original.id)
+        const ok = await bulkDeleteItems(ids)
+        if (ok) {
+          toastSuccess('Eliminados', `${selectedCount} registro(s) eliminado(s).`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError('No se pudieron eliminar todos los registros.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
+  }
+
+  if (!hasLoaded && !isInitialLoading) {
+    return (
+      <div className="flex min-h-[300px] flex-col items-center justify-center">
+        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Cargando redes sociales...</p>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
+        <p className="text-sm font-semibold">Error al cargar redes sociales</p>
+        {message && <p className="text-xs text-muted-foreground">{message}</p>}
+        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative flex flex-1 flex-col gap-4">
+      <CompanySocialNetworkStatsBar total={meta?.total ?? 0} active={activeCount} onWebsite={onWebsiteCount} />
+
+      {isFetching && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
+          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
+            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Buscar</span>
+            <Input placeholder="Nombre o link..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Estado</span>
+            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col justify-end">
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          </div>
+        </div>
+        <DataTableViewOptions table={table} />
+      </div>
+
+      <div className="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id} colSpan={h.colSpan} className={cn('bg-muted/50 text-xs', (h.column.columnDef.meta as any)?.className)}>
+                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className={cn('transition-colors', selectedCount > 0 && !row.getIsSelected() && 'opacity-50')}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={companySocialNetworksColumns.length} className="h-20 text-center text-sm text-muted-foreground">
+                  No hay redes sociales para mostrar.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <DataTablePagination table={table} className="mt-auto"
+        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
+      />
+
+      <DataTableBulkActions
+        selectedCount={selectedCount}
+        isLoading={isBulkLoading}
+        onActivate={handleBulkActivate}
+        onDeactivate={handleBulkDeactivate}
+        onDelete={handleBulkDelete}
+        onClear={() => table.resetRowSelection()}
+      />
+    </div>
+  )
+}

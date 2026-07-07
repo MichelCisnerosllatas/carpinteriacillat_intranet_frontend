@@ -30,6 +30,8 @@ const SECTION_GROUPS: { key: string; label: string; fields: SectionField[] }[] =
       { name: 'showBranches', label: 'Mostrar sucursales' },
       { name: 'showPaymentMethod', label: 'Mostrar método de pago' },
       { name: 'showBankAccounts', label: 'Mostrar cuentas bancarias' },
+      { name: 'showCompanySocialNetworks', label: 'Mostrar redes sociales' },
+      { name: 'showCompanyContacts', label: 'Mostrar contactos' },
       { name: 'showSignature', label: 'Mostrar firma' },
     ],
   },

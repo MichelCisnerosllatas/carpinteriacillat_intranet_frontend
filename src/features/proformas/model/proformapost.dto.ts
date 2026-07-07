@@ -1,16 +1,8 @@
 import type { ProformaApiItem, ProformaStatusApi } from './proforma-api-item.dto'
 
-export type ProformaDetailPostDto = {
-  product_service_id?: number
-  description: string
-  unit?: string
-  quantity: number
-  unit_price: number
-  tax?: number
-  order?: number
-}
-
 // series, correlative y code NUNCA se envían — el servidor los genera siempre.
+// details NUNCA se envía — /proformas ya no acepta detalles anidados, se gestionan
+// aparte vía /proforma-details (ver features/proforma-details).
 export type ProformaPostRequestDto = {
   client_id?: number
   template_id?: number
@@ -25,7 +17,6 @@ export type ProformaPostRequestDto = {
   currency?: string
   status?: ProformaStatusApi
   observation?: string
-  details?: ProformaDetailPostDto[]
 }
 
 export type ProformaPostResponseDto = {

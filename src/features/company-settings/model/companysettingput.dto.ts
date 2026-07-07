@@ -5,10 +5,6 @@ export type CompanySettingPutRequestDto = {
   trade_name?: string
   tax_id?: string
   tax_address?: string
-  phone?: string
-  email?: string
-  facebook?: string
-  website?: string
   logo?: string
   status: number
 }

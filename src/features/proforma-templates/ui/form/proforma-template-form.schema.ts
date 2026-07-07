@@ -46,6 +46,8 @@ export const proformaTemplateFormSchema = z.object({
   showBranches: z.boolean(),
   showPaymentMethod: z.boolean(),
   showBankAccounts: z.boolean(),
+  showCompanySocialNetworks: z.boolean(),
+  showCompanyContacts: z.boolean(),
   showSignature: z.boolean(),
   showFooter: z.boolean(),
 
@@ -88,6 +90,8 @@ export const proformaTemplateFormDefaults: ProformaTemplateFormValues = {
   showBranches: true,
   showPaymentMethod: true,
   showBankAccounts: true,
+  showCompanySocialNetworks: true,
+  showCompanyContacts: true,
   showSignature: true,
   showFooter: true,
 
@@ -127,6 +131,8 @@ export const toProformaTemplatePayload = (
     show_branches: values.showBranches,
     show_payment_method: values.showPaymentMethod,
     show_bank_accounts: values.showBankAccounts,
+    show_company_social_networks: values.showCompanySocialNetworks,
+    show_company_contacts: values.showCompanyContacts,
     show_signature: values.showSignature,
     show_footer: values.showFooter,
   },

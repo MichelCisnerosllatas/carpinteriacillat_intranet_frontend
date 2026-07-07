@@ -22,6 +22,8 @@ export const proformaTemplateSectionsSchema = z.object({
   showBranches: z.boolean(),
   showPaymentMethod: z.boolean(),
   showBankAccounts: z.boolean(),
+  showCompanySocialNetworks: z.boolean(),
+  showCompanyContacts: z.boolean(),
   showSignature: z.boolean(),
   showFooter: z.boolean(),
 })

@@ -10,18 +10,6 @@ export const proformaStatusSchema = z.union([
 ])
 export type ProformaStatus = z.infer<typeof proformaStatusSchema>
 
-export const proformaDetailLineSchema = z.object({
-  id: z.number().optional(),
-  productServiceId: z.number().nullable().optional(),
-  description: z.string().min(1, 'La descripción es requerida.'),
-  unit: z.string().optional(),
-  quantity: z.number().min(0.01, 'Debe ser mayor a 0.'),
-  unitPrice: z.number().min(0, 'Debe ser 0 o mayor.'),
-  tax: z.number().optional(),
-  order: z.number().optional(),
-})
-export type ProformaDetailLine = z.infer<typeof proformaDetailLineSchema>
-
 // Línea de detalle tal como viene del join (solo lectura, usada en el detalle/documento)
 export const proformaDetailViewSchema = z.object({
   id: z.number(),
@@ -61,10 +49,6 @@ export const proformaSchema = z.object({
   companyTradeName: z.string().nullable(),
   companyTaxId: z.string().nullable(),
   companyTaxAddress: z.string().nullable(),
-  companyPhone: z.string().nullable(),
-  companyEmail: z.string().nullable(),
-  companyFacebook: z.string().nullable(),
-  companyWebsite: z.string().nullable(),
   companyLogo: z.string().nullable(),
   introText: z.string().nullable(),
   finalText: z.string().nullable(),
