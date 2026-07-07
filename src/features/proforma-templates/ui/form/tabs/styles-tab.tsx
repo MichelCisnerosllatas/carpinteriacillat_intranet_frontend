@@ -7,7 +7,8 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { FONT_FAMILY_SUGGESTIONS, HEADER_LAYOUT_OPTIONS } from '../../../data/data'
+import { TypeFontPickerModal } from '@/features/typefonts'
+import { HEADER_LAYOUT_OPTIONS } from '../../../data/data'
 import { ColorInputField } from '../color-input-field'
 import type { ProformaTemplateFormValues } from '../proforma-template-form.schema'
 
@@ -78,6 +79,21 @@ export function StylesTab({ form }: { form: UseFormReturn<ProformaTemplateFormVa
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="headerFontFamily"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Familia tipográfica <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <TypeFontPickerModal value={field.value} onChange={field.onChange} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -234,18 +250,7 @@ export function StylesTab({ form }: { form: UseFormReturn<ProformaTemplateFormVa
                         Familia tipográfica <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <div>
-                          <Input
-                            list="font-family-suggestions"
-                            placeholder="Ej: Arial"
-                            {...field}
-                          />
-                          <datalist id="font-family-suggestions">
-                            {FONT_FAMILY_SUGGESTIONS.map((f) => (
-                              <option key={f} value={f} />
-                            ))}
-                          </datalist>
-                        </div>
+                        <TypeFontPickerModal value={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -377,6 +382,21 @@ export function StylesTab({ form }: { form: UseFormReturn<ProformaTemplateFormVa
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="footerFontFamily"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Familia tipográfica <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <TypeFontPickerModal value={field.value} onChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="footerText"

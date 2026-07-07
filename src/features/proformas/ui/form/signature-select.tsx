@@ -14,11 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/shared/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { companySignaturesService } from '@/features/company-signatures/services/company-signatures.service'
 import type { CompanySignatureApiItem } from '@/features/company-signatures/model/companysignatureget.dto'
 
@@ -56,29 +52,32 @@ export function SignatureSelect({
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   const selected = value != null ? options.find((o) => o.id === value) : null
   const label = selected ? selected.signer_name : value === null && showAll ? 'Todos' : placeholder
 
-  if (isError) return (
-    <div className="grid grid-cols-2 h-9 w-full items-center rounded-md border border-destructive/40 bg-background px-3 text-sm">
-      <span className="flex items-center gap-1.5 text-destructive text-xs">
-        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-        Error al cargar
-      </span>
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={load}
-          className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
-          Reintentar
-        </button>
+  if (isError)
+    return (
+      <div className="border-destructive/40 bg-background grid h-9 w-full grid-cols-2 items-center rounded-md border px-3 text-sm">
+        <span className="text-destructive flex items-center gap-1.5 text-xs">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          Error al cargar
+        </span>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={load}
+            className="group text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+          >
+            <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
+            Reintentar
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -92,12 +91,14 @@ export function SignatureSelect({
           className="w-full justify-between font-normal"
         >
           {isLoading ? (
-            <span className="flex items-center gap-2 text-muted-foreground">
+            <span className="text-muted-foreground flex items-center gap-2">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Cargando...
             </span>
           ) : (
-            <span className={cn('truncate', !selected && value !== null && 'text-muted-foreground')}>
+            <span
+              className={cn('truncate', !selected && value !== null && 'text-muted-foreground')}
+            >
               {label}
             </span>
           )}
@@ -113,9 +114,14 @@ export function SignatureSelect({
               {showAll && (
                 <CommandItem
                   value="__all__"
-                  onSelect={() => { onValueChange(null); setOpen(false) }}
+                  onSelect={() => {
+                    onValueChange(null)
+                    setOpen(false)
+                  }}
                 >
-                  <Check className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')} />
+                  <Check
+                    className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')}
+                  />
                   Todos
                 </CommandItem>
               )}
@@ -123,9 +129,14 @@ export function SignatureSelect({
                 <CommandItem
                   key={opt.id}
                   value={opt.signer_name}
-                  onSelect={() => { onValueChange(opt.id); setOpen(false) }}
+                  onSelect={() => {
+                    onValueChange(opt.id)
+                    setOpen(false)
+                  }}
                 >
-                  <Check className={cn('mr-2 h-4 w-4', value === opt.id ? 'opacity-100' : 'opacity-0')} />
+                  <Check
+                    className={cn('mr-2 h-4 w-4', value === opt.id ? 'opacity-100' : 'opacity-0')}
+                  />
                   {opt.signer_name}
                 </CommandItem>
               ))}

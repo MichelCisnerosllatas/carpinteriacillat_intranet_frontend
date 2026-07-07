@@ -9,8 +9,6 @@ export const proformaTemplateStatusBadge = new Map<ProformaTemplateStatus, strin
   ['inactive', 'bg-neutral-300/40 border-neutral-300'],
 ])
 
-export const FONT_FAMILY_SUGGESTIONS = ['Arial', 'Helvetica', 'Times New Roman', 'Georgia']
-
 export const HEADER_LAYOUT_OPTIONS: { value: 'logo_izquierda' | 'logo_derecha'; label: string }[] =
   [
     { value: 'logo_derecha', label: 'Logo a la derecha' },

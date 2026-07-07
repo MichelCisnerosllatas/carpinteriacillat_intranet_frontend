@@ -27,6 +27,7 @@ export type ProformaTemplateApiItem = {
     logo_width: number
     logo_height: number
     layout: PdfTemplateHeaderLayout
+    font_family: string
   }
   body: {
     background_color: string
@@ -41,6 +42,7 @@ export type ProformaTemplateApiItem = {
     background_color: string
     text_color: string
     text_size: number
+    font_family: string
     text: string | null
   }
   sections: PdfTemplateSections | null

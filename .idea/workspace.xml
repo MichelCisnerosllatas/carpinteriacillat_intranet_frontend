@@ -5,50 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dd974f2a-f549-47fa-b560-ebf0e64117d0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/features/auth/hooks/useLogoutHandler.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/auth/ui/auth-session-provider.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/users/model/userget.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/users/model/userpost.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/users/services/user.endpoint.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/users/services/user.service.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/features/users/stores/useUsuarioListStore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/shared/type/linksPagination.type.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/shared/type/metaPagination.type.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/shared/type/type_doc.type.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/shared/type/user/userjoin.type.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/project.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(auth)/splash/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(intranet)/layout-client.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(intranet)/layout-client.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(intranet)/ui-components/_components/showcase.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(intranet)/ui-components/_components/showcase.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(intranet)/users/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(intranet)/users/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/auth/model/logindto/login.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/auth/model/logindto/login.dto.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/auth/model/verifydto/verify.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/auth/model/verifydto/verify.dto.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/auth/storage/auth.storage.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/auth/storage/auth.storage.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/auth/stores/auth.store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/auth/stores/auth.store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/auth/ui/sign-in-form.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/auth/ui/sign-in-form.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/users/components/users-columns.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/users/ui/users-columns.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/users/components/users-primary-buttons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/users/ui/users-primary-buttons.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/users/components/users-provider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/users/ui/users-provider.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/users/components/users-row-actions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/users/ui/users-row-actions.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/users/components/users-table.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/users/ui/users-table.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/features/users/data/schema.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/users/data/schema.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/middleware.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/middleware.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/api/apiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/api/apiClient.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/api/env.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/api/env.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/config/cookie.storage.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/config/cookie.storage.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/config/nav-types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/config/nav-types.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/config/sidebar-data.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/config/sidebar-data.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/lib/swal.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/lib/swal.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/type/user.type.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/type/user/user.type.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/ui/data-table/pagination.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/ui/data-table/pagination.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/widgets/header/appearance-drawer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/widgets/header/appearance-drawer.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/widgets/header/config-drawer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/widgets/header/config-drawer.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/widgets/header/header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/widgets/header/header.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/widgets/header/user-menu-compact.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/widgets/header/user-menu-compact.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/widgets/sidebar/app-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/widgets/sidebar/app-sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/widgets/sidebar/nav-user.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/widgets/sidebar/nav-user.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/data/data.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/data/data.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/data/schema.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/data/schema.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/model/proformatemplate-api-item.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/model/proformatemplate-api-item.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/model/proformatemplatepost.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/model/proformatemplatepost.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/stores/useProformaTemplateListStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/stores/useProformaTemplateListStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/ui/detail/proforma-template-detail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/ui/detail/proforma-template-detail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/ui/form/proforma-template-form.schema.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/ui/form/proforma-template-form.schema.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/ui/form/proforma-template-form.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/ui/form/proforma-template-form.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proforma-templates/ui/form/tabs/styles-tab.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proforma-templates/ui/form/tabs/styles-tab.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/data/data.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/data/data.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/model/proformaget.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/model/proformaget.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/services/proformas.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/services/proformas.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/stores/useProformaFormStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/stores/useProformaFormStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/stores/useProformaListStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/stores/useProformaListStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/detail/proforma-detail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/detail/proforma-detail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/form/client-select.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/form/client-select.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/form/proforma-detail-lines.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/form/proforma-detail-lines.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/form/proforma-form.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/form/proforma-form.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/form/signature-select.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/form/signature-select.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/list/proformas-columns.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/list/proformas-columns.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/list/proformas-row-actions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/list/proformas-row-actions.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/list/proformas-table.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/list/proformas-table.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/features/proformas/ui/proformas-breadcrumb.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/features/proformas/ui/proformas-breadcrumb.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -163,6 +144,7 @@
       <workItem from="1778627569117" duration="1263000" />
       <workItem from="1778964392704" duration="1167000" />
       <workItem from="1778966677125" duration="8664000" />
+      <workItem from="1783385414029" duration="170000" />
     </task>
     <servers />
   </component>

@@ -15,7 +15,9 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     id: 'select',
     header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
         onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
         aria-label="Seleccionar todos"
         className="translate-y-0.5"
@@ -38,7 +40,10 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     accessorKey: 'code',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Código" />,
     cell: ({ row }) => (
-      <Link href={`/proformas/${row.original.id}`} className="text-sm font-medium text-primary hover:underline">
+      <Link
+        href={`/proformas/${row.original.id}`}
+        className="text-primary text-sm font-medium hover:underline"
+      >
         {row.original.code}
       </Link>
     ),
@@ -52,7 +57,9 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     accessorFn: (row) => row.clientName ?? row.clientBusinessName ?? '',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Cliente" />,
     cell: ({ row }) => (
-      <span className="text-sm">{row.original.clientName ?? row.original.clientBusinessName ?? '—'}</span>
+      <span className="text-sm">
+        {row.original.clientName ?? row.original.clientBusinessName ?? '—'}
+      </span>
     ),
     enableSorting: true,
     enableHiding: true,
@@ -73,7 +80,11 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
       const opt = getProformaStatusOption(row.original.status)
-      return <Badge variant="outline" className={cn('text-xs', opt.badge)}>{opt.label}</Badge>
+      return (
+        <Badge variant="outline" className={cn('text-xs', opt.badge)}>
+          {opt.label}
+        </Badge>
+      )
     },
     enableSorting: true,
     enableHiding: true,
@@ -84,7 +95,9 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     accessorKey: 'total',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Total" />,
     cell: ({ row }) => (
-      <span className="text-sm font-medium">{formatCurrency(row.original.total, row.original.currency)}</span>
+      <span className="text-sm font-medium">
+        {formatCurrency(row.original.total, row.original.currency)}
+      </span>
     ),
     enableSorting: true,
     enableHiding: true,

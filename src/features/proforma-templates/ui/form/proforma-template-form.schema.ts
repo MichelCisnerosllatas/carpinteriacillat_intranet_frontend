@@ -24,6 +24,7 @@ export const proformaTemplateFormSchema = z.object({
   headerLogoWidth: requiredPositiveSize('El ancho del logo'),
   headerLogoHeight: requiredPositiveSize('El alto del logo'),
   headerLayout: headerLayoutSchema,
+  headerFontFamily: z.string().min(1, 'La tipografía es requerida.'),
 
   bodyBgColor: requiredHexColor('El color de fondo del cuerpo'),
   bodyTextColor: requiredHexColor('El color de texto del cuerpo'),
@@ -36,6 +37,7 @@ export const proformaTemplateFormSchema = z.object({
   footerBgColor: requiredHexColor('El color de fondo del footer'),
   footerTextColor: requiredHexColor('El color de texto del footer'),
   footerTextSize: requiredPositiveSize('El tamaño del texto del footer'),
+  footerFontFamily: z.string().min(1, 'La tipografía es requerida.'),
   footerText: z.string().max(255).optional(),
 
   showLogo: z.boolean(),
@@ -64,6 +66,7 @@ export const proformaTemplateFormDefaults: ProformaTemplateFormValues = {
   headerLogoWidth: 15,
   headerLogoHeight: 15,
   headerLayout: 'logo_derecha',
+  headerFontFamily: 'Arial',
 
   bodyBgColor: '#FFFFFF',
   bodyTextColor: '#1F2937',
@@ -76,6 +79,7 @@ export const proformaTemplateFormDefaults: ProformaTemplateFormValues = {
   footerBgColor: '#243FC4',
   footerTextColor: '#FFFFFF',
   footerTextSize: 9,
+  footerFontFamily: 'Arial',
   footerText: '',
 
   showLogo: true,
@@ -103,6 +107,7 @@ export const toProformaTemplatePayload = (
   header_logo_width: values.headerLogoWidth,
   header_logo_height: values.headerLogoHeight,
   header_layout: values.headerLayout,
+  header_font_family: values.headerFontFamily,
   body_bg_color: values.bodyBgColor,
   body_text_color: values.bodyTextColor,
   body_border_color: values.bodyBorderColor,
@@ -113,6 +118,7 @@ export const toProformaTemplatePayload = (
   footer_bg_color: values.footerBgColor,
   footer_text_color: values.footerTextColor,
   footer_text_size: values.footerTextSize,
+  footer_font_family: values.footerFontFamily,
   footer_text: values.footerText || undefined,
   sections: {
     show_logo: values.showLogo,

@@ -26,7 +26,13 @@ type Action = {
 }
 
 const defaultFilters: ProformaListRequestDto = {
-  page: 1, per_page: 10, search: '', status: undefined, client_id: undefined, date_from: '', date_to: '',
+  page: 1,
+  per_page: 10,
+  search: '',
+  status: undefined,
+  client_id: undefined,
+  date_from: '',
+  date_to: '',
 }
 
 export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
@@ -86,9 +92,16 @@ export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
 })
 
 export const useProformaListStore = create<State & Action>((set, get) => ({
-  hasLoaded: false, isInitialLoading: false, isFetching: false,
-  isError: false, message: null, items: [], links: null, meta: null,
-  filters: defaultFilters, currentItem: null,
+  hasLoaded: false,
+  isInitialLoading: false,
+  isFetching: false,
+  isError: false,
+  message: null,
+  items: [],
+  links: null,
+  meta: null,
+  filters: defaultFilters,
+  currentItem: null,
 
   setCurrentItem: (item) => set({ currentItem: item }),
 
@@ -99,15 +112,29 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
       const response = await proformasService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
       set({
-        hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
+        hasLoaded: true,
+        isInitialLoading: false,
+        isFetching: false,
+        isError: false,
         message: response.message,
         items: response.data.map(mapProformaFromApi),
-        links: response.links, meta: response.meta,
-        filters: { ...nextFilters, page: response.meta?.current_page ?? nextFilters.page, per_page: response.meta?.per_page ?? nextFilters.per_page },
+        links: response.links,
+        meta: response.meta,
+        filters: {
+          ...nextFilters,
+          page: response.meta?.current_page ?? nextFilters.page,
+          per_page: response.meta?.per_page ?? nextFilters.per_page,
+        },
       })
       return true
     } catch (error: any) {
-      set({ hasLoaded: true, isInitialLoading: false, isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      set({
+        hasLoaded: true,
+        isInitialLoading: false,
+        isFetching: false,
+        isError: true,
+        message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.',
+      })
       return false
     }
   },
@@ -120,10 +147,25 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
       set({ isFetching: false, currentItem: mapProformaFromApi(response.data) })
       return true
     } catch (error: any) {
-      set({ isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      set({
+        isFetching: false,
+        isError: true,
+        message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.',
+      })
       return false
     }
   },
 
-  reset: () => set({ hasLoaded: false, isInitialLoading: false, isFetching: false, isError: false, message: null, items: [], links: null, meta: null, filters: defaultFilters }),
+  reset: () =>
+    set({
+      hasLoaded: false,
+      isInitialLoading: false,
+      isFetching: false,
+      isError: false,
+      message: null,
+      items: [],
+      links: null,
+      meta: null,
+      filters: defaultFilters,
+    }),
 }))

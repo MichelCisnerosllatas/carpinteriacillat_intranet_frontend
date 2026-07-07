@@ -8,8 +8,12 @@ import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
@@ -57,7 +61,8 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
 
   const handleDelete = async () => {
     await swalDeleteConfirm(
-      `¿Eliminar "${row.original.code}"?`, 'Esta acción eliminará también sus líneas de detalle y no se puede deshacer.',
+      `¿Eliminar "${row.original.code}"?`,
+      'Esta acción eliminará también sus líneas de detalle y no se puede deshacer.',
       async ({ close, showError }) => {
         const ok = await deleteItem(row.original.id)
         if (ok) {
@@ -74,24 +79,40 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+        <Button variant="ghost" className="data-[state=open]:bg-muted flex h-8 w-8 p-0">
           <DotsHorizontalIcon className="h-4 w-4" />
           <span className="sr-only">Abrir menú</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          Ver detalle{' '}
+          <DropdownMenuShortcut>
+            <Eye size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleEdit}>
-          Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
+          Editar{' '}
+          <DropdownMenuShortcut>
+            <Pencil size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => void handleDownloadPdf()} disabled={isDownloading}>
-          Descargar PDF <DropdownMenuShortcut>{isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}</DropdownMenuShortcut>
+          Descargar PDF{' '}
+          <DropdownMenuShortcut>
+            {isDownloading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+          Eliminar{' '}
+          <DropdownMenuShortcut>
+            <Trash2 size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

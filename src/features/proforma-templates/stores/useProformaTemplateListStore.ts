@@ -64,6 +64,7 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
     headerLogoWidth: item.header.logo_width,
     headerLogoHeight: item.header.logo_height,
     headerLayout: item.header.layout,
+    headerFontFamily: item.header.font_family,
 
     bodyBgColor: item.body.background_color,
     bodyTextColor: item.body.text_color,
@@ -76,6 +77,7 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
     footerBgColor: item.footer.background_color,
     footerTextColor: item.footer.text_color,
     footerTextSize: item.footer.text_size,
+    footerFontFamily: item.footer.font_family,
     footerText: item.footer.text,
 
     sections: {

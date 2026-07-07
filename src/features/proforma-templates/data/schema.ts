@@ -42,6 +42,7 @@ export const proformaTemplateSchema = z.object({
   headerLogoWidth: z.number(),
   headerLogoHeight: z.number(),
   headerLayout: headerLayoutSchema,
+  headerFontFamily: z.string(),
 
   bodyBgColor: z.string(),
   bodyTextColor: z.string(),
@@ -54,6 +55,7 @@ export const proformaTemplateSchema = z.object({
   footerBgColor: z.string(),
   footerTextColor: z.string(),
   footerTextSize: z.number(),
+  footerFontFamily: z.string(),
   footerText: z.string().nullable(),
 
   sections: proformaTemplateSectionsSchema,

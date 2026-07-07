@@ -3,8 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
-  type PaginationState, type SortingState, type VisibilityState,
-  flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
+  type PaginationState,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
@@ -24,26 +29,41 @@ import type { ProformaStatus } from '../../data/schema'
 import { proformasColumns } from './proformas-columns'
 
 export function ProformasTable() {
-  const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
-    useProformaListStore()
+  const {
+    items,
+    meta,
+    filters,
+    hasLoaded,
+    isInitialLoading,
+    isFetching,
+    isError,
+    message,
+    load,
+    reset,
+  } = useProformaListStore()
   const { bulkDeleteItems } = useProformaDeleteStore()
 
-  const [rowSelection, setRowSelection]         = useState({})
+  const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting]                   = useState<SortingState>([])
-  const [search, setSearch]                     = useState(filters.search ?? '')
-  const [status, setStatus]                     = useState<string>(filters.status ?? 'all')
-  const [clientId, setClientId]                 = useState<number | null>(filters.client_id ?? null)
-  const [dateFrom, setDateFrom]                 = useState(filters.date_from ?? '')
-  const [dateTo, setDateTo]                     = useState(filters.date_to ?? '')
-  const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [search, setSearch] = useState(filters.search ?? '')
+  const [status, setStatus] = useState<string>(filters.status ?? 'all')
+  const [clientId, setClientId] = useState<number | null>(filters.client_id ?? null)
+  const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
+  const [dateTo, setDateTo] = useState(filters.date_to ?? '')
+  const [isBulkLoading, setIsBulkLoading] = useState(false)
 
-  const pagination = useMemo<PaginationState>(() => ({
-    pageIndex: Math.max((filters.page ?? 1) - 1, 0),
-    pageSize: filters.per_page ?? 10,
-  }), [filters.page, filters.per_page])
+  const pagination = useMemo<PaginationState>(
+    () => ({
+      pageIndex: Math.max((filters.page ?? 1) - 1, 0),
+      pageSize: filters.per_page ?? 10,
+    }),
+    [filters.page, filters.per_page]
+  )
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   useEffect(() => {
     if (!hasLoaded) return
@@ -82,13 +102,25 @@ export function ProformasTable() {
   const selectedCount = selectedRows.length
 
   const resetFilters = () => {
-    setSearch(''); setStatus('all'); setClientId(null); setDateFrom(''); setDateTo('')
-    void load({ search: '', status: undefined, client_id: undefined, date_from: '', date_to: '', page: 1 })
+    setSearch('')
+    setStatus('all')
+    setClientId(null)
+    setDateFrom('')
+    setDateTo('')
+    void load({
+      search: '',
+      status: undefined,
+      client_id: undefined,
+      date_from: '',
+      date_to: '',
+      page: 1,
+    })
   }
 
   const handleBulkDelete = async () => {
     await swalDeleteConfirm(
-      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
+      `¿Eliminar ${selectedCount} registro(s)?`,
+      'Esta acción no se puede deshacer.',
       async ({ close, showError }) => {
         const ids = selectedRows.map((r) => r.original.id)
         const ok = await bulkDeleteItems(ids)
@@ -107,8 +139,8 @@ export function ProformasTable() {
   if (!hasLoaded && !isInitialLoading) {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando proformas...</p>
+        <LoaderCircle className="text-muted-foreground mb-3 size-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">Cargando proformas...</p>
       </div>
     )
   }
@@ -117,8 +149,17 @@ export function ProformasTable() {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
         <p className="text-sm font-semibold">Error al cargar proformas</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
+        {message && <p className="text-muted-foreground text-xs">{message}</p>}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            reset()
+            void load()
+          }}
+        >
+          Reintentar
+        </Button>
       </div>
     )
   }
@@ -127,8 +168,9 @@ export function ProformasTable() {
     <div className="relative flex flex-1 flex-col gap-4">
       {isFetching && (
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
+          <div className="bg-background text-muted-foreground mt-2 flex items-center gap-2 rounded-full border px-3 py-1 text-xs shadow-sm">
+            <LoaderCircle className="size-3.5 animate-spin" />
+            Actualizando...
           </div>
         </div>
       )}
@@ -136,35 +178,67 @@ export function ProformasTable() {
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Buscar</span>
-            <Input placeholder="Código o cliente..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[200px]" />
+            <span className="text-muted-foreground text-xs">Buscar</span>
+            <Input
+              placeholder="Código o cliente..."
+              value={search}
+              disabled={isFetching}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 w-full sm:w-[200px]"
+            />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Estado</span>
+            <span className="text-muted-foreground text-xs">Estado</span>
             <Select value={status} disabled={isFetching} onValueChange={setStatus}>
-              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
-                {PROFORMA_STATUS_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                {PROFORMA_STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Cliente</span>
+            <span className="text-muted-foreground text-xs">Cliente</span>
             <div className="w-full sm:w-[200px]">
-              <ClientSelect value={clientId} onValueChange={setClientId} showAll disabled={isFetching} placeholder="Todos" />
+              <ClientSelect
+                value={clientId}
+                onValueChange={setClientId}
+                showAll
+                disabled={isFetching}
+                placeholder="Todos"
+              />
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Fecha desde</span>
-            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+            <span className="text-muted-foreground text-xs">Fecha desde</span>
+            <Input
+              type="date"
+              value={dateFrom}
+              disabled={isFetching}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="h-8 w-full sm:w-[145px]"
+            />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Fecha hasta</span>
-            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+            <span className="text-muted-foreground text-xs">Fecha hasta</span>
+            <Input
+              type="date"
+              value={dateTo}
+              disabled={isFetching}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="h-8 w-full sm:w-[145px]"
+            />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
+              Limpiar
+            </Button>
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -176,7 +250,14 @@ export function ProformasTable() {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((h) => (
-                  <TableHead key={h.id} colSpan={h.colSpan} className={cn('bg-muted/50 text-xs', (h.column.columnDef.meta as any)?.className)}>
+                  <TableHead
+                    key={h.id}
+                    colSpan={h.colSpan}
+                    className={cn(
+                      'bg-muted/50 text-xs',
+                      (h.column.columnDef.meta as any)?.className
+                    )}
+                  >
                     {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
                   </TableHead>
                 ))}
@@ -189,10 +270,16 @@ export function ProformasTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={cn('transition-colors', selectedCount > 0 && !row.getIsSelected() && 'opacity-50')}
+                  className={cn(
+                    'transition-colors',
+                    selectedCount > 0 && !row.getIsSelected() && 'opacity-50'
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -200,7 +287,10 @@ export function ProformasTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={proformasColumns.length} className="h-20 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={proformasColumns.length}
+                  className="text-muted-foreground h-20 text-center text-sm"
+                >
                   No hay proformas para mostrar.
                 </TableCell>
               </TableRow>
@@ -209,8 +299,14 @@ export function ProformasTable() {
         </Table>
       </div>
 
-      <DataTablePagination table={table} className="mt-auto"
-        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
+      <DataTablePagination
+        table={table}
+        className="mt-auto"
+        summary={
+          meta
+            ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros`
+            : 'Sin registros'
+        }
       />
 
       <DataTableBulkActions

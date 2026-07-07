@@ -15,6 +15,7 @@ export type ProformaTemplatePostRequestDto = {
   header_logo_width?: number
   header_logo_height?: number
   header_layout?: PdfTemplateHeaderLayout
+  header_font_family?: string
   body_bg_color?: string
   body_text_color?: string
   body_border_color?: string
@@ -25,6 +26,7 @@ export type ProformaTemplatePostRequestDto = {
   footer_bg_color?: string
   footer_text_color?: string
   footer_text_size?: number
+  footer_font_family?: string
   footer_text?: string
   sections?: PdfTemplateSections
   status?: number

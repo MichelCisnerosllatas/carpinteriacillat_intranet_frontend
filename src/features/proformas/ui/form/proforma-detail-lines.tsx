@@ -23,7 +23,10 @@ export function ProformaDetailLines({ form, control, disabled }: ProformaDetailL
   const currency = form.watch('currency') || 'PEN'
   const { options: productServiceOptions } = useProductServiceSelectStore()
 
-  const subtotal = details.reduce((acc, d) => acc + (Number(d.quantity) || 0) * (Number(d.unitPrice) || 0), 0)
+  const subtotal = details.reduce(
+    (acc, d) => acc + (Number(d.quantity) || 0) * (Number(d.unitPrice) || 0),
+    0
+  )
   const taxTotal = details.reduce((acc, d) => acc + (Number(d.tax) || 0), 0)
   const total = subtotal + taxTotal
 
@@ -45,7 +48,7 @@ export function ProformaDetailLines({ form, control, disabled }: ProformaDetailL
           <TableBody>
             {fields.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-20 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="text-muted-foreground h-20 text-center text-sm">
                   Sin líneas. Agrega al menos una para detallar la proforma.
                 </TableCell>
               </TableRow>
@@ -82,7 +85,11 @@ export function ProformaDetailLines({ form, control, disabled }: ProformaDetailL
                     />
                   </TableCell>
                   <TableCell>
-                    <Input placeholder="Unid." disabled={disabled} {...form.register(`details.${index}.unit`)} />
+                    <Input
+                      placeholder="Unid."
+                      disabled={disabled}
+                      {...form.register(`details.${index}.unit`)}
+                    />
                   </TableCell>
                   <TableCell>
                     <Input
@@ -114,7 +121,7 @@ export function ProformaDetailLines({ form, control, disabled }: ProformaDetailL
                       size="icon"
                       disabled={disabled}
                       onClick={() => remove(index)}
-                      className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive size-8"
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -133,7 +140,14 @@ export function ProformaDetailLines({ form, control, disabled }: ProformaDetailL
         disabled={disabled}
         className="w-fit gap-1.5"
         onClick={() =>
-          append({ productServiceId: null, description: '', unit: '', quantity: 1, unitPrice: 0, tax: 0 })
+          append({
+            productServiceId: null,
+            description: '',
+            unit: '',
+            quantity: 1,
+            unitPrice: 0,
+            tax: 0,
+          })
         }
       >
         <Plus className="size-4" />

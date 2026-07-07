@@ -118,8 +118,16 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Fuente</span>
+              <span className="text-muted-foreground">Fuente header</span>
+              <span className="font-medium">{item.headerFontFamily}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fuente body</span>
               <span className="font-medium">{item.bodyFontFamily}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fuente footer</span>
+              <span className="font-medium">{item.footerFontFamily}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Título / subtítulo</span>
