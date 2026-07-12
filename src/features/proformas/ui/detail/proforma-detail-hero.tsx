@@ -78,15 +78,17 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
             </TooltipTrigger>
             <TooltipContent>Crear una proforma nueva</TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => goTo(`/proformas/edit/${item.id}`)}>
-                <Pencil className="mr-1 size-4" />
-                Editar
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Editar esta proforma</TooltipContent>
-          </Tooltip>
+          {item.status === 'PENDIENTE' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => goTo(`/proformas/edit/${item.id}`)}>
+                  <Pencil className="mr-1 size-4" />
+                  Editar
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Editar esta proforma</TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="size-9" disabled={isRefreshing} onClick={onRefresh}>

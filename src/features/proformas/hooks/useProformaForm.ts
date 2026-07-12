@@ -9,6 +9,7 @@ import { useProformaTypeSelectStore } from '@/features/proforma-types'
 import { useProformaTemplateSelectStore } from '@/features/proforma-templates'
 import { useClientSelectStore } from '@/features/clients'
 import { useCompanySignatureSelectStore } from '@/features/company-signatures'
+import { toastWarning } from '@/shared/lib/toast'
 import { useProformaListStore } from '../stores/useProformaListStore'
 import { useProformaFormStore } from '../stores/useProformaFormStore'
 import {
@@ -56,6 +57,15 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
       void loadOne(Number(id))
     }
   }, [isEdit, id, resolved])
+
+  // Solo se puede editar mientras la proforma sigue Pendiente — cubre a quien entra directo por
+  // URL sin pasar por el botón "Editar" (que ya está oculto para los demás estados).
+  useEffect(() => {
+    if (isEdit && resolved && resolved.status !== 'PENDIENTE') {
+      toastWarning('No se puede editar', 'Esta proforma ya no está en estado Pendiente.')
+      router.replace(`/proformas/${resolved.id}`)
+    }
+  }, [isEdit, resolved])
 
   // Al crear, se autoselecciona el primer ítem de cada select para agilizar el llenado — en
   // edición nunca se toca (el efecto de `form.reset` con los datos reales corre después y
