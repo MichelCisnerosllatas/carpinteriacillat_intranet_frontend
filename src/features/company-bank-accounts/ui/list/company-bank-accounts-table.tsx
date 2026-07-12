@@ -1,7 +1,7 @@
 // src/features/company-bank-accounts/ui/list/company-bank-accounts-table.tsx
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
@@ -44,10 +44,19 @@ export function CompanyBankAccountsTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
+  const appliedFilters = useRef({ search, status, currency })
+
   useEffect(() => { void load() }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search ||
+      prev.status !== status ||
+      prev.currency !== currency
+    appliedFilters.current = { search, status, currency }
+    if (!changed) return
+
     const t = window.setTimeout(() => {
       void load({
         search,

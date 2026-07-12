@@ -102,6 +102,7 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
   setCurrentItem: (item) => set({ currentItem: item }),
 
   load: async (params = {}) => {
+    if (get().isFetching) return false
     const nextFilters = { ...get().filters, ...params }
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })
     try {

@@ -19,6 +19,18 @@ export function formatDatetime(date: Date = new Date()): string {
   )
 }
 
+// Formatea una fecha (ISO "2026-04-16" o datetime "2026-04-16T00:00:00.000000Z") para mostrar
+// al usuario, ej. "16/04/2026". Úsala en toda la UI en vez de imprimir el string crudo del API.
+export function formatDisplayDate(
+  value: string | null | undefined,
+  options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }
+): string {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('es-PE', options)
+}
+
 export function getPageNumbers(currentPage: number, totalPages: number) {
   const maxVisiblePages = 5
   const rangeWithDots: (number | string)[] = []

@@ -67,6 +67,7 @@ export const useRoleListStore = create<State & Action>((set, get) => ({
   setCurrentRole: (role) => set({ currentRole: role }),
 
   load: async (params = {}) => {
+    if (get().isFetching) return false
     const nextFilters = { ...get().filters, ...params }
 
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })

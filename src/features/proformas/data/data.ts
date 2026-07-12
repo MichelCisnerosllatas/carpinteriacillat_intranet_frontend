@@ -59,3 +59,6 @@ export const PROFORMA_CURRENCIES = [
   { value: 'PEN', label: 'PEN — Soles' },
   { value: 'USD', label: 'USD — Dólares' },
 ]
+
+export const formatProformaCurrency = (value: number, currency: string) =>
+  `${currency} ${value.toFixed(2)}`

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImageOff, LoaderCircle } from 'lucide-react'
 import NProgress from 'nprogress'
@@ -35,10 +35,16 @@ export function FurnitureImagesGrid() {
   const [isBulkLoading, setIsBulkLoading] = useState(false)
   const [lightboxIdx, setLightboxIdx]     = useState(-1)
 
+  const appliedFilters = useRef({ stateFilter })
+
   useEffect(() => { void load() }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed = prev.stateFilter !== stateFilter
+    appliedFilters.current = { stateFilter }
+    if (!changed) return
+
     const t = window.setTimeout(() => {
       void load({ state: stateFilter === 'all' ? undefined : Number(stateFilter), page: 1 })
     }, 300)

@@ -101,6 +101,7 @@ export const useUserListStore = create<State & Action>((set, get) => ({
   setCurrentUser: (user) => set({ currentUser: user }),
 
   load: async (params = {}) => {
+    if (get().isFetching) return false
     const nextFilters = {
       ...get().filters,
       ...params,

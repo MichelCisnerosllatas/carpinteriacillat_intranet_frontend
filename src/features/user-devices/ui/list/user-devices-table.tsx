@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle, RefreshCw } from 'lucide-react'
 import {
   type PaginationState,
@@ -66,10 +66,22 @@ export function UserDevicesTable() {
     pageSize: filters.per_page ?? 15,
   }), [filters.page, filters.per_page])
 
+  const appliedFilters = useRef({ search, status, platform, deviceType, dateFrom, dateTo })
+
   useEffect(() => { void load() }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search ||
+      prev.status !== status ||
+      prev.platform !== platform ||
+      prev.deviceType !== deviceType ||
+      prev.dateFrom !== dateFrom ||
+      prev.dateTo !== dateTo
+    appliedFilters.current = { search, status, platform, deviceType, dateFrom, dateTo }
+    if (!changed) return
+
     const timeout = window.setTimeout(() => {
       void load({
         search,

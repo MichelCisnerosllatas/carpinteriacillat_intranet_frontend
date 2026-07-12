@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState,
@@ -61,12 +61,23 @@ export function ProformasTable() {
     [filters.page, filters.per_page]
   )
 
+  const appliedFilters = useRef({ search, status, clientId, dateFrom, dateTo })
+
   useEffect(() => {
     void load()
   }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search ||
+      prev.status !== status ||
+      prev.clientId !== clientId ||
+      prev.dateFrom !== dateFrom ||
+      prev.dateTo !== dateTo
+    appliedFilters.current = { search, status, clientId, dateFrom, dateTo }
+    if (!changed) return
+
     const t = window.setTimeout(() => {
       void load({
         search,

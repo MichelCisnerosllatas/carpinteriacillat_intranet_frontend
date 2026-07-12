@@ -86,6 +86,7 @@ export const useFurnitureListStore = create<State & Action>((set, get) => ({
   },
 
   load: async (params = {}) => {
+    if (get().isFetching) return false
     const nextFilters = { ...get().filters, ...params }
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })
     try {

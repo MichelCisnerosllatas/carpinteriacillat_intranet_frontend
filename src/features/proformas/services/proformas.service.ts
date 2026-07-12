@@ -72,9 +72,13 @@ export const proformasService = {
     return data.success
   },
 
-  // GET /proformas/{id}/pdf — PDF binario en línea, no usa el sobre JSON estándar.
+  // GET /proformas/{id}/pdf — PDF binario en línea, no usa el sobre JSON estándar. Mismo motor
+  // de PDF que el preview (puede tardar), así que usa el mismo margen amplio que ese.
   viewPdf: async (id: number): Promise<Blob> => {
-    const { data } = await apiClient.get(PROFORMAS_ENDPOINTS.v1.pdf(id), { responseType: 'blob' })
+    const { data } = await apiClient.get(PROFORMAS_ENDPOINTS.v1.pdf(id), {
+      responseType: 'blob',
+      timeout: PREVIEW_TIMEOUT_MS,
+    })
     return data
   },
 
@@ -82,6 +86,7 @@ export const proformasService = {
   downloadPdf: async (id: number): Promise<Blob> => {
     const { data } = await apiClient.get(PROFORMAS_ENDPOINTS.v1.pdfDownload(id), {
       responseType: 'blob',
+      timeout: PREVIEW_TIMEOUT_MS,
     })
     return data
   },

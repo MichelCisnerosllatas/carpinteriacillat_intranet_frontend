@@ -1,7 +1,7 @@
 // src/features/typecolors/ui/list/typecolors-table.tsx
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
@@ -44,10 +44,20 @@ export function TypeColorsTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
+  const appliedFilters = useRef({ search, state, dateFrom, dateTo })
+
   useEffect(() => { void load() }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search ||
+      prev.state !== state ||
+      prev.dateFrom !== dateFrom ||
+      prev.dateTo !== dateTo
+    appliedFilters.current = { search, state, dateFrom, dateTo }
+    if (!changed) return
+
     const t = window.setTimeout(() => {
       void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 })
     }, 500)

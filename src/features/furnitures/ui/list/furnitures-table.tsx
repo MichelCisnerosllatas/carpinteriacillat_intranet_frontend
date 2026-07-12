@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { LoaderCircle, Sofa } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
@@ -34,10 +34,20 @@ export function FurnituresTable() {
   const [dateTo, setDateTo]             = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
 
+  const appliedFilters = useRef({ search, state, dateFrom, dateTo })
+
   useEffect(() => { void load() }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search ||
+      prev.state !== state ||
+      prev.dateFrom !== dateFrom ||
+      prev.dateTo !== dateTo
+    appliedFilters.current = { search, state, dateFrom, dateTo }
+    if (!changed) return
+
     const t = window.setTimeout(() => {
       void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 })
     }, 500)

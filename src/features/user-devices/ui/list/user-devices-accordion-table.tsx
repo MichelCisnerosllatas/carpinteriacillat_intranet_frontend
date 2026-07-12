@@ -420,6 +420,7 @@ export function UserDevicesAccordionTable() {
   )
   const [platform, setPlatform] = useState<string>(filters.platform ?? 'all')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const appliedFilters = useRef({ search, isActive, platform })
 
   useEffect(() => {
     if (!hasLoaded && !isInitialLoading) {
@@ -444,7 +445,14 @@ export function UserDevicesAccordionTable() {
     [load, search, isActive, platform]
   )
 
-  useEffect(() => { applyFilters() }, [search, isActive, platform]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search || prev.isActive !== isActive || prev.platform !== platform
+    appliedFilters.current = { search, isActive, platform }
+    if (!changed) return
+    applyFilters()
+  }, [search, isActive, platform]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Agrupar por usuario
   const groups: UserGroup[] = []

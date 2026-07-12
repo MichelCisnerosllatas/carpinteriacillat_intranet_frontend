@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
@@ -41,10 +41,16 @@ export function ProductsServicesTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
+  const appliedFilters = useRef({ search, type, status })
+
   useEffect(() => { void load() }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed = prev.search !== search || prev.type !== type || prev.status !== status
+    appliedFilters.current = { search, type, status }
+    if (!changed) return
+
     const t = window.setTimeout(() => {
       void load({
         search,

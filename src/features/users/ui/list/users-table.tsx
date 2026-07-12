@@ -1,7 +1,7 @@
 // src/features/users/ui/list/users-table.tsx
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
@@ -48,13 +48,23 @@ export function UsersTable() {
 
   const { bulkToggleState, bulkDeleteItems } = useUserDeleteStore()
 
+  const appliedFilters = useRef({ search, state, role, dateFrom, dateTo })
+
   useEffect(() => {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    if (!hasLoaded) return
+    const prev = appliedFilters.current
+    const changed =
+      prev.search !== search ||
+      prev.state !== state ||
+      prev.role !== role ||
+      prev.dateFrom !== dateFrom ||
+      prev.dateTo !== dateTo
+    appliedFilters.current = { search, state, role, dateFrom, dateTo }
+    if (!changed) return
 
     const timeout = window.setTimeout(() => {
       void load({
