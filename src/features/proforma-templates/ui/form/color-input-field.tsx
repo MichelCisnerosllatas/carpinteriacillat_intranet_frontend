@@ -2,6 +2,7 @@
 
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
+import { FieldTip } from '@/shared/ui/field-tip'
 
 const HEX_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
@@ -11,6 +12,7 @@ interface ColorInputFieldProps {
   onChange: (value: string) => void
   disabled?: boolean
   required?: boolean
+  tip?: string
 }
 
 export function ColorInputField({
@@ -19,14 +21,20 @@ export function ColorInputField({
   onChange,
   disabled,
   required,
+  tip,
 }: ColorInputFieldProps) {
   const isValidHex = HEX_REGEX.test(value || '')
   const swatchColor = isValidHex ? value : '#ffffff'
+  const labelContent = (
+    <>
+      {label} {required && <span className="text-destructive">*</span>}
+    </>
+  )
 
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-sm">
-        {label} {required && <span className="text-destructive">*</span>}
+        {tip ? <FieldTip label={labelContent} tip={tip} /> : labelContent}
       </Label>
       <div className="flex items-center gap-2">
         <input

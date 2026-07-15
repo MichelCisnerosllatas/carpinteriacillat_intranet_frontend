@@ -16,7 +16,7 @@ type State = {
 
 type Action = {
   setForceReload: (value: boolean) => void
-  loadByTemplate: (templateId: number) => Promise<boolean>
+  loadByTemplateText: (templateId: number) => Promise<boolean>
   reset: () => void
 }
 
@@ -38,7 +38,7 @@ export const useProformaTemplateTextListStore = create<State & Action>((set, get
 
   setForceReload: (value) => set({ forceReload: value }),
 
-  loadByTemplate: async (templateId) => {
+  loadByTemplateText: async (templateId) => {
     if (!get().forceReload && get().hasLoaded && get().templateId === templateId) return true
     set({ isFetching: true, isError: false, message: null, templateId })
     try {

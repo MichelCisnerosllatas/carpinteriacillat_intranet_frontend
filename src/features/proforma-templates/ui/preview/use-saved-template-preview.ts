@@ -7,6 +7,7 @@ import { proformasService } from '@/features/proformas'
 export function useSavedTemplatePreview(templateId: number | null) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
 
   const refresh = async () => {
     if (templateId == null) return
@@ -14,8 +15,10 @@ export function useSavedTemplatePreview(templateId: number | null) {
     try {
       const url = await proformasService.getPreviewStyleUrl(templateId)
       setPreviewUrl(url)
+      setIsError(false)
     } catch (err) {
       console.error('[preview-style] error al cargar la vista previa guardada:', err)
+      setIsError(true)
     } finally {
       setIsLoading(false)
     }
@@ -25,5 +28,5 @@ export function useSavedTemplatePreview(templateId: number | null) {
     void refresh()
   }, [templateId])
 
-  return { previewUrl, isLoading, refresh }
+  return { previewUrl, isLoading, isError, refresh }
 }

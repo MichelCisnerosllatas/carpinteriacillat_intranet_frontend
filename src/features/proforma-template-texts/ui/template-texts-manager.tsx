@@ -7,6 +7,8 @@ import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Switch } from '@/shared/ui/switch'
 import { Label } from '@/shared/ui/label'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { FieldTip } from '@/shared/ui/field-tip'
 import { cn } from '@/shared/lib/utils'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -43,7 +45,7 @@ interface TemplateTextsManagerProps {
 }
 
 export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) {
-  const { items, isFetching, isError, loadByTemplate } = useProformaTemplateTextListStore()
+  const { items, isFetching, isError, loadByTemplateText: loadByTemplate } = useProformaTemplateTextListStore()
   const { isSubmitting, create, update } = useProformaTemplateTextFormStore()
   const { isLoading: isDeleting, deleteItem } = useProformaTemplateTextDeleteStore()
 
@@ -142,10 +144,20 @@ export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) 
       {rows.map((row) => (
         <div key={row.localId} className={cn('flex flex-col gap-3 rounded-lg border p-3', !row.id && 'border-dashed')}>
           <div className="flex items-start gap-3">
-            <GripVertical className="mt-2 size-4 shrink-0 text-muted-foreground" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <GripVertical className="mt-2 size-4 shrink-0 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>Usa el campo &quot;Orden&quot; para cambiar la posición de este bloque</TooltipContent>
+            </Tooltip>
             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Clave interna (key) *</Label>
+                <Label className="text-xs text-muted-foreground">
+                  <FieldTip
+                    label="Clave interna (key) *"
+                    tip="Identificador único de este bloque de texto (no se muestra en el PDF). Usa solo letras, números y guiones bajos."
+                  />
+                </Label>
                 <Input
                   placeholder="Ej: texto_introductorio"
                   value={row.key}
@@ -153,7 +165,9 @@ export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) 
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Título</Label>
+                <Label className="text-xs text-muted-foreground">
+                  <FieldTip label="Título" tip="Encabezado visible de este bloque dentro del PDF (opcional)." />
+                </Label>
                 <Input
                   placeholder="Título visible"
                   value={row.title}
@@ -161,7 +175,9 @@ export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) 
                 />
               </div>
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <Label className="text-xs text-muted-foreground">Contenido</Label>
+                <Label className="text-xs text-muted-foreground">
+                  <FieldTip label="Contenido" tip="Texto que se imprimirá dentro del bloque en el PDF." />
+                </Label>
                 <Textarea
                   placeholder="Contenido del bloque..."
                   value={row.content}
@@ -171,10 +187,14 @@ export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) 
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={row.visible} onCheckedChange={(v) => updateField(row.localId, 'visible', v)} />
-                <Label className="text-sm">Visible</Label>
+                <Label className="text-sm">
+                  <FieldTip label="Visible" tip="Si está apagado, este bloque no aparecerá en el PDF, pero se conserva guardado." />
+                </Label>
               </div>
               <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Orden</Label>
+                <Label className="text-xs text-muted-foreground">
+                  <FieldTip label="Orden" tip="Posición de este bloque respecto a los demás (menor número aparece primero)." />
+                </Label>
                 <Input
                   type="number"
                   value={row.order}
@@ -185,37 +205,52 @@ export function TemplateTextsManager({ templateId }: TemplateTextsManagerProps) 
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              disabled={isDeleting && deletingRow === row.localId}
-              onClick={() => void removeRow(row)}
-            >
-              {isDeleting && deletingRow === row.localId
-                ? <Loader2 className="size-4 animate-spin" />
-                : <Trash2 className="size-4" />}
-              Eliminar
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={isSubmitting && savingRow === row.localId}
-              onClick={() => void saveRow(row)}
-            >
-              {isSubmitting && savingRow === row.localId
-                ? <Loader2 className="mr-1 size-4 animate-spin" />
-                : <Save className="mr-1 size-4" />}
-              Guardar bloque
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                  disabled={isDeleting && deletingRow === row.localId}
+                  onClick={() => void removeRow(row)}
+                >
+                  {isDeleting && deletingRow === row.localId
+                    ? <Loader2 className="size-4 animate-spin" />
+                    : <Trash2 className="size-4" />}
+                  Eliminar
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Elimina este bloque de texto de la plantilla</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isSubmitting && savingRow === row.localId}
+                  onClick={() => void saveRow(row)}
+                >
+                  {isSubmitting && savingRow === row.localId
+                    ? <Loader2 className="mr-1 size-4 animate-spin" />
+                    : <Save className="mr-1 size-4" />}
+                  Guardar bloque
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Guarda los cambios de este bloque de texto</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       ))}
 
-      <Button type="button" variant="outline" onClick={addRow} className="w-fit">
-        <Plus className="mr-1 size-4" />Agregar bloque de texto
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button type="button" variant="outline" onClick={addRow} className="w-fit">
+            <Plus className="mr-1 size-4" />Agregar bloque de texto
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Agrega un nuevo bloque de texto libre a esta plantilla</TooltipContent>
+      </Tooltip>
     </div>
   )
 }

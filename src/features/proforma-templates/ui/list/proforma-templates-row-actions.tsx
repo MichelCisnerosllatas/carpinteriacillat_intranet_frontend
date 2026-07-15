@@ -14,6 +14,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useProformaTemplateListStore } from '../../stores/useProformaTemplateListStore'
@@ -80,12 +81,23 @@ export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="data-[state=open]:bg-muted flex h-8 w-8 p-0">
-          <DotsHorizontalIcon className="h-4 w-4" />
-          <span className="sr-only">Abrir menú</span>
-        </Button>
-      </DropdownMenuTrigger>
+      {/* El `span` intermedio evita que el `data-state` del tooltip pise el `data-state="open"/
+          "closed"` que usa el propio DropdownMenuTrigger para resaltarse. Necesita tamaño real
+          (`inline-flex`, no `contents`) porque Tooltip posiciona su contenido según el rect de
+          este nodo. */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="data-[state=open]:bg-muted flex h-8 w-8 p-0">
+                <DotsHorizontalIcon className="h-4 w-4" />
+                <span className="sr-only">Abrir menú</span>
+              </Button>
+            </DropdownMenuTrigger>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Más acciones</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={handleView}>
           Ver detalle{' '}

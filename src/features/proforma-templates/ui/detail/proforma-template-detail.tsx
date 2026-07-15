@@ -32,6 +32,7 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
   const {
     previewUrl,
     isLoading: isLoadingPreview,
+    isError: isPreviewError,
     refresh: refreshPreview,
   } = useSavedTemplatePreview(item?.id ?? null)
 
@@ -179,6 +180,7 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
         <TemplatePreviewCard
           previewUrl={previewUrl}
           isLoading={isLoadingPreview}
+          isError={isPreviewError}
           onRefresh={refreshPreview}
         />
       </div>

@@ -1,6 +1,7 @@
 // src/features/proformas/ui/detail/proforma-detail.tsx
 'use client'
 
+import { CheckCircle2, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -63,10 +64,24 @@ export function ProformaDetail({ id }: { id: string }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="flex flex-1">
-                <TabsTrigger value="pdf" className="w-full">Documento PDF</TabsTrigger>
+                <TabsTrigger value="pdf" className="w-full">
+                  <span className="flex items-center gap-1.5">
+                    Documento PDF
+                    {pdfLoading && <Loader2 className="size-3 animate-spin text-muted-foreground" />}
+                    {!pdfLoading && pdfUrl && !pdfError && (
+                      <CheckCircle2 className="size-3 text-emerald-600" />
+                    )}
+                  </span>
+                </TabsTrigger>
               </span>
             </TooltipTrigger>
-            <TooltipContent>Vista previa del PDF real de la proforma</TooltipContent>
+            <TooltipContent>
+              {pdfLoading
+                ? 'Generándose en segundo plano...'
+                : pdfUrl
+                  ? 'PDF listo para ver'
+                  : 'Vista previa del PDF real de la proforma'}
+            </TooltipContent>
           </Tooltip>
         </TabsList>
 

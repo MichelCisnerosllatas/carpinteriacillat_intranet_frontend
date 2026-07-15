@@ -17,10 +17,10 @@ export const proformaTemplateFormSchema = z.object({
   moduleTypeId: z.number().nullable(),
   name: z.string().min(1, 'El nombre es requerido.').max(150),
 
-  headerBgColor: requiredHexColor('El color de fondo del header'),
-  headerTextColor: requiredHexColor('El color de texto del header'),
+  headerBgColor: requiredHexColor('El color de fondo del encabezado'),
+  headerTextColor: requiredHexColor('El color de texto del encabezado'),
   headerTitleSize: requiredPositiveSize('El tamaño del título'),
-  headerHeight: requiredPositiveSize('El alto del header'),
+  headerHeight: requiredPositiveSize('El alto del encabezado'),
   headerLogoWidth: requiredPositiveSize('El ancho del logo'),
   headerLogoHeight: requiredPositiveSize('El alto del logo'),
   headerLayout: headerLayoutSchema,
@@ -34,9 +34,9 @@ export const proformaTemplateFormSchema = z.object({
   bodyTextSize: requiredPositiveSize('El tamaño del texto'),
   bodyTableSize: requiredPositiveSize('El tamaño de la tabla'),
 
-  footerBgColor: requiredHexColor('El color de fondo del footer'),
-  footerTextColor: requiredHexColor('El color de texto del footer'),
-  footerTextSize: requiredPositiveSize('El tamaño del texto del footer'),
+  footerBgColor: requiredHexColor('El color de fondo del pie de página'),
+  footerTextColor: requiredHexColor('El color de texto del pie de página'),
+  footerTextSize: requiredPositiveSize('El tamaño del texto del pie de página'),
   footerFontFamily: z.string().min(1, 'La tipografía es requerida.'),
   footerText: z.string().max(255).optional(),
 

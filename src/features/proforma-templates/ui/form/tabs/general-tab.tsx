@@ -5,6 +5,7 @@ import { Input } from '@/shared/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { FieldTip } from '@/shared/ui/field-tip'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { ProformaTypeSelect } from '@/features/proforma-types'
 import type { ProformaTemplateFormValues } from '../proforma-template-form.schema'
@@ -22,7 +23,14 @@ export function GeneralTab({ form }: { form: UseFormReturn<ProformaTemplateFormV
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Nombre <span className="text-destructive">*</span>
+                <FieldTip
+                  label={
+                    <>
+                      Nombre <span className="text-destructive">*</span>
+                    </>
+                  }
+                  tip="Nombre interno para identificar esta plantilla en el listado. No aparece en el PDF."
+                />
               </FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Plantilla estándar" {...field} />
@@ -36,7 +44,12 @@ export function GeneralTab({ form }: { form: UseFormReturn<ProformaTemplateFormV
           name="moduleTypeId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipo de proforma</FormLabel>
+              <FormLabel>
+                <FieldTip
+                  label="Tipo de proforma"
+                  tip="Si eliges un tipo, esta plantilla se usará solo para proformas de ese tipo. Déjalo en blanco para usarla con cualquier tipo."
+                />
+              </FormLabel>
               <FormControl>
                 <ProformaTypeSelect value={field.value} onValueChange={field.onChange} showAll />
               </FormControl>
@@ -49,7 +62,12 @@ export function GeneralTab({ form }: { form: UseFormReturn<ProformaTemplateFormV
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Estado</FormLabel>
+              <FormLabel>
+                <FieldTip
+                  label="Estado"
+                  tip="Activa: disponible para usarse al emitir proformas. Inactiva: se oculta, pero no se elimina."
+                />
+              </FormLabel>
               <Select
                 key={`status-${field.value}`}
                 value={String(field.value)}

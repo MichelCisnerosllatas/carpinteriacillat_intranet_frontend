@@ -9,10 +9,14 @@ import { proformasService } from '@/features/proformas'
 export function useLiveStylePreview<T extends FieldValues>(
   form: UseFormReturn<T>,
   toStylePayload: (values: T) => Record<string, unknown>,
-  ready: boolean
+  ready: boolean,
+  // Campos del formulario que NO afectan el estilo del PDF (ej. nombre, tipo, estado) — cambiarlos
+  // no debe disparar una regeneración: el usuario ve el spinner de "generando" sin motivo real.
+  excludeFields: string[] = []
 ) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
   const blobUrlRef = useRef<string | null>(null)
   const seqRef = useRef(0)
   const abortRef = useRef<AbortController | null>(null)
@@ -47,9 +51,11 @@ export function useLiveStylePreview<T extends FieldValues>(
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
       blobUrlRef.current = nextUrl
       setPreviewUrl(nextUrl)
+      setIsError(false)
     } catch (err: any) {
       if (err?.code === 'ERR_CANCELED') return // cancelado a propósito por un cambio más reciente
       console.error('[preview-style] error al generar la vista previa:', err)
+      if (seq === seqRef.current) setIsError(true)
     } finally {
       if (seq === seqRef.current) setIsLoading(false)
       isBusyRef.current = false
@@ -68,7 +74,8 @@ export function useLiveStylePreview<T extends FieldValues>(
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
-    const subscription = form.watch((values) => {
+    const subscription = form.watch((values, { name }) => {
+      if (name && excludeFields.includes(name)) return
       if (timer) clearTimeout(timer)
       timer = setTimeout(() => void refresh(values as T), 600)
     })
@@ -86,5 +93,5 @@ export function useLiveStylePreview<T extends FieldValues>(
     []
   )
 
-  return { previewUrl, isLoading, refresh: () => refresh(form.getValues()) }
+  return { previewUrl, isLoading, isError, refresh: () => refresh(form.getValues()) }
 }
