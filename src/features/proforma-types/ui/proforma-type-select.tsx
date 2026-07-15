@@ -18,6 +18,8 @@ import {
   PopoverTrigger,
 } from '@/shared/ui/popover'
 import { useProformaTypeSelectStore } from '../stores/useProformaTypeSelectStore'
+import { proformaTypesService } from '../services/proforma-types.service'
+import type { ProformaTypeApiItem } from '../model/proformatypeget.dto'
 
 interface ProformaTypeSelectProps {
   value?: number | null
@@ -35,11 +37,25 @@ export function ProformaTypeSelect({
   showAll = false,
 }: ProformaTypeSelectProps) {
   const [open, setOpen] = useState(false)
-  const { options, isLoading, isError, load } = useProformaTypeSelectStore()
+  const { options, isLoading, isError, load, setForceReload } = useProformaTypeSelectStore()
+  // El id ya asignado (ej. al editar) puede quedar fuera de `options` — filtra solo activos y
+  // trae hasta 100 — así que si no aparece ahí, se busca ese tipo puntual por su id.
+  const [fallback, setFallback] = useState<ProformaTypeApiItem | null>(null)
 
   useEffect(() => { load() }, [])
 
-  const selected = value != null ? options.find((o) => o.id === value) : null
+  useEffect(() => {
+    if (isLoading || value == null) return
+    if (options.some((o) => o.id === value)) return
+    if (fallback?.id === value) return
+    let cancelled = false
+    proformaTypesService.getById(value).then((res) => {
+      if (!cancelled && res.success) setFallback(res.data)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [value, isLoading, options])
+
+  const selected = value != null ? (options.find((o) => o.id === value) ?? (fallback?.id === value ? fallback : undefined)) : null
   const label    = selected ? selected.name : value === null && showAll ? 'Todos' : placeholder
 
   if (isError) return (
@@ -51,7 +67,7 @@ export function ProformaTypeSelect({
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={load}
+          onClick={() => { setForceReload(true); load() }}
           className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />

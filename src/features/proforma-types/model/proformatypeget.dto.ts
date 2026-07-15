@@ -25,3 +25,10 @@ export type ProformaTypeListResponseDto = {
   links: LinksPaginationType
   meta: MetaPaginationType
 }
+
+export type ProformaTypeGetByIdResponseDto = {
+  success: boolean
+  status: number
+  message: string
+  data: ProformaTypeApiItem
+}

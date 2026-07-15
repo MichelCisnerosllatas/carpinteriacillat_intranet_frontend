@@ -32,6 +32,14 @@ export const productsServicesService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useProductServiceModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<ProductServiceListResponseDto> => {
+    const { data } = await apiClient.get<ProductServiceListResponseDto>(PRODUCTS_SERVICES_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: ProductServicePostRequestDto): Promise<ProductServicePostResponseDto> => {
     const { data } = await apiClient.post<ProductServicePostResponseDto>(PRODUCTS_SERVICES_ENDPOINTS.v1.post, param)
     return data

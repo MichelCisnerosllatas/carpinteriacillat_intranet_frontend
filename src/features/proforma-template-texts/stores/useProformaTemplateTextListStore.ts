@@ -10,9 +10,12 @@ type State = {
   message: string | null
   items: ProformaTemplateText[]
   templateId: number | null
+  /** false = loadByTemplate() reutiliza los datos ya cargados (hasLoaded) en vez de pedirlos de nuevo. Por defecto true: la pantalla vuelve a pedir la lista cada vez que se entra a la ruta. */
+  forceReload: boolean
 }
 
 type Action = {
+  setForceReload: (value: boolean) => void
   loadByTemplate: (templateId: number) => Promise<boolean>
   reset: () => void
 }
@@ -29,10 +32,14 @@ const mapFromApi = (item: ProformaTemplateTextApiItem): ProformaTemplateText => 
   updatedAt: item.updated_at ?? '',
 })
 
-export const useProformaTemplateTextListStore = create<State & Action>((set) => ({
+export const useProformaTemplateTextListStore = create<State & Action>((set, get) => ({
   hasLoaded: false, isFetching: false, isError: false, message: null, items: [], templateId: null,
+  forceReload: true,
+
+  setForceReload: (value) => set({ forceReload: value }),
 
   loadByTemplate: async (templateId) => {
+    if (!get().forceReload && get().hasLoaded && get().templateId === templateId) return true
     set({ isFetching: true, isError: false, message: null, templateId })
     try {
       const response = await proformaTemplateTextsService.getList({ template_id: templateId, per_page: 100 })

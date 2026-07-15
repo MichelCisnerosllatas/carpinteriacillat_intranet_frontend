@@ -29,7 +29,7 @@ import { useAutoSelectFirstOption } from './useAutoSelectFirstOption'
  */
 export function useProformaForm(mode: 'create' | 'edit', id?: string) {
   const router = useRouter()
-  const { currentItem, items, loadOne } = useProformaListStore()
+  const { currentItem, items, loadOne, isFetching: isLoadingProformaList, isError: isListError, message: listMessage } = useProformaListStore()
   const { error, fieldErrors, create, update, reset } = useProformaFormStore()
   const isEdit = mode === 'edit'
   const resolved =
@@ -119,6 +119,11 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
 
   const goToList = () => router.push('/proformas')
 
+  // Mientras se carga la proforma a editar (o si falla), el formulario no debe mostrarse vacío
+  // en silencio — antes no había ningún aviso visible en ninguno de los dos casos.
+  const isLoadingProforma = isEdit && !resolved && isLoadingProformaList
+  const proformaLoadError = isEdit && !resolved && isListError ? listMessage : null
+
   return {
     form,
     isEdit,
@@ -130,5 +135,7 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
     onSubmit,
     onInvalid: warnInvalidFields,
     goToList,
+    isLoadingProforma,
+    proformaLoadError,
   }
 }

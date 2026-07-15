@@ -16,11 +16,22 @@ export function useLiveStylePreview<T extends FieldValues>(
   const blobUrlRef = useRef<string | null>(null)
   const seqRef = useRef(0)
   const abortRef = useRef<AbortController | null>(null)
+  // El backend local (php artisan serve) procesa una request a la vez. Antes, cada cambio
+  // abortaba el fetch anterior desde el cliente y disparaba uno nuevo — pero el backend seguía
+  // procesando el "cancelado" igual, así que edits rápidos apilaban renders de PDF pendientes
+  // hasta que una request más reciente esperaba en cola más que el timeout. Ahora, si ya hay
+  // una request en vuelo, el cambio nuevo solo se guarda en `pendingRef` y se reintenta al
+  // terminar la actual — nunca hay más de una request viajando al servidor a la vez.
+  const isBusyRef = useRef(false)
+  const pendingValuesRef = useRef<T | null>(null)
 
   const refresh = async (values: T) => {
-    // Cancela cualquier preview anterior todavía en curso — nunca debe haber más de una
-    // request en vuelo a la vez (el backend local procesa una por una y se apilan).
-    abortRef.current?.abort()
+    if (isBusyRef.current) {
+      pendingValuesRef.current = values
+      return
+    }
+    isBusyRef.current = true
+
     const controller = new AbortController()
     abortRef.current = controller
 
@@ -41,6 +52,13 @@ export function useLiveStylePreview<T extends FieldValues>(
       console.error('[preview-style] error al generar la vista previa:', err)
     } finally {
       if (seq === seqRef.current) setIsLoading(false)
+      isBusyRef.current = false
+
+      const pending = pendingValuesRef.current
+      if (pending !== null) {
+        pendingValuesRef.current = null
+        void refresh(pending)
+      }
     }
   }
 

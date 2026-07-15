@@ -20,6 +20,14 @@ export const typefontsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useTypeFontModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<TypeFontListResponseDto> => {
+    const { data } = await apiClient.get<TypeFontListResponseDto>(TYPEFONTS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: TypeFontPostRequestDto): Promise<TypeFontPostResponseDto> => {
     const { data } = await apiClient.post<TypeFontPostResponseDto>(TYPEFONTS_ENDPOINTS.v1.post, param)
     return data

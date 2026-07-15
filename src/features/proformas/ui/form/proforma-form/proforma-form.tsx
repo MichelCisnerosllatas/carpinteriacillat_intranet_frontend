@@ -1,6 +1,7 @@
 // src/features/proformas/ui/form/proforma-form/proforma-form.tsx
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import { Separator } from '@/shared/ui/separator'
 import { Form } from '@/shared/ui/form'
 import { AlertError } from '@/widgets/alerts_components'
@@ -21,7 +22,27 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
     onSubmit,
     onInvalid,
     goToList,
+    isLoadingProforma,
+    proformaLoadError,
   } = useProformaForm(mode, id)
+
+  if (isLoadingProforma) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
+        <Loader2 className="size-6 animate-spin" />
+        <p className="text-sm">Cargando proforma...</p>
+      </div>
+    )
+  }
+
+  if (proformaLoadError) {
+    return (
+      <AlertError
+        title="No se pudo cargar la proforma"
+        message={proformaLoadError}
+      />
+    )
+  }
 
   return (
     <Form {...form}>

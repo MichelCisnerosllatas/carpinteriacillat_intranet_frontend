@@ -18,6 +18,14 @@ export const clientsService = {
     return data
   },
 
+  /** Igual que getList, pero es la que consume useClientModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<ClientJoinListResponseDto> => {
+    const { data } = await apiClient.get<ClientJoinListResponseDto>(CLIENTS_ENDPOINTS.v1.getJoin, {
+      params: { per_page: 100, status: 1 },
+    })
+    return data
+  },
+
   getById: async (id: number): Promise<ClientGetByIdResponseDto> => {
     const { data } = await apiClient.get<ClientGetByIdResponseDto>(`${CLIENTS_ENDPOINTS.v1.getJoin}/${id}`)
     return data

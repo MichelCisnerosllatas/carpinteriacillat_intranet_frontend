@@ -24,7 +24,7 @@ export function RoleSelect({
   placeholder = 'Seleccionar rol...',
   disabled,
 }: RoleSelectProps) {
-  const { options, isLoading, isError, load } = useRoleSelectStore()
+  const { options, isLoading, isError, load, setForceReload } = useRoleSelectStore()
 
   useEffect(() => { load() }, [])
 
@@ -44,7 +44,7 @@ export function RoleSelect({
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={load}
+          onClick={() => { setForceReload(true); load() }}
           className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />

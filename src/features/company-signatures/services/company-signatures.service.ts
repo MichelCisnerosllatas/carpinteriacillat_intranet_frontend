@@ -1,6 +1,6 @@
 import apiClient from '@/shared/api/apiClient'
 import { COMPANY_SIGNATURES_ENDPOINTS } from './company-signatures.endpoint'
-import type { CompanySignatureListRequestDto, CompanySignatureListResponseDto } from '../model/companysignatureget.dto'
+import type { CompanySignatureListRequestDto, CompanySignatureListResponseDto, CompanySignatureGetByIdResponseDto } from '../model/companysignatureget.dto'
 import type { CompanySignaturePostRequestDto, CompanySignaturePostResponseDto } from '../model/companysignaturepost.dto'
 import type { CompanySignaturePutRequestDto, CompanySignaturePutResponseDto } from '../model/companysignatureput.dto'
 
@@ -10,6 +10,19 @@ export const companySignaturesService = {
       Object.entries(param).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     )
     const { data } = await apiClient.get<CompanySignatureListResponseDto>(COMPANY_SIGNATURES_ENDPOINTS.v1.get, { params })
+    return data
+  },
+
+  /** Igual que getList, pero es la que consume useCompanySignatureModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<CompanySignatureListResponseDto> => {
+    const { data } = await apiClient.get<CompanySignatureListResponseDto>(COMPANY_SIGNATURES_ENDPOINTS.v1.get, {
+      params: { per_page: 100, status: 1 },
+    })
+    return data
+  },
+
+  getById: async (id: number): Promise<CompanySignatureGetByIdResponseDto> => {
+    const { data } = await apiClient.get<CompanySignatureGetByIdResponseDto>(`${COMPANY_SIGNATURES_ENDPOINTS.v1.get}/${id}`)
     return data
   },
 

@@ -20,6 +20,14 @@ export const typewoodsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useTypeWoodModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<TypeWoodListResponseDto> => {
+    const { data } = await apiClient.get<TypeWoodListResponseDto>(TYPEWOODS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: TypeWoodPostRequestDto): Promise<TypeWoodPostResponseDto> => {
     const { data } = await apiClient.post<TypeWoodPostResponseDto>(TYPEWOODS_ENDPOINTS.v1.post, param)
     return data

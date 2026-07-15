@@ -20,6 +20,14 @@ export const typedocsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useTypeDocModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<TypeDocListResponseDto> => {
+    const { data } = await apiClient.get<TypeDocListResponseDto>(TYPEDOCS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: TypeDocPostRequestDto): Promise<TypeDocPostResponseDto> => {
     const { data } = await apiClient.post<TypeDocPostResponseDto>(TYPEDOCS_ENDPOINTS.v1.post, param)
     return data

@@ -22,6 +22,14 @@ export const furnituresService = {
     return data
   },
 
+  /** Igual que getList, pero es la que consume useFurnitureModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<FurnitureJoinListResponseDto> => {
+    const { data } = await apiClient.get<FurnitureJoinListResponseDto>(FURNITURES_ENDPOINTS.v1.getJoin, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: FurniturePostRequestDto): Promise<FurniturePostResponseDto> => {
     const { data } = await apiClient.post<FurniturePostResponseDto>(FURNITURES_ENDPOINTS.v1.post, param)
     return data

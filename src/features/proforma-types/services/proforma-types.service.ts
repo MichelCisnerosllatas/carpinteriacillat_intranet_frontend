@@ -1,6 +1,6 @@
 import apiClient from '@/shared/api/apiClient'
 import { PROFORMA_TYPES_ENDPOINTS } from './proforma-types.endpoint'
-import type { ProformaTypeListRequestDto, ProformaTypeListResponseDto } from '../model/proformatypeget.dto'
+import type { ProformaTypeListRequestDto, ProformaTypeListResponseDto, ProformaTypeGetByIdResponseDto } from '../model/proformatypeget.dto'
 import type { ProformaTypePostRequestDto, ProformaTypePostResponseDto } from '../model/proformatypepost.dto'
 import type { ProformaTypePutRequestDto, ProformaTypePutResponseDto } from '../model/proformatypeput.dto'
 
@@ -17,6 +17,19 @@ export const proformaTypesService = {
     const { data } = await apiClient.get<ProformaTypeListResponseDto>(PROFORMA_TYPES_ENDPOINTS.v1.get, {
       params: { page: 1, per_page: 100 },
     })
+    return data
+  },
+
+  /** Igual que getForSelect, pero es la que consume useProformaTypeModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<ProformaTypeListResponseDto> => {
+    const { data } = await apiClient.get<ProformaTypeListResponseDto>(PROFORMA_TYPES_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
+  getById: async (id: number): Promise<ProformaTypeGetByIdResponseDto> => {
+    const { data } = await apiClient.get<ProformaTypeGetByIdResponseDto>(`${PROFORMA_TYPES_ENDPOINTS.v1.get}/${id}`)
     return data
   },
 

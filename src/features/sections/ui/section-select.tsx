@@ -23,7 +23,7 @@ export function SectionSelect({
   disabled = false,
   showAll = false,
 }: SectionSelectProps) {
-  const { options, isLoading, isError, load } = useSectionSelectStore()
+  const { options, isLoading, isError, load, setForceReload } = useSectionSelectStore()
   const [open, setOpen] = useState(false)
 
   useEffect(() => { void load() }, [])
@@ -49,7 +49,7 @@ export function SectionSelect({
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => void load()}
+            onClick={() => { setForceReload(true); load() }}
             className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />

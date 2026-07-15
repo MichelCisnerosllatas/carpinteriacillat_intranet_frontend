@@ -27,3 +27,10 @@ export type CompanySignatureListResponseDto = {
   links: LinksPaginationType
   meta: MetaPaginationType
 }
+
+export type CompanySignatureGetByIdResponseDto = {
+  success: boolean
+  status: number
+  message: string
+  data: CompanySignatureApiItem
+}

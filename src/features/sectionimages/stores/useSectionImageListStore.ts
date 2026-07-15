@@ -17,9 +17,12 @@ type State = {
   meta: MetaPaginationType | null
   filters: SectionImageListRequestDto
   currentItem: SectionImage | null
+  /** false = load() reutiliza los datos ya cargados (hasLoaded) en vez de pedirlos de nuevo. Por defecto true: la pantalla vuelve a pedir la lista cada vez que se entra a la ruta. */
+  forceReload: boolean
 }
 
 type Action = {
+  setForceReload: (value: boolean) => void
   load: (params?: SectionImageListRequestDto) => Promise<boolean>
   setCurrentItem: (item: SectionImage | null) => void
   reset: () => void
@@ -48,11 +51,14 @@ export const useSectionImageListStore = create<State & Action>((set, get) => ({
   hasLoaded: false, isInitialLoading: false, isFetching: false,
   isError: false, message: null, items: [], links: null, meta: null,
   filters: defaultFilters, currentItem: null,
+  forceReload: true,
 
+  setForceReload: (value) => set({ forceReload: value }),
   setCurrentItem: (item) => set({ currentItem: item }),
 
   load: async (params = {}) => {
     if (get().isFetching) return false
+    if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })
     try {

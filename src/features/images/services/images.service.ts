@@ -21,6 +21,14 @@ export const imagesService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useImageModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<ImageListResponseDto> => {
+    const { data } = await apiClient.get<ImageListResponseDto>(IMAGES_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   getById: async (id: number): Promise<ImageGetByIdResponseDto> => {
     const { data } = await apiClient.get<ImageGetByIdResponseDto>(IMAGES_ENDPOINTS.v1.getById(id))
     return data

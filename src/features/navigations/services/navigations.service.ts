@@ -20,6 +20,14 @@ export const navigationsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useNavigationModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<NavigationListResponseDto> => {
+    const { data } = await apiClient.get<NavigationListResponseDto>(NAVIGATIONS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: NavigationPostRequestDto): Promise<NavigationPostResponseDto> => {
     const { data } = await apiClient.post<NavigationPostResponseDto>(NAVIGATIONS_ENDPOINTS.v1.post, param)
     return data

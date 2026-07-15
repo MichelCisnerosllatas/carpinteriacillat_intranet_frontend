@@ -49,6 +49,17 @@ export const proformaTemplatesService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useProformaTemplateModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<ProformaTemplateListResponseDto> => {
+    const { data } = await apiClient.get<ProformaTemplateListResponseDto>(
+      PROFORMA_TEMPLATES_ENDPOINTS.v1.get,
+      {
+        params: { module: PDF_TEMPLATE_MODULE, page: 1, per_page: 100 },
+      }
+    )
+    return data
+  },
+
   post: async (param: ProformaTemplatePostRequestDto): Promise<ProformaTemplatePostResponseDto> => {
     const { data } = await apiClient.post<ProformaTemplatePostResponseDto>(
       PROFORMA_TEMPLATES_ENDPOINTS.v1.post,

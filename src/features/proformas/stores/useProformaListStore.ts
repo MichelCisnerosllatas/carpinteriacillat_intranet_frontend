@@ -16,9 +16,12 @@ type State = {
   meta: MetaPaginationType | null
   filters: ProformaListRequestDto
   currentItem: Proforma | null
+  /** false = load() reutiliza los datos ya cargados (hasLoaded) en vez de pedirlos de nuevo. Por defecto true: la pantalla vuelve a pedir la lista cada vez que se entra a la ruta. */
+  forceReload: boolean
 }
 
 type Action = {
+  setForceReload: (value: boolean) => void
   load: (params?: ProformaListRequestDto) => Promise<boolean>
   loadOne: (id: number) => Promise<boolean>
   setCurrentItem: (item: Proforma | null) => void
@@ -36,14 +39,17 @@ const defaultFilters: ProformaListRequestDto = {
 }
 
 export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
+  // El endpoint -join (detalle por id) no siempre trae los ids planos (client_id, template_id,
+  // etc.) — solo el objeto anidado (client.id, template.id...). Se usa ese como respaldo, si no,
+  // los selects de la cabecera quedan sin valor al editar aunque el resto del formulario cargue bien.
   id: item.id,
-  clientId: item.client_id,
+  clientId: item.client_id ?? item.client?.id ?? null,
   clientBusinessName: item.client?.business_name ?? null,
-  templateId: item.template_id,
+  templateId: item.template_id ?? item.template?.id ?? null,
   templateName: item.template?.name ?? null,
-  signatureId: item.signature_id,
+  signatureId: item.signature_id ?? item.signature?.id ?? null,
   signerName: item.signature?.signer_name ?? null,
-  proformaTypeId: item.proforma_type_id,
+  proformaTypeId: item.proforma_type_id ?? item.proforma_type?.id ?? null,
   proformaTypeCode: item.proforma_type?.code ?? null,
   series: item.series,
   correlative: item.correlative,
@@ -98,11 +104,14 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
   meta: null,
   filters: defaultFilters,
   currentItem: null,
+  forceReload: true,
 
+  setForceReload: (value) => set({ forceReload: value }),
   setCurrentItem: (item) => set({ currentItem: item }),
 
   load: async (params = {}) => {
     if (get().isFetching) return false
+    if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })
     try {

@@ -25,6 +25,14 @@ export const sectionsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useSectionModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<SectionListResponseDto> => {
+    const { data } = await apiClient.get<SectionListResponseDto>(SECTIONS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   getById: async (id: number): Promise<SectionGetByIdResponseDto> => {
     const { data } = await apiClient.get<SectionGetByIdResponseDto>(`${SECTIONS_ENDPOINTS.v1.getJoin}/${id}`)
     return data

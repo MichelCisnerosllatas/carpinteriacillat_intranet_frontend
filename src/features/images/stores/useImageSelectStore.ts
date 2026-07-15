@@ -14,9 +14,12 @@ type State = {
   options:   ImageSelectOption[]
   isLoading: boolean
   isError:   boolean
+  /** true = load() ignora el caché y vuelve a pedir los datos al servidor. Por defecto false: solo carga una vez (evita golpear el servidor cada vez que se monta el select). */
+  forceReload: boolean
 }
 
 type Action = {
+  setForceReload: (value: boolean) => void
   load: () => Promise<void>
   reload: () => Promise<void>
 }
@@ -29,12 +32,15 @@ const mapOption = (item: ImageApiItem): ImageSelectOption => ({
 })
 
 export const useImageSelectStore = create<State & Action>((set, get) => ({
-  options:   [],
-  isLoading: false,
-  isError:   false,
+  options:     [],
+  isLoading:   false,
+  isError:     false,
+  forceReload: false,
+
+  setForceReload: (value) => set({ forceReload: value }),
 
   load: async () => {
-    if (get().isLoading || get().options.length > 0) return
+    if (!get().forceReload && (get().isLoading || get().options.length > 0)) return
     set({ isLoading: true, isError: false })
     try {
       const res = await imagesService.getForSelect()

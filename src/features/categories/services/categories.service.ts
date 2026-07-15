@@ -20,6 +20,14 @@ export const categoriesService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useCategoryModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<CategoryListResponseDto> => {
+    const { data } = await apiClient.get<CategoryListResponseDto>(CATEGORIES_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: CategoryPostRequestDto): Promise<CategoryPostResponseDto> => {
     const { data } = await apiClient.post<CategoryPostResponseDto>(CATEGORIES_ENDPOINTS.v1.post, param)
     return data

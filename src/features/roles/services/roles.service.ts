@@ -19,6 +19,12 @@ export const rolesService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useRoleModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<RoleGetResponseDto> => {
+    const { data } = await apiClient.get<RoleGetResponseDto>(ROLES_ENDPOINTS.v1.get)
+    return data
+  },
+
 
   post: async (param: RolePostRequestDto): Promise<RolePostResponseDto> => {
     const { data } = await apiClient.post<RolePostResponseDto>(ROLES_ENDPOINTS.v1.post, param)

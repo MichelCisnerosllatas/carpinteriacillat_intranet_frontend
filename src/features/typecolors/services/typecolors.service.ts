@@ -20,6 +20,14 @@ export const typecolorsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useTypeColorModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<TypeColorListResponseDto> => {
+    const { data } = await apiClient.get<TypeColorListResponseDto>(TYPECOLORS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: TypeColorPostRequestDto): Promise<TypeColorPostResponseDto> => {
     const { data } = await apiClient.post<TypeColorPostResponseDto>(TYPECOLORS_ENDPOINTS.v1.post, param)
     return data

@@ -14,6 +14,8 @@ import {
 } from '@/shared/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { useCompanySignatureSelectStore } from '../stores/useCompanySignatureSelectStore'
+import { companySignaturesService } from '../services/company-signatures.service'
+import type { CompanySignatureApiItem } from '../model/companysignatureget.dto'
 
 interface CompanySignatureSelectProps {
   value?: number | null
@@ -31,11 +33,25 @@ export function CompanySignatureSelect({
   showAll = false,
 }: CompanySignatureSelectProps) {
   const [open, setOpen] = useState(false)
-  const { options, isLoading, isError, load } = useCompanySignatureSelectStore()
+  const { options, isLoading, isError, load, setForceReload } = useCompanySignatureSelectStore()
+  // El id ya asignado (ej. al editar) puede quedar fuera de `options` — filtra solo activos y
+  // trae hasta 100 — así que si no aparece ahí, se busca esa firma puntual por su id.
+  const [fallback, setFallback] = useState<CompanySignatureApiItem | null>(null)
 
   useEffect(() => { load() }, [])
 
-  const selected = value != null ? options.find((o) => o.id === value) : null
+  useEffect(() => {
+    if (isLoading || value == null) return
+    if (options.some((o) => o.id === value)) return
+    if (fallback?.id === value) return
+    let cancelled = false
+    companySignaturesService.getById(value).then((res) => {
+      if (!cancelled && res.success) setFallback(res.data)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [value, isLoading, options])
+
+  const selected = value != null ? (options.find((o) => o.id === value) ?? (fallback?.id === value ? fallback : undefined)) : null
   const label = selected ? selected.signer_name : value === null && showAll ? 'Todos' : placeholder
 
   if (isError)
@@ -48,7 +64,7 @@ export function CompanySignatureSelect({
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={load}
+            onClick={() => { setForceReload(true); load() }}
             className="group text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />

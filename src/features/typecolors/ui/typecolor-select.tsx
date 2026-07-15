@@ -35,7 +35,7 @@ export function TypeColorSelect({
   showAll = false,
 }: TypeColorSelectProps) {
   const [open, setOpen] = useState(false)
-  const { options, isLoading, isError, load } = useTypeColorSelectStore()
+  const { options, isLoading, isError, load, setForceReload } = useTypeColorSelectStore()
 
   useEffect(() => { load() }, [])
 
@@ -51,7 +51,7 @@ export function TypeColorSelect({
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={load}
+          onClick={() => { setForceReload(true); load() }}
           className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />

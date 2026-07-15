@@ -19,9 +19,12 @@ type State = {
   meta: MetaPaginationType | null
   filters: Filters
   currentDevice: UserDevice | null
+  /** false = load() reutiliza los datos ya cargados (hasLoaded) en vez de pedirlos de nuevo. Por defecto true: la pantalla vuelve a pedir la lista cada vez que se entra a la ruta. */
+  forceReload: boolean
 }
 
 type Action = {
+  setForceReload: (value: boolean) => void
   load: (params?: Filters) => Promise<boolean>
   revoke: (id: number) => Promise<boolean>
   deleteDevice: (id: number) => Promise<boolean>
@@ -101,9 +104,13 @@ export const useUserDeviceListStore = create<State & Action>((set, get) => ({
   meta: null,
   filters: defaultFilters,
   currentDevice: null,
+  forceReload: true,
+
+  setForceReload: (value) => set({ forceReload: value }),
 
   load: async (params = {}) => {
     if (get().isFetching) return false
+    if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
 
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })

@@ -36,7 +36,7 @@ export function ProductServiceSelect({
   showAll = false,
 }: ProductServiceSelectProps) {
   const [open, setOpen] = useState(false)
-  const { options, isLoading, isError, load } = useProductServiceSelectStore()
+  const { options, isLoading, isError, load, setForceReload } = useProductServiceSelectStore()
 
   useEffect(() => { load() }, [])
 
@@ -52,7 +52,7 @@ export function ProductServiceSelect({
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={load}
+          onClick={() => { setForceReload(true); load() }}
           className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />

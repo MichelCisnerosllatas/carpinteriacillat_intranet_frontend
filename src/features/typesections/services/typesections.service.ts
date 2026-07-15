@@ -20,6 +20,14 @@ export const typesectionsService = {
     return data
   },
 
+  /** Igual que getForSelect, pero es la que consume useTypeSectionModalSelectStore para <ModalSelect />. */
+  getForModalSelect: async (): Promise<TypeSectionListResponseDto> => {
+    const { data } = await apiClient.get<TypeSectionListResponseDto>(TYPESECTIONS_ENDPOINTS.v1.get, {
+      params: { page: 1, per_page: 100 },
+    })
+    return data
+  },
+
   post: async (param: TypeSectionPostRequestDto): Promise<TypeSectionPostResponseDto> => {
     const { data } = await apiClient.post<TypeSectionPostResponseDto>(TYPESECTIONS_ENDPOINTS.v1.post, param)
     return data

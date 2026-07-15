@@ -20,9 +20,12 @@ type State = {
   meta: MetaPaginationType | null
   filters: ProformaTemplateListRequestDto
   currentItem: ProformaTemplate | null
+  /** false = load() reutiliza los datos ya cargados (hasLoaded) en vez de pedirlos de nuevo. Por defecto true: la pantalla vuelve a pedir la lista cada vez que se entra a la ruta. */
+  forceReload: boolean
 }
 
 type Action = {
+  setForceReload: (value: boolean) => void
   load: (params?: ProformaTemplateListRequestDto) => Promise<boolean>
   loadById: (id: number) => Promise<boolean>
   setCurrentItem: (item: ProformaTemplate | null) => void
@@ -121,7 +124,9 @@ export const useProformaTemplateListStore = create<State & Action>((set, get) =>
   meta: null,
   filters: defaultFilters,
   currentItem: null,
+  forceReload: true,
 
+  setForceReload: (value) => set({ forceReload: value }),
   setCurrentItem: (item) => set({ currentItem: item }),
 
   loadById: async (id) => {
@@ -144,6 +149,7 @@ export const useProformaTemplateListStore = create<State & Action>((set, get) =>
 
   load: async (params = {}) => {
     if (get().isFetching) return false
+    if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
     set({ filters: nextFilters, isFetching: true, isError: false, message: null })
     try {
