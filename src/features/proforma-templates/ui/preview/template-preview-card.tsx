@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Eye, EyeOff, Loader2, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Eye, EyeOff, Loader2, Maximize2, RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 
@@ -35,6 +36,9 @@ export function TemplatePreviewCard({
   // del navegador, no la request que trae la URL/blob) — sin esto se ve en blanco un buen
   // rato aunque `isLoading` ya haya terminado.
   const [isRendering, setIsRendering] = useState(false)
+  // Pantalla completa en un Dialog (no Fullscreen API): el recuadro fijo de 500px se queda
+  // corto para revisar el detalle de un PDF con varias páginas o texto pequeño.
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
     if (previewUrl) setIsRendering(true)
@@ -76,6 +80,21 @@ export function TemplatePreviewCard({
             </TooltipTrigger>
             <TooltipContent>Regenerar vista previa</TooltipContent>
           </Tooltip>
+          {isVisible && previewUrl && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFullscreen(true)}
+                >
+                  <Maximize2 className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Ver en pantalla completa</TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </CardHeader>
       {!isVisible ? (
@@ -112,7 +131,11 @@ export function TemplatePreviewCard({
             </p>
           ) : (
             <div className="relative h-[500px] w-full overflow-hidden rounded-md border">
-              {previewUrl && (
+              {/* Mientras está en pantalla completa, este iframe NO se monta — el backend local
+                  (php artisan serve) atiende una request a la vez, así que dos iframes cargando
+                  el mismo PDF en paralelo hacen que el segundo se quede esperando al primero
+                  indefinidamente (pantalla en negro, sin spinner ni error). */}
+              {previewUrl && !isFullscreen && (
                 <iframe
                   src={previewUrl}
                   onLoad={() => setIsRendering(false)}
@@ -120,10 +143,15 @@ export function TemplatePreviewCard({
                   title="Vista previa de la plantilla"
                 />
               )}
+              {isFullscreen && (
+                <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
+                  Abierta en pantalla completa
+                </div>
+              )}
               <div
                 className={cn(
                   'bg-background/90 absolute inset-0 flex flex-col items-center justify-center gap-2 transition-opacity',
-                  showOverlay ? 'opacity-100' : 'pointer-events-none opacity-0'
+                  showOverlay && !isFullscreen ? 'opacity-100' : 'pointer-events-none opacity-0'
                 )}
               >
                 <Loader2 className="text-primary size-8 animate-spin" />
@@ -133,6 +161,23 @@ export function TemplatePreviewCard({
           )}
         </CardContent>
       )}
+
+      <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
+        <DialogContent className="flex h-[92vh] w-full max-w-6xl flex-col gap-3 sm:max-w-6xl">
+          <DialogHeader>
+            <DialogTitle>Vista previa</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-hidden rounded-md border">
+            {previewUrl && isFullscreen && (
+              <iframe
+                src={previewUrl}
+                className="h-full w-full"
+                title="Vista previa en pantalla completa"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

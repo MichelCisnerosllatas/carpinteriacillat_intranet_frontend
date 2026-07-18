@@ -42,12 +42,31 @@ export const proformaTemplateFormSchema = z.object({
 
   showLogo: z.boolean(),
   showDate: z.boolean(),
+  showCompanyName: z.boolean(),
+
+  showClientName: z.boolean(),
+  showClientDocument: z.boolean(),
+  showClientAddress: z.boolean(),
+  showClientAttention: z.boolean(),
+
+  showIntroText: z.boolean(),
+  showItemsTable: z.boolean(),
+  showSummaryTotal: z.boolean(),
+  showDeliveryTime: z.boolean(),
+
   showCompanyData: z.boolean(),
+  showCompanyTaxId: z.boolean(),
+  showCompanyAddress: z.boolean(),
+  showCompanyBusinessName: z.boolean(),
+  showCompanySocialNetworks: z.boolean(),
+  showCompanyContacts: z.boolean(),
+
   showBranches: z.boolean(),
   showPaymentMethod: z.boolean(),
   showBankAccounts: z.boolean(),
-  showCompanySocialNetworks: z.boolean(),
-  showCompanyContacts: z.boolean(),
+
+  showFinalText: z.boolean(),
+  showFinalGreeting: z.boolean(),
   showSignature: z.boolean(),
   showFooter: z.boolean(),
 
@@ -86,12 +105,31 @@ export const proformaTemplateFormDefaults: ProformaTemplateFormValues = {
 
   showLogo: true,
   showDate: true,
+  showCompanyName: true,
+
+  showClientName: true,
+  showClientDocument: true,
+  showClientAddress: true,
+  showClientAttention: true,
+
+  showIntroText: true,
+  showItemsTable: true,
+  showSummaryTotal: true,
+  showDeliveryTime: true,
+
   showCompanyData: true,
+  showCompanyTaxId: true,
+  showCompanyAddress: true,
+  showCompanyBusinessName: true,
+  showCompanySocialNetworks: true,
+  showCompanyContacts: true,
+
   showBranches: true,
   showPaymentMethod: true,
   showBankAccounts: true,
-  showCompanySocialNetworks: true,
-  showCompanyContacts: true,
+
+  showFinalText: true,
+  showFinalGreeting: true,
   showSignature: true,
   showFooter: true,
 
@@ -127,19 +165,38 @@ export const toProformaTemplatePayload = (
   sections: {
     show_logo: values.showLogo,
     show_date: values.showDate,
+    show_company_name: values.showCompanyName,
+
+    show_client_name: values.showClientName,
+    show_client_document: values.showClientDocument,
+    show_client_address: values.showClientAddress,
+    show_client_attention: values.showClientAttention,
+
+    show_intro_text: values.showIntroText,
+    show_items_table: values.showItemsTable,
+    show_summary_total: values.showSummaryTotal,
+    show_delivery_time: values.showDeliveryTime,
+
     show_company_data: values.showCompanyData,
+    show_company_tax_id: values.showCompanyTaxId,
+    show_company_address: values.showCompanyAddress,
+    show_company_business_name: values.showCompanyBusinessName,
+    show_company_social_networks: values.showCompanySocialNetworks,
+    show_company_contacts: values.showCompanyContacts,
+
     show_branches: values.showBranches,
     show_payment_method: values.showPaymentMethod,
     show_bank_accounts: values.showBankAccounts,
-    show_company_social_networks: values.showCompanySocialNetworks,
-    show_company_contacts: values.showCompanyContacts,
+
+    show_final_text: values.showFinalText,
+    show_final_greeting: values.showFinalGreeting,
     show_signature: values.showSignature,
     show_footer: values.showFooter,
   },
   status: values.status,
 })
 
-// Para POST /proformas/preview-style: mismos campos de estilo, sin module/module_type_id/name/status
+// Para POST /proformas/pdf-preview-style: mismos campos de estilo, sin module/module_type_id/name/status
 // (ese endpoint no identifica ni crea ninguna plantilla, ver proformas.md).
 export const toProformaTemplateStylePayload = (
   values: ProformaTemplateFormValues

@@ -6,7 +6,7 @@ import { useProductServiceSelectStore } from '@/features/products-services'
 import { useProformaDetailListStore } from '@/features/proforma-details'
 import { usePendingCartItemsStore } from '../stores/usePendingCartItemsStore'
 import { useCartDraftsStore } from '../stores/useCartDraftsStore'
-import { calculateCartTotals, uploadPendingItems } from '../lib/proforma-cart'
+import { calculateCartTotals } from '../lib/proforma-cart'
 
 interface UseProformaCartOptions {
   proformaId: number | null
@@ -48,21 +48,15 @@ export function useProformaCart({ proformaId, onCountChange }: UseProformaCartOp
     return () => resetSavedItems()
   }, [proformaId])
 
-  // Solo al desmontar el formulario por completo (deps [] — NO en cada cambio de proformaId).
-  // Si estuviera atado a `proformaId`, este cleanup correría justo cuando proformaId pasa de
-  // null a un id real al registrar, borrando `pendingCartItems` antes de que el efecto de abajo
-  // alcance a leerlos para subirlos — ese fue el bug que hacía que no se guardara nada.
+  // Solo al desmontar el formulario por completo (deps []). La subida de `pendingCartItems` al
+  // crear la proforma ya NO ocurre acá — la maneja `submitProformaHeader`
+  // (lib/proforma-form/submit-proforma-header/), que llama a `uploadPendingItems` y espera a que
+  // termine ANTES de cerrar el modal y navegar (así el modal no se cierra con las líneas todavía
+  // subiéndose en segundo plano). Este cleanup solo limpia el store si el usuario cierra el
+  // formulario sin llegar a registrar nada.
   useEffect(() => {
     return () => usePendingCartItemsStore.getState().clearPendingCartItems()
   }, [])
-
-  // Automático (no lo llama ningún botón): en cuanto llega el proformaId real, delega en
-  // `uploadPendingItems` (lib/proforma-cart/uploadPendingItems.ts) la subida de los productos
-  // guardados en `usePendingCartItemsStore`.
-  useEffect(() => {
-    if (!proformaId || usePendingCartItemsStore.getState().pendingCartItems.length === 0) return
-    void uploadPendingItems({ proformaId })
-  }, [proformaId])
 
   const totals = calculateCartTotals(savedItems, pendingCartItems)
 

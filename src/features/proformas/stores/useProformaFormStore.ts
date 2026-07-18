@@ -12,7 +12,7 @@ type State = {
 
 type Action = {
   create: (params: ProformaPostRequestDto) => Promise<number | null>
-  update: (id: number, data: ProformaPutRequestDto) => Promise<boolean>
+  update: (id: number, data: Partial<ProformaPutRequestDto>) => Promise<boolean>
   reset: () => void
 }
 
@@ -45,7 +45,7 @@ export const useProformaFormStore = create<State & Action>((set) => ({
   update: async (id, data) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      const res = await proformasService.put(id, data)
+      const res = await proformasService.patch(id, data)
       if (!res.success) {
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false

@@ -15,15 +15,35 @@ export const proformaTemplateTextSchema = z.object({
   order: z.number(),
 })
 
+// Espeja App\Enums\PdfTemplateSectionKey (backend) — las 24 keys fijas de `sections`.
 export const proformaTemplateSectionsSchema = z.object({
   showLogo: z.boolean(),
   showDate: z.boolean(),
+  showCompanyName: z.boolean(),
+
+  showClientName: z.boolean(),
+  showClientDocument: z.boolean(),
+  showClientAddress: z.boolean(),
+  showClientAttention: z.boolean(),
+
+  showIntroText: z.boolean(),
+  showItemsTable: z.boolean(),
+  showSummaryTotal: z.boolean(),
+  showDeliveryTime: z.boolean(),
+
   showCompanyData: z.boolean(),
+  showCompanyTaxId: z.boolean(),
+  showCompanyAddress: z.boolean(),
+  showCompanyBusinessName: z.boolean(),
+  showCompanySocialNetworks: z.boolean(),
+  showCompanyContacts: z.boolean(),
+
   showBranches: z.boolean(),
   showPaymentMethod: z.boolean(),
   showBankAccounts: z.boolean(),
-  showCompanySocialNetworks: z.boolean(),
-  showCompanyContacts: z.boolean(),
+
+  showFinalText: z.boolean(),
+  showFinalGreeting: z.boolean(),
   showSignature: z.boolean(),
   showFooter: z.boolean(),
 })

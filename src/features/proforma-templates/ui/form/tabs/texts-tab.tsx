@@ -10,13 +10,7 @@ export function TextsTab({ templateId }: { templateId: number | null }) {
         <CardTitle className="text-sm">Textos de la plantilla</CardTitle>
       </CardHeader>
       <CardContent>
-        {templateId != null ? (
-          <TemplateTextsManager templateId={templateId} />
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            Guarda la plantilla primero para poder agregar textos.
-          </p>
-        )}
+        <TemplateTextsManager templateId={templateId} />
       </CardContent>
     </Card>
   )

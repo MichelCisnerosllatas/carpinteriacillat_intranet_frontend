@@ -33,7 +33,12 @@ const mapFromApi = (item: ProformaTemplateTextApiItem): ProformaTemplateText => 
 })
 
 export const useProformaTemplateTextListStore = create<State & Action>((set, get) => ({
-  hasLoaded: false, isFetching: false, isError: false, message: null, items: [], templateId: null,
+  hasLoaded: false,
+  isFetching: false,
+  isError: false,
+  message: null,
+  items: [],
+  templateId: null,
   forceReload: true,
 
   setForceReload: (value) => set({ forceReload: value }),
@@ -42,18 +47,37 @@ export const useProformaTemplateTextListStore = create<State & Action>((set, get
     if (!get().forceReload && get().hasLoaded && get().templateId === templateId) return true
     set({ isFetching: true, isError: false, message: null, templateId })
     try {
-      const response = await proformaTemplateTextsService.getList({ template_id: templateId, per_page: 100 })
+      const response = await proformaTemplateTextsService.getList({
+        template_id: templateId,
+        per_page: 100,
+      })
       if (!response.success) throw new Error(response.message)
       const items = response.data.map(mapFromApi).sort((a, b) => a.order - b.order)
       set({ hasLoaded: true, isFetching: false, isError: false, message: response.message, items })
       return true
     } catch (error: any) {
-      // TEMP: log para diagnosticar por qué falla la carga de textos.
-      console.error('[pdf-template-texts] error al cargar:', error)
-      set({ hasLoaded: true, isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      // console.warn (no .error): esto ya se maneja con el botón "Reintentar" en la UI — un
+      // timeout aquí no es un bug, es el backend local (php artisan serve, una request a la vez)
+      // ocupado con el preview-style que corre en paralelo. .error dispararía el overlay de
+      // "Issues" de Next en cada timeout, que es ruido para algo que el usuario ya puede resolver.
+      console.warn('[pdf-template-texts] error al cargar:', error)
+      set({
+        hasLoaded: true,
+        isFetching: false,
+        isError: true,
+        message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.',
+      })
       return false
     }
   },
 
-  reset: () => set({ hasLoaded: false, isFetching: false, isError: false, message: null, items: [], templateId: null }),
+  reset: () =>
+    set({
+      hasLoaded: false,
+      isFetching: false,
+      isError: false,
+      message: null,
+      items: [],
+      templateId: null,
+    }),
 }))

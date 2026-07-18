@@ -128,58 +128,557 @@ function FooterLivePreview({ form }: FormProps) {
 
 export function StylesTab({ form }: { form: UseFormReturn<ProformaTemplateFormValues> }) {
   return (
-    <Card className="py-2">
-      <CardContent className="px-4">
-        <p className="text-muted-foreground mb-2 text-xs">
-          El recuadro dentro de cada sección es una vista rápida y aproximada — se actualiza al
-          instante, pero no usa la tipografía real. La vista previa del PDF de la derecha sí es el
-          documento real; por eso tarda unos segundos en actualizarse tras cada cambio.
-        </p>
-        <Accordion type="multiple" defaultValue={['header', 'body', 'footer']} className="w-full">
-          <AccordionItem value="header">
-            <AccordionTrigger className="text-sm font-medium hover:no-underline">
-              <AccordionSectionTitle
-                icon={PanelTop}
-                title="Encabezado"
-                hint="Logo, título y colores de la parte superior del documento"
-              />
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="flex flex-col gap-4 pt-1">
-                <HeaderLivePreview form={form} />
+    <div className="flex flex-col gap-4">
+      <p className="text-muted-foreground text-xs">
+        El recuadro dentro de cada sección es una vista rápida y aproximada — se actualiza al
+        instante, pero no usa la tipografía real. La vista previa del PDF de la derecha sí es el
+        documento real; por eso tarda unos segundos en actualizarse tras cada cambio.
+      </p>
 
-                <StyleGroupLabel>Colores</StyleGroupLabel>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Card className="py-2">
+        <CardContent className="px-4">
+          <Accordion type="single" collapsible defaultValue="header" className="w-full">
+            <AccordionItem value="header" className="border-b-0">
+              <AccordionTrigger className="text-sm font-medium hover:no-underline">
+                <AccordionSectionTitle
+                  icon={PanelTop}
+                  title="Encabezado"
+                  hint="Logo, título y colores de la parte superior del documento"
+                />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-col gap-4 pt-1">
+                  <HeaderLivePreview form={form} />
+
+                  <StyleGroupLabel>Colores</StyleGroupLabel>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="headerBgColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de fondo"
+                              tip="Color de la franja superior del documento (donde va el logo y el título)."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="headerTextColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de texto"
+                              tip="Color del título y el texto dentro del encabezado."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <StyleGroupLabel>Tipografía y diseño</StyleGroupLabel>
                   <FormField
                     control={form.control}
-                    name="headerBgColor"
+                    name="headerLayout"
                     render={({ field }) => (
                       <FormItem>
-                        <FormControl>
-                          <ColorInputField
-                            label="Color de fondo"
-                            tip="Color de la franja superior del documento (donde va el logo y el título)."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
+                        <FormLabel>
+                          <FieldTip
+                            label={
+                              <>
+                                Distribución del logo <span className="text-destructive">*</span>
+                              </>
+                            }
+                            tip="Ubica el logo de la empresa a la izquierda o a la derecha del título, dentro del encabezado."
                           />
-                        </FormControl>
+                        </FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {HEADER_LAYOUT_OPTIONS.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
-                    name="headerTextColor"
+                    name="headerFontFamily"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel>
+                          <FieldTip
+                            label={
+                              <>
+                                Familia tipográfica <span className="text-destructive">*</span>
+                              </>
+                            }
+                            tip="Letra usada para el título del encabezado en el PDF final."
+                          />
+                        </FormLabel>
                         <FormControl>
-                          <ColorInputField
-                            label="Color de texto"
-                            tip="Color del título y el texto dentro del encabezado."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
+                          <TypeFontPickerModal value={field.value} onChange={field.onChange} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <StyleGroupLabel>Medidas (px)</StyleGroupLabel>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <FormField
+                      control={form.control}
+                      name="headerTitleSize"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Tamaño del título (px) <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Tamaño de letra del título principal del encabezado."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="headerHeight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Alto del encabezado (px){' '}
+                                  <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Alto total de la franja superior del documento."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="headerLogoWidth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Ancho del logo (px) <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Ancho con el que se mostrará el logo de la empresa en el encabezado."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="headerLogoHeight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Alto del logo (px) <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Alto con el que se mostrará el logo de la empresa en el encabezado."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      <Card className="py-2">
+        <CardContent className="px-4">
+          <Accordion type="single" collapsible defaultValue="body" className="w-full">
+            <AccordionItem value="body" className="border-b-0">
+              <AccordionTrigger className="text-sm font-medium hover:no-underline">
+                <AccordionSectionTitle
+                  icon={Table2}
+                  title="Cuerpo del documento"
+                  hint="Colores y tamaños de la tabla de productos que verá el cliente"
+                />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-col gap-4 pt-1">
+                  <BodyLivePreview form={form} />
+
+                  <StyleGroupLabel>Colores</StyleGroupLabel>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="bodyBgColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de fondo"
+                              tip="Color de fondo de la tabla de productos y del cuerpo del documento."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyTextColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de texto"
+                              tip="Color del texto dentro de la tabla de productos."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyBorderColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de borde"
+                              tip="Color de las líneas que separan las filas y columnas de la tabla."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <StyleGroupLabel>Tipografía</StyleGroupLabel>
+                  <FormField
+                    control={form.control}
+                    name="bodyFontFamily"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          <FieldTip
+                            label={
+                              <>
+                                Familia tipográfica <span className="text-destructive">*</span>
+                              </>
+                            }
+                            tip="Letra usada en la tabla de productos y el cuerpo del documento."
+                          />
+                        </FormLabel>
+                        <FormControl>
+                          <TypeFontPickerModal value={field.value} onChange={field.onChange} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <StyleGroupLabel>Medidas (px)</StyleGroupLabel>
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="bodySubtitleSize"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Tamaño del subtítulo (px){' '}
+                                  <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Tamaño de letra de los subtítulos dentro del cuerpo (ej. nombres de sección)."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyTextSize"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Tamaño del texto (px) <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Tamaño de letra del texto general dentro del cuerpo del documento."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bodyTableSize"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Tamaño de la tabla (px){' '}
+                                  <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Tamaño de letra de los productos, cantidades y precios dentro de la tabla."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      <Card className="py-2">
+        <CardContent className="px-4">
+          <Accordion type="single" collapsible defaultValue="footer" className="w-full">
+            <AccordionItem value="footer" className="border-b-0">
+              <AccordionTrigger className="text-sm font-medium hover:no-underline">
+                <AccordionSectionTitle
+                  icon={PanelBottom}
+                  title="Pie de página"
+                  hint="Franja inferior con el texto de cierre, como 'Gracias por su preferencia'"
+                />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-col gap-4 pt-1">
+                  <FooterLivePreview form={form} />
+
+                  <StyleGroupLabel>Colores y medidas</StyleGroupLabel>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="footerBgColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de fondo"
+                              tip="Color de la franja inferior del documento."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="footerTextColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ColorInputField
+                              label="Color de texto"
+                              tip="Color del texto de cierre en el pie de página."
+                              required
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="footerTextSize"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            <FieldTip
+                              label={
+                                <>
+                                  Tamaño del texto (px) <span className="text-destructive">*</span>
+                                </>
+                              }
+                              tip="Tamaño de letra del texto del pie de página."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              {...field}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <StyleGroupLabel>Tipografía</StyleGroupLabel>
+                  <FormField
+                    control={form.control}
+                    name="footerFontFamily"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          <FieldTip
+                            label={
+                              <>
+                                Familia tipográfica <span className="text-destructive">*</span>
+                              </>
+                            }
+                            tip="Letra usada para el texto del pie de página."
+                          />
+                        </FormLabel>
+                        <FormControl>
+                          <TypeFontPickerModal value={field.value} onChange={field.onChange} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <StyleGroupLabel>Texto</StyleGroupLabel>
+                  <FormField
+                    control={form.control}
+                    name="footerText"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          <FieldTip
+                            label="Texto del pie de página"
+                            tip="Mensaje que aparece en la franja inferior de cada página del PDF, como un agradecimiento o dato de contacto."
+                          />
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ej: Gracias por su preferencia."
+                            rows={3}
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -187,493 +686,11 @@ export function StylesTab({ form }: { form: UseFormReturn<ProformaTemplateFormVa
                     )}
                   />
                 </div>
-
-                <StyleGroupLabel>Tipografía y diseño</StyleGroupLabel>
-                <FormField
-                  control={form.control}
-                  name="headerLayout"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <FieldTip
-                          label={
-                            <>
-                              Distribución del logo <span className="text-destructive">*</span>
-                            </>
-                          }
-                          tip="Ubica el logo de la empresa a la izquierda o a la derecha del título, dentro del encabezado."
-                        />
-                      </FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {HEADER_LAYOUT_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>
-                              {o.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="headerFontFamily"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <FieldTip
-                          label={
-                            <>
-                              Familia tipográfica <span className="text-destructive">*</span>
-                            </>
-                          }
-                          tip="Letra usada para el título del encabezado en el PDF final."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <TypeFontPickerModal value={field.value} onChange={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <StyleGroupLabel>Medidas (px)</StyleGroupLabel>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name="headerTitleSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Tamaño del título (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Tamaño de letra del título principal del encabezado."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="headerHeight"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Alto del encabezado (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Alto total de la franja superior del documento."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="headerLogoWidth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Ancho del logo (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Ancho con el que se mostrará el logo de la empresa en el encabezado."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="headerLogoHeight"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Alto del logo (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Alto con el que se mostrará el logo de la empresa en el encabezado."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="body">
-            <AccordionTrigger className="text-sm font-medium hover:no-underline">
-              <AccordionSectionTitle
-                icon={Table2}
-                title="Cuerpo del documento"
-                hint="Colores y tamaños de la tabla de productos que verá el cliente"
-              />
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="flex flex-col gap-4 pt-1">
-                <BodyLivePreview form={form} />
-
-                <StyleGroupLabel>Colores</StyleGroupLabel>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="bodyBgColor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ColorInputField
-                            label="Color de fondo"
-                            tip="Color de fondo de la tabla de productos y del cuerpo del documento."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bodyTextColor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ColorInputField
-                            label="Color de texto"
-                            tip="Color del texto dentro de la tabla de productos."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bodyBorderColor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ColorInputField
-                            label="Color de borde"
-                            tip="Color de las líneas que separan las filas y columnas de la tabla."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <StyleGroupLabel>Tipografía</StyleGroupLabel>
-                <FormField
-                  control={form.control}
-                  name="bodyFontFamily"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <FieldTip
-                          label={
-                            <>
-                              Familia tipográfica <span className="text-destructive">*</span>
-                            </>
-                          }
-                          tip="Letra usada en la tabla de productos y el cuerpo del documento."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <TypeFontPickerModal value={field.value} onChange={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <StyleGroupLabel>Medidas (px)</StyleGroupLabel>
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="bodySubtitleSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Tamaño del subtítulo (px){' '}
-                                <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Tamaño de letra de los subtítulos dentro del cuerpo (ej. nombres de sección)."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bodyTextSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Tamaño del texto (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Tamaño de letra del texto general dentro del cuerpo del documento."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bodyTableSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Tamaño de la tabla (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Tamaño de letra de los productos, cantidades y precios dentro de la tabla."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="footer" className="border-b-0">
-            <AccordionTrigger className="text-sm font-medium hover:no-underline">
-              <AccordionSectionTitle
-                icon={PanelBottom}
-                title="Pie de página"
-                hint="Franja inferior con el texto de cierre, como 'Gracias por su preferencia'"
-              />
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="flex flex-col gap-4 pt-1">
-                <FooterLivePreview form={form} />
-
-                <StyleGroupLabel>Colores y medidas</StyleGroupLabel>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="footerBgColor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ColorInputField
-                            label="Color de fondo"
-                            tip="Color de la franja inferior del documento."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="footerTextColor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ColorInputField
-                            label="Color de texto"
-                            tip="Color del texto de cierre en el pie de página."
-                            required
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="footerTextSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          <FieldTip
-                            label={
-                              <>
-                                Tamaño del texto (px) <span className="text-destructive">*</span>
-                              </>
-                            }
-                            tip="Tamaño de letra del texto del pie de página."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <StyleGroupLabel>Tipografía</StyleGroupLabel>
-                <FormField
-                  control={form.control}
-                  name="footerFontFamily"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <FieldTip
-                          label={
-                            <>
-                              Familia tipográfica <span className="text-destructive">*</span>
-                            </>
-                          }
-                          tip="Letra usada para el texto del pie de página."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <TypeFontPickerModal value={field.value} onChange={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <StyleGroupLabel>Texto</StyleGroupLabel>
-                <FormField
-                  control={form.control}
-                  name="footerText"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <FieldTip
-                          label="Texto del pie de página"
-                          tip="Mensaje que aparece en la franja inferior de cada página del PDF, como un agradecimiento o dato de contacto."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ej: Gracias por su preferencia."
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </CardContent>
-    </Card>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

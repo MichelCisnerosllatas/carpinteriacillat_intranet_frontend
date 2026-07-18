@@ -2,15 +2,37 @@
 // Consume el módulo genérico PdfTemplate (/v1/intranet/pdf-templates) filtrado por module="proforma".
 export type PdfTemplateHeaderLayout = 'logo_izquierda' | 'logo_derecha'
 
+// Keys de App\Enums\PdfTemplateSectionKey (backend) — fuente de verdad de qué toggles acepta
+// `pdf_templates.sections`. Agregar un case ahí no hace nada acá hasta reflejarlo aquí también.
 export type PdfTemplateSections = {
+  // Encabezado
   show_logo?: boolean
   show_date?: boolean
+  show_company_name?: boolean
+  // Cliente
+  show_client_name?: boolean
+  show_client_document?: boolean
+  show_client_address?: boolean
+  show_client_attention?: boolean
+  // Intro / ítems / resumen
+  show_intro_text?: boolean
+  show_items_table?: boolean
+  show_summary_total?: boolean
+  show_delivery_time?: boolean
+  // Datos de la empresa (línea por línea)
   show_company_data?: boolean
+  show_company_tax_id?: boolean
+  show_company_address?: boolean
+  show_company_business_name?: boolean
+  show_company_social_networks?: boolean
+  show_company_contacts?: boolean
+  // Sucursales / forma de pago / cuentas bancarias
   show_branches?: boolean
   show_payment_method?: boolean
   show_bank_accounts?: boolean
-  show_company_social_networks?: boolean
-  show_company_contacts?: boolean
+  // Cierre / firma / footer
+  show_final_text?: boolean
+  show_final_greeting?: boolean
   show_signature?: boolean
   show_footer?: boolean
 }

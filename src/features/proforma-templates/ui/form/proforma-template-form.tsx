@@ -10,10 +10,14 @@ import { Separator } from '@/shared/ui/separator'
 import { Form } from '@/shared/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
-import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
+import { swalConfirmAction, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { useIsMobile } from '@/shared/lib/use-mobile'
 import { AlertError } from '@/widgets/alerts_components'
+import {
+  useProformaTemplateTextDraftStore,
+  useProformaTemplateTextListStore,
+} from '@/features/proforma-template-texts'
 import { useProformaTemplateListStore } from '../../stores/useProformaTemplateListStore'
 import { useProformaTemplateFormStore } from '../../stores/useProformaTemplateFormStore'
 import { useLiveStylePreview } from '../preview/use-live-style-preview'
@@ -46,7 +50,26 @@ export function ProformaTemplateForm({ mode, id }: { mode: 'create' | 'edit'; id
   }, [isMobile, previewVisible])
   const showPreview = previewVisible ?? !isMobile
   const { currentItem, items, loadById } = useProformaTemplateListStore()
-  const { isSubmitting, error, fieldErrors, create, update, reset } = useProformaTemplateFormStore()
+  const {
+    isSubmitting,
+    error,
+    fieldErrors,
+    create,
+    update: updateTemplate,
+    reset,
+  } = useProformaTemplateFormStore()
+  const {
+    syncToTemplate,
+    setFromExisting,
+    seedDefaults,
+    reset: resetTextDrafts,
+  } = useProformaTemplateTextDraftStore()
+  const { loadByTemplateText, reset: resetTextList } = useProformaTemplateTextListStore()
+  // El preview no arranca hasta que los textos también estén listos: antes se cargaban recién al
+  // entrar al tab "Textos extra", y como cambiar el borrador dispara una regeneración del PDF (ver
+  // el subscribe más abajo), el usuario veía el PDF renderizarse UNA VEZ al entrar y OTRA VEZ al
+  // abrir esa pestaña. Cargar todo antes del primer render evita el segundo renderizado.
+  const [textsReady, setTextsReady] = useState(false)
   const isEdit = mode === 'edit'
   const resolved = currentItem ?? (id ? (items.find((i) => i.id === Number(id)) ?? null) : null)
 
@@ -60,6 +83,31 @@ export function ProformaTemplateForm({ mode, id }: { mode: 'create' | 'edit'; id
       void loadById(Number(id))
     }
   }, [isEdit, id])
+
+  // Misma función/efecto que resuelve la plantilla: en cuanto se conoce el id (edición) se piden
+  // sus textos ya guardados; en creación, se siembra el redactado por defecto. Ambos casos dejan
+  // el borrador listo ANTES de que el preview haga su primera petición.
+  useEffect(() => {
+    if (!isEdit) {
+      seedDefaults()
+      setTextsReady(true)
+      return
+    }
+    if (!resolved) return
+    if (useProformaTemplateTextDraftStore.getState().initializedForTemplateId === resolved.id) {
+      setTextsReady(true)
+      return
+    }
+    let alive = true
+    void loadByTemplateText(resolved.id).then((ok) => {
+      if (!alive) return
+      if (ok) setFromExisting(resolved.id, useProformaTemplateTextListStore.getState().items)
+      setTextsReady(true)
+    })
+    return () => {
+      alive = false
+    }
+  }, [isEdit, resolved?.id])
 
   useEffect(() => {
     if (isEdit && resolved) {
@@ -88,12 +136,26 @@ export function ProformaTemplateForm({ mode, id }: { mode: 'create' | 'edit'; id
         footerText: resolved.footerText ?? '',
         showLogo: resolved.sections.showLogo,
         showDate: resolved.sections.showDate,
+        showCompanyName: resolved.sections.showCompanyName,
+        showClientName: resolved.sections.showClientName,
+        showClientDocument: resolved.sections.showClientDocument,
+        showClientAddress: resolved.sections.showClientAddress,
+        showClientAttention: resolved.sections.showClientAttention,
+        showIntroText: resolved.sections.showIntroText,
+        showItemsTable: resolved.sections.showItemsTable,
+        showSummaryTotal: resolved.sections.showSummaryTotal,
+        showDeliveryTime: resolved.sections.showDeliveryTime,
         showCompanyData: resolved.sections.showCompanyData,
+        showCompanyTaxId: resolved.sections.showCompanyTaxId,
+        showCompanyAddress: resolved.sections.showCompanyAddress,
+        showCompanyBusinessName: resolved.sections.showCompanyBusinessName,
+        showCompanySocialNetworks: resolved.sections.showCompanySocialNetworks,
+        showCompanyContacts: resolved.sections.showCompanyContacts,
         showBranches: resolved.sections.showBranches,
         showPaymentMethod: resolved.sections.showPaymentMethod,
         showBankAccounts: resolved.sections.showBankAccounts,
-        showCompanySocialNetworks: resolved.sections.showCompanySocialNetworks,
-        showCompanyContacts: resolved.sections.showCompanyContacts,
+        showFinalText: resolved.sections.showFinalText,
+        showFinalGreeting: resolved.sections.showFinalGreeting,
         showSignature: resolved.sections.showSignature,
         showFooter: resolved.sections.showFooter,
         status: resolved.stateValue,
@@ -101,43 +163,97 @@ export function ProformaTemplateForm({ mode, id }: { mode: 'create' | 'edit'; id
     }
   }, [isEdit, resolved?.id])
 
-  useEffect(() => () => reset(), [])
+  useEffect(
+    () => () => {
+      reset()
+      resetTextDrafts()
+      resetTextList()
+    },
+    []
+  )
 
-  const previewReady = isEdit ? Boolean(resolved) : true
+  const previewReady = (isEdit ? Boolean(resolved) : true) && textsReady
+  // El payload de estilo no incluye los textos por sí solo (viven en un store aparte, no en el
+  // formulario) — se agregan acá leyendo el estado más reciente del borrador en cada llamada
+  // (`.getState()`, no una variable capturada), para que el preview siempre imprima lo que el
+  // usuario ve en el tab "Textos extra", incluso cuando cambia sin tocar ningún campo de estilo.
+  const stylePayloadWithTexts = (values: ProformaTemplateFormValues): Record<string, unknown> => ({
+    ...toProformaTemplateStylePayload(values),
+    texts: useProformaTemplateTextDraftStore
+      .getState()
+      .rows.filter((r) => !r.deleted)
+      .map((r) => ({ key: r.key, content: r.content, visible: r.visible, order: r.order })),
+  })
+
   const {
     previewUrl,
     isLoading: isLoadingPreview,
     isError: isPreviewError,
     refresh: refreshPreview,
-  } = useLiveStylePreview(form, toProformaTemplateStylePayload, previewReady, GENERAL_TAB_FIELDS)
+  } = useLiveStylePreview(form, stylePayloadWithTexts, previewReady, GENERAL_TAB_FIELDS)
+
+  // El watcher de estilos del hook solo escucha cambios del formulario (react-hook-form) — los
+  // textos viven en un store aparte y no lo disparan, así que se resuscribe acá directo al store
+  // para regenerar el preview (debounced) cada vez que el borrador de textos cambia.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const unsubscribe = useProformaTemplateTextDraftStore.subscribe(() => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => refreshPreview(), 600)
+    })
+    return () => {
+      if (timer) clearTimeout(timer)
+      unsubscribe()
+    }
+  }, [])
 
   const onSubmit = async (values: ProformaTemplateFormValues) => {
-    const confirmed = await swalConfirm({
+    const payload = toProformaTemplatePayload(values)
+    // El id se obtiene DENTRO de la acción (creando o actualizando la plantilla) y solo después de
+    // tenerlo se sincronizan los textos — nunca al revés, porque los textos necesitan el
+    // `template_id` real para guardarse.
+    let savedId: number | null = null
+
+    const confirmed = await swalConfirmAction({
       title: isEdit ? '¿Guardar cambios?' : '¿Crear plantilla de proforma?',
       text: values.name,
       confirmText: isEdit ? 'Sí, guardar' : 'Sí, crear',
       cancelText: 'Cancelar',
+      loading: { title: isEdit ? 'Actualizando plantilla...' : 'Registrando plantilla...' },
+      action: async ({ update: setStep, close, showError }) => {
+        if (isEdit) {
+          const success = await updateTemplate(resolved!.id, payload)
+          if (!success) return showError('No se pudo actualizar la plantilla.')
+          savedId = resolved!.id
+        } else {
+          const created = await create(payload)
+          if (!created) return showError('No se pudo crear la plantilla.')
+          savedId = created.id
+        }
+
+        setStep({ title: 'Registrando textos...' })
+        const sync = await syncToTemplate(savedId)
+        if (!sync.ok) {
+          return showError(sync.error ?? 'La plantilla se guardó, pero los textos no.')
+        }
+
+        close()
+      },
     })
-    if (!confirmed) return
 
-    const payload = toProformaTemplatePayload(values)
-
-    if (isEdit) {
-      const success = await update(resolved!.id, payload)
-      if (success) {
-        await swalSuccess('Actualizado', values.name)
-      } else {
+    if (!confirmed) {
+      if (savedId == null) {
         applyApiErrors(form, fieldErrors)
+      } else if (!isEdit) {
+        // La plantilla ya quedó creada aunque los textos fallaran — se deja seguir editando ahí
+        // en vez de perder el registro y obligar a crear todo de nuevo.
+        router.push(`/proforma-templates/edit/${savedId}`)
       }
-    } else {
-      const created = await create(payload)
-      if (created) {
-        await swalSuccess('Creado', values.name)
-        router.push(`/proforma-templates/edit/${created.id}`)
-      } else {
-        applyApiErrors(form, fieldErrors)
-      }
+      return
     }
+
+    await swalSuccess(isEdit ? 'Actualizado' : 'Creado', values.name)
+    if (!isEdit && savedId) router.push(`/proforma-templates/edit/${savedId}`)
   }
 
   return (

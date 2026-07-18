@@ -11,8 +11,11 @@ interface UploadPendingItemsDeps {
  * Se dispara sola en cuanto la proforma obtiene su id real (ver el useEffect en useProformaCart).
  * Recorre `usePendingCartItemsStore().pendingCartItems` y sube al backend, uno por uno, los
  * productos que se armaron en memoria mientras la proforma no existía — llamando directo al
- * store de creación (`useProformaDetailFormStore`). Secuencial (no en paralelo) porque cada
- * creación regenera el PDF en el servidor y puede tardar. Cada producto se quita de la lista
+ * store de creación (`useProformaDetailFormStore`). Secuencial (no en paralelo): cada creación
+ * recalcula `subtotal`/`tax`/`total` de la cabecera sumando TODOS los detalles existentes en ese
+ * momento (ver `proforma-details.md`) — en paralelo, dos altas casi simultáneas podrían pisarse
+ * ese recálculo. El PDF NO se regenera acá (ver «Cómo funciona el PDF» en proformas.md) — queda
+ * desactualizado hasta que alguien pida verlo/descargarlo. Cada producto se quita de la lista
  * temporal en cuanto se sube bien.
  */
 export async function uploadPendingItems(deps: UploadPendingItemsDeps): Promise<void> {

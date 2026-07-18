@@ -39,7 +39,11 @@ export const proformaSchema = z.object({
   correlative: z.number(),
   code: z.string(),
   issueDate: z.string(),
+  // Ya vienen formateadas ("17 de julio de 2026, 12:00 am") desde el backend — usarlas en la UI
+  // en vez de formatear `issueDate`/`dueDate` (ISO) en el propio front.
+  issueDateFormatted: z.string().nullable(),
   dueDate: z.string().nullable(),
+  dueDateFormatted: z.string().nullable(),
   placeOfIssue: z.string().nullable(),
   clientAttention: z.string().nullable(),
   clientName: z.string().nullable(),

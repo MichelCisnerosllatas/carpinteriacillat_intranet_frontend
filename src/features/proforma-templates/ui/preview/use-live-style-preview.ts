@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FieldValues, UseFormReturn } from 'react-hook-form'
 import { proformasService } from '@/features/proformas'
 
-// Vista previa en vivo: POST /proformas/preview-style con los estilos actuales del
+// Vista previa en vivo: POST /proformas/pdf-preview-style con los estilos actuales del
 // formulario (sin guardar nada). Funciona desde el primer render, con o sin plantilla
 // guardada — no depende de tener un id. Se dispara cuando `ready` pasa a true, y en
 // cada cambio del formulario (debounced).

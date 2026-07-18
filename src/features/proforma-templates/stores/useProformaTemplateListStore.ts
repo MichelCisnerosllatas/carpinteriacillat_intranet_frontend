@@ -86,12 +86,31 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
     sections: {
       showLogo: sections.show_logo ?? true,
       showDate: sections.show_date ?? true,
+      showCompanyName: sections.show_company_name ?? true,
+
+      showClientName: sections.show_client_name ?? true,
+      showClientDocument: sections.show_client_document ?? true,
+      showClientAddress: sections.show_client_address ?? true,
+      showClientAttention: sections.show_client_attention ?? true,
+
+      showIntroText: sections.show_intro_text ?? true,
+      showItemsTable: sections.show_items_table ?? true,
+      showSummaryTotal: sections.show_summary_total ?? true,
+      showDeliveryTime: sections.show_delivery_time ?? true,
+
       showCompanyData: sections.show_company_data ?? true,
+      showCompanyTaxId: sections.show_company_tax_id ?? true,
+      showCompanyAddress: sections.show_company_address ?? true,
+      showCompanyBusinessName: sections.show_company_business_name ?? true,
+      showCompanySocialNetworks: sections.show_company_social_networks ?? true,
+      showCompanyContacts: sections.show_company_contacts ?? true,
+
       showBranches: sections.show_branches ?? true,
       showPaymentMethod: sections.show_payment_method ?? true,
       showBankAccounts: sections.show_bank_accounts ?? true,
-      showCompanySocialNetworks: sections.show_company_social_networks ?? true,
-      showCompanyContacts: sections.show_company_contacts ?? true,
+
+      showFinalText: sections.show_final_text ?? true,
+      showFinalGreeting: sections.show_final_greeting ?? true,
       showSignature: sections.show_signature ?? true,
       showFooter: sections.show_footer ?? true,
     },

@@ -69,7 +69,9 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
   {
     accessorKey: 'issueDate',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Fecha de emisión" />,
-    cell: ({ row }) => <span className="text-sm">{row.original.issueDate}</span>,
+    cell: ({ row }) => (
+      <span className="text-sm">{row.original.issueDateFormatted ?? row.original.issueDate}</span>
+    ),
     enableSorting: true,
     enableHiding: true,
     meta: { className: 'w-[130px]' },

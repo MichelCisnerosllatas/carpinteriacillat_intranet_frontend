@@ -8,7 +8,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
-import { cn, formatDisplayDate } from '@/shared/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { getProformaStatusOption } from '../../data/data'
 import type { Proforma, ProformaStatus } from '../../data/schema'
 
@@ -63,8 +63,8 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
               </Badge>
             </div>
             <p className="text-muted-foreground text-xs">
-              {item.clientName ?? item.clientBusinessName ?? '—'} · Emitida el {formatDisplayDate(item.issueDate)}
-              {item.dueDate && <> · Vence el {formatDisplayDate(item.dueDate)}</>}
+              {item.clientName ?? item.clientBusinessName ?? '—'} · Emitida el {item.issueDateFormatted ?? item.issueDate}
+              {item.dueDate && <> · Vence el {item.dueDateFormatted ?? item.dueDate}</>}
             </p>
           </div>
         </div>

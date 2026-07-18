@@ -35,7 +35,9 @@ export type ProformaApiItem = {
   correlative: number
   code: string
   issue_date: string
+  issue_date_formatted: string | null
   due_date: string | null
+  due_date_formatted: string | null
   place_of_issue: string | null
   client_name: string | null
   client_document: string | null
