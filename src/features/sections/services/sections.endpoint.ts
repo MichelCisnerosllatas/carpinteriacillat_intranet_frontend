@@ -8,5 +8,6 @@ export const SECTIONS_ENDPOINTS = {
     put:     (id: number) => `${BASE}/${id}`,
     patch:   (id: number) => `${BASE}/${id}`,
     delete:  (id: number) => `${BASE}/${id}`,
+    reorder: `${BASE}/reorder`,
   },
 }

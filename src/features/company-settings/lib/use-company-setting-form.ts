@@ -56,6 +56,7 @@ export function useCompanySettingForm() {
     if (pendingFile) {
       const formData = new FormData()
       formData.append('file', pendingFile)
+      formData.append('folder', "sistema")
 
       const uploadResponse = await storageFilesService.upload(formData)
       if (!uploadResponse.success) {

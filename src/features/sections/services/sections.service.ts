@@ -8,6 +8,7 @@ import type {
 } from '../model/sectionget.dto'
 import type { SectionPostRequestDto, SectionPostResponseDto } from '../model/sectionpost.dto'
 import type { SectionPutRequestDto, SectionPutResponseDto } from '../model/sectionput.dto'
+import type { SectionReorderResponseDto } from '../model/sectionreorder.dto'
 
 export const sectionsService = {
   getList: async (param: SectionListRequestDto): Promise<SectionJoinListResponseDto> => {
@@ -56,5 +57,10 @@ export const sectionsService = {
   delete: async (id: number): Promise<boolean> => {
     const { data } = await apiClient.delete(SECTIONS_ENDPOINTS.v1.delete(id))
     return data.success
+  },
+
+  reorder: async (ids: number[]): Promise<SectionReorderResponseDto> => {
+    const { data } = await apiClient.post<SectionReorderResponseDto>(SECTIONS_ENDPOINTS.v1.reorder, { ids })
+    return data
   },
 }

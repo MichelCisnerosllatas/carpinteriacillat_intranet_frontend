@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
-import { Plus } from 'lucide-react'
+import { ArrowUpDown, Plus } from 'lucide-react'
 import { SectionsTable } from '@/features/sections/ui/list/sections-table'
 
 export const metadata: Metadata = { title: 'Secciones' }
@@ -17,9 +17,14 @@ export default function SectionsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Secciones</h2>
             <p className="text-muted-foreground">Gestión de secciones del catálogo</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/sections/create"><Plus size={18} /><span>Nueva Sección</span></Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" className="space-x-1">
+              <Link href="/sections/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+            </Button>
+            <Button asChild className="space-x-1">
+              <Link href="/sections/create"><Plus size={18} /><span>Nueva Sección</span></Link>
+            </Button>
+          </div>
         </div>
         <SectionsTable />
       </main>

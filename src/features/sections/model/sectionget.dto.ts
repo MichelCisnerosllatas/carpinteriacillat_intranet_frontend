@@ -5,6 +5,7 @@ export type SectionApiItem = {
   id_section: number
   section_name: string
   section_description: string | null
+  section_order: number | null
   section_state: number
   id_typesection: number
   id_navigation: number | null

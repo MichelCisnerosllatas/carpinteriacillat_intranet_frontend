@@ -11,6 +11,7 @@ export const sectionSchema = z.object({
   typesectionName: z.string(),
   idNavigation: z.number().nullable(),
   navigationName: z.string().nullable(),
+  order: z.number().nullable(),
   status: sectionStatusSchema,
   statusLabel: z.string(),
   stateValue: z.number(),

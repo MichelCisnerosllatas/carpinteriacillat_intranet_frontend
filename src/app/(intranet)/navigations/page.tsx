@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
-import { Plus } from 'lucide-react'
+import { ArrowUpDown, Plus } from 'lucide-react'
 import { NavigationsTable } from '@/features/navigations/ui/list/navigations-table'
 
 export const metadata: Metadata = { title: 'Navegaciones' }
@@ -17,9 +17,14 @@ export default function NavigationsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Navegaciones</h2>
             <p className="text-muted-foreground">Gestión de ítems del menú de navegación</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/navigations/create"><Plus size={18} /><span>Nueva Navegación</span></Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" className="space-x-1">
+              <Link href="/navigations/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+            </Button>
+            <Button asChild className="space-x-1">
+              <Link href="/navigations/create"><Plus size={18} /><span>Nueva Navegación</span></Link>
+            </Button>
+          </div>
         </div>
         <NavigationsTable />
       </main>

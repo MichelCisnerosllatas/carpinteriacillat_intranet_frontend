@@ -40,6 +40,7 @@ const mapFromApi = (item: SectionJoinApiItem): Section => {
     typesectionName: item.typesection?.typesection_name ?? '',
     idNavigation: item.id_navigation,
     navigationName: item.navigation?.navigation_name ?? null,
+    order: item.section_order,
     status: item.section_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.section_state,

@@ -3,6 +3,7 @@ import { NAVIGATIONS_ENDPOINTS } from './navigations.endpoint'
 import type { NavigationListRequestDto, NavigationListResponseDto } from '../model/navigationget.dto'
 import type { NavigationPostRequestDto, NavigationPostResponseDto } from '../model/navigationpost.dto'
 import type { NavigationPutRequestDto, NavigationPutResponseDto } from '../model/navigationput.dto'
+import type { NavigationReorderResponseDto } from '../model/navigationreorder.dto'
 
 export const navigationsService = {
   getList: async (param: NavigationListRequestDto): Promise<NavigationListResponseDto> => {
@@ -46,5 +47,10 @@ export const navigationsService = {
   delete: async (id: number): Promise<boolean> => {
     const { data } = await apiClient.delete(NAVIGATIONS_ENDPOINTS.v1.delete(id))
     return data.success
+  },
+
+  reorder: async (ids: number[]): Promise<NavigationReorderResponseDto> => {
+    const { data } = await apiClient.post<NavigationReorderResponseDto>(NAVIGATIONS_ENDPOINTS.v1.reorder, { ids })
+    return data
   },
 }
