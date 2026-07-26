@@ -19,6 +19,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Separator } from '@/shared/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
 import { useStorageGalleryStore } from '../../stores/useStorageGalleryStore'
 import { useStorageActionStore } from '../../stores/useStorageActionStore'
@@ -152,15 +153,20 @@ export function StorageGallery() {
               <Loader2 className="size-3.5 animate-spin" />
             </div>
           ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => void load({ page: 1 })}
-              className="hidden sm:flex"
-            >
-              <RefreshCw className="size-3.5 mr-1.5" />
-            </Button>
-          )}        
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void load({ page: 1 })}
+                  className="hidden sm:flex"
+                >
+                  <RefreshCw className="size-3.5 mr-1.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Actualizar lista</TooltipContent>
+            </Tooltip>
+          )}
 
 
           {/* <Button size="icon" variant="outline" className="size-9 sm:hidden" onClick={() => void load({ page: 1 })}>
@@ -295,27 +301,37 @@ export function StorageGallery() {
                   : 'Sin archivos'}
               </p>
               <div className="flex items-center gap-1.5">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="size-8"
-                  disabled={currentPage <= 1 || isFetching}
-                  onClick={() => void load({ page: currentPage - 1 })}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="size-8"
+                      disabled={currentPage <= 1 || isFetching}
+                      onClick={() => void load({ page: currentPage - 1 })}
+                    >
+                      <ChevronLeft className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Página anterior</TooltipContent>
+                </Tooltip>
                 <span className="min-w-[72px] text-center text-xs text-muted-foreground">
                   {currentPage} / {lastPage}
                 </span>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="size-8"
-                  disabled={currentPage >= lastPage || isFetching}
-                  onClick={() => void load({ page: currentPage + 1 })}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="size-8"
+                      disabled={currentPage >= lastPage || isFetching}
+                      onClick={() => void load({ page: currentPage + 1 })}
+                    >
+                      <ChevronRight className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Página siguiente</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           )}
@@ -443,13 +459,18 @@ function FolderTreeItem({
         style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
         {/* Expand toggle */}
-        <button
-          onClick={() => hasChildren && setOpen((p) => !p)}
-          className={cn('flex size-5 shrink-0 items-center justify-center', !hasChildren && 'cursor-default opacity-0')}
-          tabIndex={-1}
-        >
-          {open ? <ChevronDown className="size-3" /> : <ChevronRightIcon className="size-3" />}
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => hasChildren && setOpen((p) => !p)}
+              className={cn('flex size-5 shrink-0 items-center justify-center', !hasChildren && 'cursor-default opacity-0')}
+              tabIndex={-1}
+            >
+              {open ? <ChevronDown className="size-3" /> : <ChevronRightIcon className="size-3" />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{open ? 'Colapsar carpeta' : 'Expandir carpeta'}</TooltipContent>
+        </Tooltip>
 
         {/* Folder label (click = filter) */}
         <button

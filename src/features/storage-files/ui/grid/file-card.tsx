@@ -8,6 +8,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isImage } from '../../data/schema'
 import { FileTypeIcon, fileTypeColor } from './file-type-icon'
 import type { StorageFile } from '../../data/schema'
@@ -55,16 +56,23 @@ export function FileCard({
       {/* Context menu — top-right */}
       <div className="absolute right-1.5 top-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 rounded-lg bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 rounded-lg bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="size-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Más acciones</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onPreview() }} className="gap-2 cursor-pointer">
               <Eye className="size-3.5" /> Ver / Previsualizar

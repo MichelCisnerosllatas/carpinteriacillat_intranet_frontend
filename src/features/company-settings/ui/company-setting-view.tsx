@@ -2,33 +2,52 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Loader2 } from 'lucide-react'
+// import { Loader2 } from 'lucide-react'
 import { useCompanySettingStore } from '../stores/useCompanySettingStore'
 import { CompanySettingForm } from './form/company-setting-form'
+import { CompanySettingsSkeleton } from './form/company-settings-skeleton'
+import { ErrorState } from '@/widgets/error/error-state'
 
 export function CompanySettingView() {
-  const { data, isLoading, isError, message, fetch } = useCompanySettingStore()
+  const { data, hasLoaded, isLoading, isError, message, fetch } = useCompanySettingStore()
 
   useEffect(() => {
-    if (!data) fetch()
+    if (!hasLoaded) fetch()
   }, [])
 
   if (isLoading && !data) {
-    return (
-      <div className="flex flex-1 items-center justify-center py-16 text-muted-foreground">
-        <Loader2 className="mr-2 size-5 animate-spin" />
-        Cargando configuración...
-      </div>
-    )
+    return <CompanySettingsSkeleton />;
   }
 
   if (isError && !data) {
     return (
-      <div className="flex flex-1 items-center justify-center py-16 text-destructive">
-        {message ?? 'No se pudo cargar la configuración de la empresa.'}
-      </div>
+      <ErrorState
+        title="No se pudo cargar la configuración"
+        message={
+          message ??
+          'Ocurrió un problema al cargar la configuración de la empresa.'
+        }
+        // message2="Comprueba tu conexión o vuelve a intentarlo."
+        primaryLabel="Reintentar"
+        secondaryLabel="Volver al inicio"
+        // isPrimaryLoading={isFetching}
+        onPrimaryAction={() => {
+          fetch()
+        }}
+        // onSecondaryAction={() => {
+        //   router.push('/')
+        // }}
+      />
     )
   }
+
+  // if (isError && !data) {
+  //   return (
+  //     <div className="flex flex-1 items-center justify-center py-16 text-destructive">
+  //       {message ?? 'No se pudo cargar la configuración de la empresa.'}
+  //     </div>
+  //   )
+  // }
 
   if (!data) return null
 

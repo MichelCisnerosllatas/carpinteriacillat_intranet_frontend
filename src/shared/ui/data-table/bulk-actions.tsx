@@ -3,6 +3,7 @@
 import { CheckCircle2, Loader2, Trash2, XCircle, X } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Separator } from '@/shared/ui/separator'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 
 interface DataTableBulkActionsProps {
@@ -89,16 +90,21 @@ export function DataTableBulkActions({
 
       <Separator orientation="vertical" className="h-5" />
 
-      <Button
-        variant="ghost"
-        size="icon"
-        disabled={isLoading}
-        onClick={onClear}
-        className="size-7"
-      >
-        <X className="size-3.5" />
-        <span className="sr-only">Limpiar selección</span>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={isLoading}
+            onClick={onClear}
+            className="size-7"
+          >
+            <X className="size-3.5" />
+            <span className="sr-only">Limpiar selección</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Limpiar selección</TooltipContent>
+      </Tooltip>
     </div>
   )
 }

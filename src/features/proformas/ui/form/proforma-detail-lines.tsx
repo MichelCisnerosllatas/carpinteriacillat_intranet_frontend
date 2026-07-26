@@ -5,6 +5,7 @@ import { Check, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { ProductServiceSelect } from '@/features/products-services'
 import { useProformaCart } from '../../hooks'
 import { useCartDraftsStore } from '../../stores/useCartDraftsStore'
@@ -130,35 +131,50 @@ export function ProformaDetailLines({ proformaId, currency, onCountChange }: Pro
                     <div className="flex items-center justify-end gap-1">
                       {isDirty && (
                         <>
-                          <Button
-                            type="button" variant="ghost" size="icon" disabled={isRowBusy}
-                            onClick={async () => {
-                              cart.setSavingItemId(row.id)
-                              const ok = await saveEditedCartItem({ row, proformaId: proformaId!, values })
-                              cart.setSavingItemId(null)
-                              if (ok) discardSavedItemEdit(row.id)
-                            }}
-                            className="text-teal-600 hover:bg-teal-500/10 hover:text-teal-600 size-8"
-                          >
-                            {isRowBusy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                          </Button>
-                          <Button
-                            type="button" variant="ghost" size="icon" disabled={isRowBusy}
-                            onClick={() => discardSavedItemEdit(row.id)}
-                            className="size-8"
-                          >
-                            <X className="size-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button" variant="ghost" size="icon" disabled={isRowBusy}
+                                onClick={async () => {
+                                  cart.setSavingItemId(row.id)
+                                  const ok = await saveEditedCartItem({ row, proformaId: proformaId!, values })
+                                  cart.setSavingItemId(null)
+                                  if (ok) discardSavedItemEdit(row.id)
+                                }}
+                                className="text-teal-600 hover:bg-teal-500/10 hover:text-teal-600 size-8"
+                              >
+                                {isRowBusy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Guardar cambios de esta línea</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button" variant="ghost" size="icon" disabled={isRowBusy}
+                                onClick={() => discardSavedItemEdit(row.id)}
+                                className="size-8"
+                              >
+                                <X className="size-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Descartar cambios</TooltipContent>
+                          </Tooltip>
                         </>
                       )}
                       {!isDirty && (
-                        <Button
-                          type="button" variant="ghost" size="icon" disabled={isRowBusy}
-                          onClick={() => removeProductFromCart({ proformaId, savedRow: row })}
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive size-8"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button" variant="ghost" size="icon" disabled={isRowBusy}
+                              onClick={() => removeProductFromCart({ proformaId, savedRow: row })}
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive size-8"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Quitar producto</TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </TableCell>
@@ -216,13 +232,18 @@ export function ProformaDetailLines({ proformaId, currency, onCountChange }: Pro
                       {isRowUploading ? (
                         <Loader2 className="size-4 animate-spin text-muted-foreground" />
                       ) : (
-                        <Button
-                          type="button" variant="ghost" size="icon"
-                          onClick={() => removeProductFromCart({ proformaId, pendingTempId: item.tempId })}
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive size-8"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button" variant="ghost" size="icon"
+                              onClick={() => removeProductFromCart({ proformaId, pendingTempId: item.tempId })}
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive size-8"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Quitar producto</TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </TableCell>

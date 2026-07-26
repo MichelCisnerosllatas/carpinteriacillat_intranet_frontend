@@ -5,6 +5,7 @@ import { Check, ChevronsUpDown, Loader2, AlertCircle, Search, ChevronLeft, Chevr
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { furnituresService } from '../services/furnitures.service'
 import type { FurnitureJoinApiItem } from '../model/furniture-api-item.dto'
 
@@ -113,13 +114,18 @@ export function FurnitureSelect({
           </span>
           <span className="ml-2 flex shrink-0 items-center gap-1">
             {selected && (
-              <span
-                role="button"
-                onClick={handleClear}
-                className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    role="button"
+                    onClick={handleClear}
+                    className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Quitar mueble seleccionado</TooltipContent>
+              </Tooltip>
             )}
             <ChevronsUpDown className="size-4 opacity-50" />
           </span>
@@ -138,9 +144,14 @@ export function FurnitureSelect({
             autoFocus
           />
           {search && (
-            <button type="button" onClick={() => { setSearch(''); fetchPage(1, '') }} className="text-muted-foreground hover:text-foreground">
-              <X className="size-3.5" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" onClick={() => { setSearch(''); fetchPage(1, '') }} className="text-muted-foreground hover:text-foreground">
+                  <X className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Limpiar búsqueda</TooltipContent>
+            </Tooltip>
           )}
         </div>
 
@@ -194,13 +205,23 @@ export function FurnitureSelect({
             <span className="text-[11px] text-muted-foreground">{total} mueble{total !== 1 ? 's' : ''}</span>
             {lastPage > 1 && (
               <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="icon" className="size-6" disabled={page <= 1 || loading} onClick={() => fetchPage(page - 1, search)}>
-                  <ChevronLeft className="size-3.5" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" className="size-6" disabled={page <= 1 || loading} onClick={() => fetchPage(page - 1, search)}>
+                      <ChevronLeft className="size-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Página anterior</TooltipContent>
+                </Tooltip>
                 <span className="min-w-[52px] text-center text-[11px] text-muted-foreground">{page} / {lastPage}</span>
-                <Button type="button" variant="ghost" size="icon" className="size-6" disabled={page >= lastPage || loading} onClick={() => fetchPage(page + 1, search)}>
-                  <ChevronRight className="size-3.5" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" className="size-6" disabled={page >= lastPage || loading} onClick={() => fetchPage(page + 1, search)}>
+                      <ChevronRight className="size-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Página siguiente</TooltipContent>
+                </Tooltip>
               </div>
             )}
           </div>

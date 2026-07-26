@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { useNotificationStore, type Notification } from '@/shared/stores/notification-store'
 
@@ -35,20 +36,27 @@ export function NotificationDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="size-4" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 size-4 justify-center rounded-full p-0 text-[10px]"
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
-          )}
-          <span className="sr-only">Notifications</span>
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="size-4" />
+                {unreadCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 size-4 justify-center rounded-full p-0 text-[10px]"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+                <span className="sr-only">Notifications</span>
+              </Button>
+            </DropdownMenuTrigger>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Notificaciones</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notifications</span>
@@ -90,17 +98,22 @@ export function NotificationDropdown() {
                     <p className="text-xs text-muted-foreground">{n.description}</p>
                     <p className="text-xs text-muted-foreground/60">{n.time}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-5 shrink-0 opacity-0 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeNotification(n.id)
-                    }}
-                  >
-                    <X className="size-3" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-5 shrink-0 opacity-0 group-hover:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeNotification(n.id)
+                        }}
+                      >
+                        <X className="size-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Eliminar notificación</TooltipContent>
+                  </Tooltip>
                 </DropdownMenuItem>
               )
             })}

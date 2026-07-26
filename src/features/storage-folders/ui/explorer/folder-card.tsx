@@ -7,6 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { StorageFolder } from '../../data/schema'
 
 interface FolderCardProps {
@@ -33,16 +34,23 @@ export function FolderCard({ folder, isActive, onClick, onRename, onDelete }: Fo
       {/* Menu */}
       <div className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 rounded-lg"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="size-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Más acciones</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem
               onClick={(e) => { e.stopPropagation(); onRename() }}

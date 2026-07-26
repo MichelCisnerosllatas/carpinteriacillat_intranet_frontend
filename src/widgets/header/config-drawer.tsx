@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from '@/shared/ui/sheet'
 import { useSidebar } from '@/shared/ui/sidebar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { Collapsible } from '@/shared/providers/layout-provider'
 
 // ─── Icons (inlined from original assets) ───────────────────────────────────
@@ -181,19 +182,41 @@ function SectionTitle({
     <div className={cn('mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground', className)}>
       {title}
       {showReset && onReset && (
-        <Button
-          type="button"
-          size="icon"
-          variant="secondary"
-          className="size-4 rounded-full"
-          onClick={onReset}
-          aria-label={resetAriaLabel}
-        >
-          <RotateCcw className="size-3" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className="size-4 rounded-full"
+              onClick={onReset}
+              aria-label={resetAriaLabel}
+            >
+              <RotateCcw className="size-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{resetTooltipEs(resetAriaLabel)}</TooltipContent>
+        </Tooltip>
       )}
     </div>
   )
+}
+
+// Maps the (English) aria-labels used across the reset buttons to Spanish
+// tooltip copy without changing the underlying accessibility text.
+function resetTooltipEs(resetAriaLabel?: string): string {
+  switch (resetAriaLabel) {
+    case 'Reset theme to default':
+      return 'Restablecer tema'
+    case 'Reset sidebar style to default':
+      return 'Restablecer estilo de barra lateral'
+    case 'Reset layout to default':
+      return 'Restablecer diseño'
+    case 'Reset direction':
+      return 'Restablecer dirección'
+    default:
+      return resetAriaLabel ?? 'Restablecer'
+  }
 }
 
 function RadioGroupItem({
@@ -367,11 +390,18 @@ export function ConfigDrawer() {
 
   return (
     <Sheet>
-      <SheetTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label="Open theme settings" className="rounded-full">
-          <Settings aria-hidden="true" />
-        </Button>
-      </SheetTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <SheetTrigger asChild>
+              <Button size="icon" variant="ghost" aria-label="Open theme settings" className="rounded-full">
+                <Settings aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Configurar apariencia</TooltipContent>
+      </Tooltip>
       <SheetContent className="flex flex-col">
         <SheetHeader className="pb-0 text-start">
           <SheetTitle>Theme Settings</SheetTitle>

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 type PasswordInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> & {
   ref?: React.Ref<HTMLInputElement>
@@ -20,17 +21,22 @@ export function PasswordInput({ className, disabled, ref, ...props }: PasswordIn
         disabled={disabled}
         {...props}
       />
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        disabled={disabled}
-        className="absolute inset-e-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md text-muted-foreground"
-        onClick={() => setShow((p) => !p)}
-      >
-        {show ? <Eye size={18} /> : <EyeOff size={18} />}
-        <span className="sr-only">{show ? 'Hide password' : 'Show password'}</span>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            disabled={disabled}
+            className="absolute inset-e-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md text-muted-foreground"
+            onClick={() => setShow((p) => !p)}
+          >
+            {show ? <Eye size={18} /> : <EyeOff size={18} />}
+            <span className="sr-only">{show ? 'Hide password' : 'Show password'}</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{show ? 'Ocultar contraseña' : 'Mostrar contraseña'}</TooltipContent>
+      </Tooltip>
     </div>
   )
 }

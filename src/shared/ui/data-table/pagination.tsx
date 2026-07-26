@@ -5,6 +5,7 @@ import { type Table } from '@tanstack/react-table'
 import { cn, getPageNumbers } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { ReactNode } from 'react'
 
 export function DataTablePagination<TData>({
@@ -73,12 +74,22 @@ export function DataTablePagination<TData>({
           Pag {currentPage} de {totalPages}
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" className="size-8 p-0 @max-md/content:hidden" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
-            <span className="sr-only">First page</span><DoubleArrowLeftIcon className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" className="size-8 p-0" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-            <span className="sr-only">Previous page</span><ChevronLeftIcon className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" className="size-8 p-0 @max-md/content:hidden" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+                <span className="sr-only">First page</span><DoubleArrowLeftIcon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Primera página</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" className="size-8 p-0" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                <span className="sr-only">Previous page</span><ChevronLeftIcon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Página anterior</TooltipContent>
+          </Tooltip>
           {pageNumbers.map((p, i) => (
             <div key={`${p}-${i}`} className="flex items-center">
               {p === '...' ? (
@@ -90,12 +101,22 @@ export function DataTablePagination<TData>({
               )}
             </div>
           ))}
-          <Button variant="outline" className="size-8 p-0" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-            <span className="sr-only">Next page</span><ChevronRightIcon className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" className="size-8 p-0 @max-md/content:hidden" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
-            <span className="sr-only">Last page</span><DoubleArrowRightIcon className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" className="size-8 p-0" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                <span className="sr-only">Next page</span><ChevronRightIcon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Página siguiente</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" className="size-8 p-0 @max-md/content:hidden" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+                <span className="sr-only">Last page</span><DoubleArrowRightIcon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Última página</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shared/ui/breadcrumb'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 interface UserDevicesBreadcrumbProps {
   currentPage: string
@@ -25,12 +26,17 @@ export function UserDevicesBreadcrumb({
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         {backHref && (
-          <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-            <Link href={backHref}>
-              <ChevronLeft className="size-4" />
-              <span className="sr-only">Volver</span>
-            </Link>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
+                <Link href={backHref}>
+                  <ChevronLeft className="size-4" />
+                  <span className="sr-only">Volver</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Volver a dispositivos</TooltipContent>
+          </Tooltip>
         )}
         <Breadcrumb>
           <BreadcrumbList>

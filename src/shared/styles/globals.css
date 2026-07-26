@@ -169,3 +169,9 @@
   from { height: var(--radix-collapsible-content-height); }
   to { height: 0; }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

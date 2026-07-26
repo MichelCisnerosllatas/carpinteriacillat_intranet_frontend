@@ -15,6 +15,7 @@ import { Button } from '@/shared/ui/button'
 import { Label } from '@/shared/ui/label'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
 import { imagesService } from '../../services/images.service'
 import { useImageSelectStore } from '../../stores/useImageSelectStore'
@@ -234,14 +235,19 @@ export function ImageUploadForm() {
 
                         {/* Botón X — visible en hover, solo en pending */}
                         {entry.status === 'pending' && (
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
-                            disabled={isUploading}
-                            className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
-                          >
-                            <X className="size-3.5" />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
+                                disabled={isUploading}
+                                className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Quitar de la lista</TooltipContent>
+                          </Tooltip>
                         )}
 
                         {/* Status overlays */}

@@ -14,6 +14,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
@@ -356,12 +357,17 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               className="pl-8 h-8 text-xs"
             />
             {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Limpiar búsqueda</TooltipContent>
+              </Tooltip>
             )}
           </div>
 
@@ -545,9 +551,14 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               Eliminar
             </Button>
 
-            <Button size="icon" variant="ghost" className="size-8 shrink-0" disabled={isActing} onClick={clearSelection}>
-              <X className="size-3.5" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" className="size-8 shrink-0" disabled={isActing} onClick={clearSelection}>
+                  <X className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Deseleccionar todo</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       )}

@@ -35,6 +35,7 @@ import { Label } from '@/shared/ui/label'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { FieldTip } from '@/shared/ui/field-tip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { useProformaTemplateTextListStore } from '../stores/useProformaTemplateTextListStore'
@@ -126,14 +127,19 @@ function TextVersionRow({
       className={cn('flex items-start gap-2', isDragging && 'z-10 opacity-75')}
     >
       {!readOnly && (
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          className="text-muted-foreground mt-4 shrink-0 cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="size-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              className="text-muted-foreground mt-4 shrink-0 cursor-grab active:cursor-grabbing"
+            >
+              <GripVertical className="size-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Arrastra para reordenar</TooltipContent>
+        </Tooltip>
       )}
 
       <Card
@@ -203,15 +209,20 @@ function TextVersionRow({
       </Card>
 
       {!readOnly && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="text-destructive hover:text-destructive mt-1 shrink-0"
-          onClick={onRemove}
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive mt-1 shrink-0"
+              onClick={onRemove}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Quitar esta versión</TooltipContent>
+        </Tooltip>
       )}
     </div>
   )

@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import type { NavUser } from '@/shared/config/nav-types'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { AppearanceDrawer } from './appearance-drawer'
 import { useLogoutHandler } from '@/features/auth/hooks/useLogoutHandler'
 
@@ -44,17 +45,24 @@ export function UserMenuCompact({ user }: { user: NavUser }) {
   return (
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="User menu"
-          >
-            <Avatar className="size-8 rounded-full">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-full text-xs">{initials}</AvatarFallback>
-            </Avatar>
-          </button>
-        </DropdownMenuTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="User menu"
+                >
+                  <Avatar className="size-8 rounded-full">
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarFallback className="rounded-full text-xs">{initials}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Menú de usuario</TooltipContent>
+        </Tooltip>
 
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="p-0 font-normal">

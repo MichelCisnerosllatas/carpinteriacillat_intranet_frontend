@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import type { UserDevice } from '../../data/schema'
@@ -70,12 +71,19 @@ export function UserDevicesRowActions({ row }: { row: Row<UserDevice> }) {
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
-          <MoreHorizontal className="size-4" />
-          <span className="sr-only">Abrir menú</span>
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+                <MoreHorizontal className="size-4" />
+                <span className="sr-only">Abrir menú</span>
+              </Button>
+            </DropdownMenuTrigger>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Más acciones</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={handleView}>
           Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>

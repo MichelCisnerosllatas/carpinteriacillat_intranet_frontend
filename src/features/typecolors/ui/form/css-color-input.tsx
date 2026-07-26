@@ -80,15 +80,19 @@ export function CssColorInput({ value, onChange, disabled }: CssColorInputProps)
         />
 
         {hasValue && (
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onChange('')}
-            className="flex size-9 flex-shrink-0 items-center justify-center rounded-md border text-muted-foreground transition hover:bg-muted hover:text-foreground"
-            title="Limpiar color"
-          >
-            <X className="size-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onChange('')}
+                className="flex size-9 flex-shrink-0 items-center justify-center rounded-md border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Limpiar color</TooltipContent>
+          </Tooltip>
         )}
       </div>
 

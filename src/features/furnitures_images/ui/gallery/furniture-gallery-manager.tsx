@@ -23,6 +23,7 @@ import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import { GripVertical, Images, ImagePlus, Upload } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { FurnitureGalleryItem } from './furniture-gallery-item'
 import { FurnitureGalleryAddPicker, type PickedImage } from './furniture-gallery-add-picker'
@@ -75,13 +76,18 @@ function SortableItem({
     >
       {/* Drag handle — visible on hover */}
       {!disabled && (
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute left-1 top-1 z-10 flex size-5 cursor-grab items-center justify-center rounded bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover/item:opacity-100 active:cursor-grabbing"
-        >
-          <GripVertical className="size-3" />
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              {...attributes}
+              {...listeners}
+              className="absolute left-1 top-1 z-10 flex size-5 cursor-grab items-center justify-center rounded bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover/item:opacity-100 active:cursor-grabbing"
+            >
+              <GripVertical className="size-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>Arrastra para reordenar</TooltipContent>
+        </Tooltip>
       )}
       <FurnitureGalleryItem
         imageUrl={entry.imageUrl}

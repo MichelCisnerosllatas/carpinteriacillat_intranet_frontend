@@ -8,6 +8,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { FileTypeIcon, fileTypeColor } from '@/features/storage-files/ui/grid/file-type-icon'
 import { isImage } from '@/features/storage-files/data/schema'
 import type { StorageFolder } from '../../data/schema'
@@ -134,15 +135,22 @@ export function StorageItemCard({
         onClick={(e) => e.stopPropagation()}
       >
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6 rounded-lg bg-background/70 backdrop-blur-sm hover:bg-background"
-            >
-              <MoreVertical className="size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 rounded-lg bg-background/70 backdrop-blur-sm hover:bg-background"
+                  >
+                    <MoreVertical className="size-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Más acciones</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent align="end" className="min-w-36">
             {isFolder ? (
               <>

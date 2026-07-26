@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/shared/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useGoogleFontsStore } from '../stores/useGoogleFontsStore'
 import { fontFamilyStyle, loadGoogleFont } from '../lib/load-google-font'
 
@@ -55,17 +56,21 @@ export function TypeFontPickerModal({ value, onChange, disabled, triggerPlacehol
   return (
     <>
       {variant === 'icon' ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          disabled={disabled}
-          onClick={() => setOpen(true)}
-          className="shrink-0"
-          title="Explorar tipografías"
-        >
-          <Search className="size-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={disabled}
+              onClick={() => setOpen(true)}
+              className="shrink-0"
+            >
+              <Search className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Explorar tipografías</TooltipContent>
+        </Tooltip>
       ) : (
         <Button
           type="button"

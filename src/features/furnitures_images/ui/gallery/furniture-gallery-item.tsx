@@ -2,6 +2,7 @@
 
 import { X, ImageOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 interface FurnitureGalleryItemProps {
   imageUrl: string | null
@@ -59,17 +60,22 @@ export function FurnitureGalleryItem({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          onRemove()
-        }}
-        disabled={disabled}
-        className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
-      >
-        <X className="size-3" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove()
+            }}
+            disabled={disabled}
+            className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
+          >
+            <X className="size-3" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Quitar de la galería</TooltipContent>
+      </Tooltip>
 
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 translate-y-full rounded-b-xl bg-black/80 px-1.5 py-1 text-[9px] text-white transition-transform duration-150 group-hover:translate-y-0 truncate">
         {imageName ?? 'sin nombre'}

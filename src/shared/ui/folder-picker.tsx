@@ -8,6 +8,7 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import apiClient from '@/shared/api/apiClient'
 import type { StorageFolderListResponseDto, StorageFolderItem } from '@/features/storage-folders/model/storagefolder.get.dto'
 
@@ -116,12 +117,17 @@ export function FolderPicker({
             {displayValue ?? placeholder}
           </span>
           {displayValue && onClear && !disabled && (
-            <span
-              onClick={(e) => { e.stopPropagation(); onClear() }}
-              className="shrink-0 rounded hover:text-foreground text-muted-foreground"
-            >
-              <X className="size-3.5" />
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  onClick={(e) => { e.stopPropagation(); onClear() }}
+                  className="shrink-0 rounded hover:text-foreground text-muted-foreground"
+                >
+                  <X className="size-3.5" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Quitar carpeta seleccionada</TooltipContent>
+            </Tooltip>
           )}
         </button>
       </PopoverTrigger>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { imagesService } from '@/features/images/services/images.service'
 import { getImageUrl, getImageDisplayName } from '@/features/images/lib/image-url'
@@ -126,12 +127,17 @@ export function FurnitureGalleryAddPicker({
             onChange={(e) => handleSearch(e.target.value)}
           />
           {search && (
-            <button
-              type="button"
-              onClick={() => { setSearch(''); void fetchPage(1, '') }}
-            >
-              <X className="size-3.5 text-muted-foreground hover:text-foreground" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => { setSearch(''); void fetchPage(1, '') }}
+                >
+                  <X className="size-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Limpiar búsqueda</TooltipContent>
+            </Tooltip>
           )}
         </div>
 
@@ -212,13 +218,23 @@ export function FurnitureGalleryAddPicker({
               {total} imagen{total !== 1 ? 'es' : ''}
             </span>
             <div className="flex items-center gap-1">
-              <Button type="button" variant="ghost" size="icon" className="size-7" disabled={page <= 1} onClick={() => fetchPage(page - 1, search)}>
-                <ChevronLeft className="size-3.5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" className="size-7" disabled={page <= 1} onClick={() => fetchPage(page - 1, search)}>
+                    <ChevronLeft className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Página anterior</TooltipContent>
+              </Tooltip>
               <span className="min-w-[48px] text-center text-xs text-muted-foreground">{page} / {lastPage}</span>
-              <Button type="button" variant="ghost" size="icon" className="size-7" disabled={page >= lastPage} onClick={() => fetchPage(page + 1, search)}>
-                <ChevronRight className="size-3.5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" className="size-7" disabled={page >= lastPage} onClick={() => fetchPage(page + 1, search)}>
+                    <ChevronRight className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Página siguiente</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         )}

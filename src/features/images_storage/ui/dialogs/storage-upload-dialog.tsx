@@ -17,6 +17,7 @@ import { Label } from '@/shared/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/shared/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
 import { imagesService } from '@/features/images/services/images.service'
 import { useStorageGalleryStore } from '../../stores/useStorageGalleryStore'
@@ -256,13 +257,18 @@ export function StorageUploadDialog({ open, onClose }: StorageUploadDialogProps)
 
                       {/* Botón X — esquina superior derecha, visible en hover */}
                       {entry.status === 'pending' && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
-                          disabled={isUploading}
-                          className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
-                        >
-                          <X className="size-3.5" />
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
+                              disabled={isUploading}
+                              className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Quitar de la lista</TooltipContent>
+                        </Tooltip>
                       )}
 
                       {/* Status badge overlay */}

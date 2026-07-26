@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shared/ui/breadcrumb'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 interface UsersBreadcrumbProps {
   currentPage: string
@@ -53,12 +54,17 @@ export function UsersBreadcrumb({
       {showHeader && (
         <div className="flex items-center gap-3">
           {backHref && (
-            <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-              <Link href={backHref}>
-                <ChevronLeft className="size-4" />
-                <span className="sr-only">{backLabel}</span>
-              </Link>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
+                  <Link href={backHref}>
+                    <ChevronLeft className="size-4" />
+                    <span className="sr-only">{backLabel}</span>
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Volver a usuarios</TooltipContent>
+            </Tooltip>
           )}
 
           <h2 className="text-xl font-semibold tracking-tight">

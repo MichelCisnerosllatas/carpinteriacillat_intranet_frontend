@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { Label } from '@/shared/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/ui/dialog'
 import { FolderPicker } from '@/shared/ui/folder-picker'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
 import { nextEntryId } from '../../stores/useStorageFileActionStore'
 import { FileTypeIcon } from '../grid/file-type-icon'
@@ -189,9 +190,14 @@ export function FileUploadModal({ open, currentPath, onClose, onUploaded }: File
                   {entry.status === 'done'      && <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />}
                   {entry.status === 'error'     && <XCircle className="size-4 shrink-0 text-destructive" />}
                   {entry.status === 'pending' && !isUploading && (
-                    <button onClick={() => removeEntry(entry.id)} className="shrink-0 text-muted-foreground hover:text-foreground">
-                      <X className="size-4" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button onClick={() => removeEntry(entry.id)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                          <X className="size-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Quitar de la lista</TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               ))}

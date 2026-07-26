@@ -168,7 +168,7 @@ export const sidebarData: SidebarData = {
           items: [
             { title: 'Colores',      url: '/typecolors',   icon: Palette },
             { title: 'Documentos',   url: '/typedocs',     icon: FileText },
-            { title: 'Secciones',    url: '/typesections', icon: LayoutGrid },
+            
             { title: 'Maderas',      url: '/typewoods',    icon: Layers },
             { title: 'Tipografías',  url: '/typefonts',    icon: Type },
           ],
@@ -178,17 +178,25 @@ export const sidebarData: SidebarData = {
     {
       title: 'Sitio Web',
       items: [
+        { title: 'Navegaciones',       url: '/navigations',      icon: Navigation2 },
+        {
+          title: 'Secciones',
+          icon: Sofa,
+          items: [
+            { title: 'Secciones', url: '/sections', icon: Rows3 },
+            { title: 'Sec. Imágenes',   url: '/section-images',   icon: ImageIcon },                     
+            { title: 'Tipos de Sección',    url: '/typesections', icon: LayoutGrid },
+          ],
+        }, 
         {
           title: 'Muebles',
           icon: Sofa,
           items: [
             { title: 'Muebles',            url: '/furnitures',       icon: Sofa },
-            { title: 'Imágenes de mueble', url: '/furniture-images', icon: GalleryHorizontalEnd },
+            // { title: 'Imágenes de mueble', url: '/furniture-images', icon: GalleryHorizontalEnd },
             { title: 'Categorías',         url: '/categories',       icon: Tag },
-            { title: 'Imágenes',           url: '/images',           icon: ImageIcon },
-            { title: 'Navegaciones',       url: '/navigations',      icon: Navigation2 },
-            { title: 'Secciones',          url: '/sections',         icon: Rows3 },
-            { title: 'Secc. — Imágenes',   url: '/section-images',   icon: ImageIcon },
+            { title: 'Imágenes',           url: '/images',           icon: ImageIcon },                       
+            
           ],
         },
         

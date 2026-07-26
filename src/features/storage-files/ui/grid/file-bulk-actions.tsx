@@ -3,6 +3,7 @@
 import { Loader2, MoveRight, Trash2, X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 interface FileBulkActionsProps {
   count:       number
@@ -47,15 +48,20 @@ export function FileBulkActions({ count, isActing, onMove, onDelete, onClear }: 
         Eliminar
       </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onClear}
-        disabled={isActing}
-        className="size-8 rounded-lg"
-      >
-        <X className="size-3.5" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClear}
+            disabled={isActing}
+            className="size-8 rounded-lg"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Deseleccionar todo</TooltipContent>
+      </Tooltip>
     </div>
   )
 }

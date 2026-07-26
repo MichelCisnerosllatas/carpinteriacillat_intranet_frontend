@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
 
 interface FurnitureGridPaginationProps {
@@ -29,23 +30,33 @@ export function FurnitureGridPagination({ meta, onPageChange, onPageSizeChange }
           </SelectContent>
         </Select>
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline" size="icon" className="h-8 w-8"
-            disabled={meta.current_page <= 1}
-            onClick={() => onPageChange(meta.current_page - 1)}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline" size="icon" className="h-8 w-8"
+                disabled={meta.current_page <= 1}
+                onClick={() => onPageChange(meta.current_page - 1)}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Página anterior</TooltipContent>
+          </Tooltip>
           <span className="min-w-[60px] text-center text-sm">
             {meta.current_page} / {meta.last_page}
           </span>
-          <Button
-            variant="outline" size="icon" className="h-8 w-8"
-            disabled={meta.current_page >= meta.last_page}
-            onClick={() => onPageChange(meta.current_page + 1)}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline" size="icon" className="h-8 w-8"
+                disabled={meta.current_page >= meta.last_page}
+                onClick={() => onPageChange(meta.current_page + 1)}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Página siguiente</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

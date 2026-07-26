@@ -1,6 +1,7 @@
 'use client'
 
 import { Eye, MoreHorizontal, CheckCircle2, XCircle, Trash2, ImageOff, Sofa, Pencil } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -102,15 +103,27 @@ export function FurnitureImageCard({
           <Eye className="size-3.5" /> Detalle
         </Button>
         <div className="flex items-center gap-0.5">
-          <Button size="icon" variant="ghost" className="size-7" onClick={onEdit} title="Editar">
-            <Pencil className="size-3.5" />
-          </Button>
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="size-7">
-                <MoreHorizontal className="size-3.5" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" className="size-7" onClick={onEdit}>
+                <Pencil className="size-3.5" />
               </Button>
-            </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Editar</TooltipContent>
+          </Tooltip>
+          <DropdownMenu modal={false}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="size-7">
+                      <MoreHorizontal className="size-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Más acciones</TooltipContent>
+            </Tooltip>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem onClick={onToggleState}>
                 {isActive

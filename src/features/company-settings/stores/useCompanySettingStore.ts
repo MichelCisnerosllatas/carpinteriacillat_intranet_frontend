@@ -24,6 +24,7 @@ function mapCompanySettingFromApi(item: CompanySettingApiItem): CompanySetting {
 
 type State = {
   data: CompanySetting | null
+  hasLoaded: boolean
   isLoading: boolean
   isError: boolean
   message: string | null
@@ -35,13 +36,15 @@ type Action = {
   reset: () => void
 }
 
-export const useCompanySettingStore = create<State & Action>((set) => ({
+export const useCompanySettingStore = create<State & Action>((set, get) => ({
   data: null,
+  hasLoaded: false,
   isLoading: false,
   isError: false,
   message: null,
 
   fetch: async () => {
+    if (get().isLoading) return false
     set({ isLoading: true, isError: false, message: null })
     try {
       const res = await companySettingsService.get()
@@ -49,7 +52,7 @@ export const useCompanySettingStore = create<State & Action>((set) => ({
         set({ isLoading: false, isError: true, message: res.message })
         return false
       }
-      set({ isLoading: false, data: mapCompanySettingFromApi(res.data) })
+      set({ isLoading: false, hasLoaded: true, data: mapCompanySettingFromApi(res.data) })
       return true
     } catch (error: any) {
       set({
@@ -81,5 +84,5 @@ export const useCompanySettingStore = create<State & Action>((set) => ({
     }
   },
 
-  reset: () => set({ data: null, isLoading: false, isError: false, message: null }),
+  reset: () => set({ data: null, hasLoaded: false, isLoading: false, isError: false, message: null }),
 }))

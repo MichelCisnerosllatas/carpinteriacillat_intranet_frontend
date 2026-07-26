@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { userDevicesColumns } from './user-devices-columns'
 import { UserDevicesError } from '../user-devices-error'
@@ -230,15 +231,20 @@ export function UserDevicesTable() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-8"
-            disabled={isFetching}
-            onClick={() => void load({ page: 1 })}
-          >
-            <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="size-8"
+                disabled={isFetching}
+                onClick={() => void load({ page: 1 })}
+              >
+                <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Actualizar lista</TooltipContent>
+          </Tooltip>
           <DataTableViewOptions table={table} />
         </div>
       </div>
