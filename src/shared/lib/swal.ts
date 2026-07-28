@@ -140,24 +140,20 @@ export type ActionHelpers = {
 }
 
 // ─── Theme-aware base ─────────────────────────────────────────────────────────
+// Lee los tokens directo de globals.css (vía CSS custom properties) en vez de
+// duplicar valores, para que el modal siempre siga la paleta de marca vigente.
 function getThemeOptions(): Partial<SweetAlertOptions> {
-  const isDark =
-    typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('dark')
+  if (typeof document === 'undefined') return {}
 
-  return isDark
-    ? {
-        background: '#1e2535',
-        color: '#e2e8f0',
-        confirmButtonColor: '#3b5bdb',
-        cancelButtonColor: '#374151',
-      }
-    : {
-        background: 'oklch(1 0 0)',
-        color: 'oklch(0.129 0.042 264.695)',
-        confirmButtonColor: 'oklch(0.208 0.042 265.755)',
-        cancelButtonColor: 'oklch(0.554 0.046 257.417)',
-      }
+  const styles = getComputedStyle(document.documentElement)
+  const cssVar = (name: string) => styles.getPropertyValue(name).trim()
+
+  return {
+    background: cssVar('--popover'),
+    color: cssVar('--popover-foreground'),
+    confirmButtonColor: cssVar('--primary'),
+    cancelButtonColor: cssVar('--muted-foreground'),
+  }
 }
 
 // ─── Scroll lock helpers ──────────────────────────────────────────────────────
@@ -181,7 +177,7 @@ export function baseSwal<T = any>(
       popup: 'rounded-xl shadow-xl border border-border text-sm',
       title: 'text-base font-semibold',
       htmlContainer: 'text-muted-foreground text-sm',
-      confirmButton: 'rounded-md px-4 py-2 text-sm font-medium',
+      confirmButton: 'rounded-md px-4 py-2 text-sm font-medium text-primary-foreground!',
       cancelButton: 'rounded-md px-4 py-2 text-sm font-medium',
       ...(customClass ?? {}),
     },
@@ -222,6 +218,9 @@ export async function swalConfirm(options: {
       ? {
           confirmButtonColor: 'oklch(0.577 0.245 27.325)',
           iconColor: 'oklch(0.577 0.245 27.325)',
+          customClass: {
+            confirmButton: 'rounded-md px-4 py-2 text-sm font-medium text-white!',
+          },
         }
       : {}),
   })
@@ -265,6 +264,9 @@ export async function swalConfirmAction(options: {
       ? {
           confirmButtonColor: 'oklch(0.577 0.245 27.325)',
           iconColor: 'oklch(0.577 0.245 27.325)',
+          customClass: {
+            confirmButton: 'rounded-md px-4 py-2 text-sm font-medium text-white!',
+          },
         }
       : {}),
     preConfirm: () =>
