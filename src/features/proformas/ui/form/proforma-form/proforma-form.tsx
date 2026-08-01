@@ -17,6 +17,7 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
     proformaId,
     isManualSaving,
     setLineCount,
+    cartError,
     error,
     fieldErrors,
     onSubmit,
@@ -53,6 +54,7 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
           proformaId={proformaId}
           currency={form.watch('currency') || 'PEN'}
           onCountChange={setLineCount}
+          cartError={cartError}
         />
 
         <Separator />

@@ -52,6 +52,9 @@ export interface ModalSelectProps<T> {
 
   /** Mensaje cuando la lista (filtrada) queda vacía. */
   emptyMessage?: string
+  /** Contenido opcional debajo de `emptyMessage` (ej. un botón "Crear nuevo") — solo se muestra
+   * cuando la lista queda vacía y no está cargando ni en error. */
+  emptyAction?: React.ReactNode
   /** Texto del botón de acción por fila. Por defecto "Seleccionar". */
   selectLabel?: string
 

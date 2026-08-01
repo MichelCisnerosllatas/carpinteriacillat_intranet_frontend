@@ -7,6 +7,7 @@ import { getStateOption } from '@/shared/config/entity-states'
 import { getProductServiceTypeLabel } from '../../data/data'
 import type { ProductService } from '../../data/schema'
 import { ProductsServicesRowActions } from './products-services-row-actions'
+import { ProductServiceThumb } from '../product-service-thumb'
 
 export const productsServicesColumns: ColumnDef<ProductService>[] = [
   {
@@ -37,11 +38,14 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     accessorFn: (row) => `${row.name} ${row.description ?? ''}`,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
     cell: ({ row }) => (
-      <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
-        {row.original.description && (
-          <span className="text-xs text-muted-foreground">{row.original.description}</span>
-        )}
+      <div className="flex min-w-[220px] items-center gap-3 py-1.5">
+        <ProductServiceThumb imageUrl={row.original.coverImageUrl} alt={row.original.name} />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+          {row.original.description && (
+            <span className="text-xs text-muted-foreground">{row.original.description}</span>
+          )}
+        </div>
       </div>
     ),
     enableSorting: true,

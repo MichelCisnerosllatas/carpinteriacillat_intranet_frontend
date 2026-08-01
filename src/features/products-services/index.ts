@@ -12,6 +12,14 @@ export { ProductServiceForm } from './ui/form/product-service-form'
 export { ProductServiceDetail } from './ui/detail/product-service-detail'
 export { ProductsServicesBreadcrumb } from './ui/products-services-breadcrumb'
 export { ProductServiceSelect } from './ui/product-service-select'
+export { ProductServicePickerModal } from './ui/product-service-picker-modal'
+export { ProductServiceThumb } from './ui/product-service-thumb'
+export { ProductServiceQuickCreateDialog } from './ui/product-service-quick-create-dialog'
 export { PRODUCT_SERVICE_TYPES, getProductServiceTypeLabel } from './data/data'
 export type { ProductService, ProductServiceStatus, ProductServiceTypeUi } from './data/schema'
-export type { ProductServiceApiItem, ProductServiceJoinApiItem, ProductServiceType } from './model/product-service-api-item.dto'
+export type {
+  ProductServiceApiItem,
+  ProductServiceJoinApiItem,
+  ProductServiceFurnitureJoin,
+  ProductServiceType,
+} from './model/product-service-api-item.dto'

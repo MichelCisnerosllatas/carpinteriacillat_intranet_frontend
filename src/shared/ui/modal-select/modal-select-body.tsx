@@ -4,14 +4,7 @@ import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ScrollArea } from '@/shared/ui/scroll-area'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import type { ModalSelectColumn } from './modal-select.types'
 
 /**
@@ -27,6 +20,7 @@ interface ModalSelectBodyProps<T> {
   getId: (item: T) => string | number
   columns: ModalSelectColumn<T>[]
   emptyMessage: string
+  emptyAction?: React.ReactNode
   selectLabel: string
   highlightedIndex: number
   onHighlight: (index: number) => void
@@ -42,6 +36,7 @@ export function ModalSelectBody<T>({
   getId,
   columns,
   emptyMessage,
+  emptyAction,
   selectLabel,
   highlightedIndex,
   onHighlight,
@@ -50,8 +45,8 @@ export function ModalSelectBody<T>({
   if (isError) {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-10">
-        <AlertCircle className="size-6 text-destructive" />
-        <p className="text-sm text-destructive">{errorMessage ?? 'Error al cargar los datos'}</p>
+        <AlertCircle className="text-destructive size-6" />
+        <p className="text-destructive text-sm">{errorMessage ?? 'Error al cargar los datos'}</p>
         {onRetry && (
           <Button size="sm" variant="outline" onClick={onRetry}>
             <RefreshCw className="mr-1.5 size-3.5" />
@@ -64,67 +59,103 @@ export function ModalSelectBody<T>({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 px-6 py-10 text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex items-center justify-center gap-2 px-6 py-10 text-sm">
         <Loader2 className="size-4 animate-spin" />
         Cargando...
       </div>
     )
   }
 
+  if (items.length === 0) {
+    return (
+      <div className="text-muted-foreground flex flex-col items-center gap-3 px-6 py-10 text-center text-sm">
+        {emptyMessage}
+        {emptyAction}
+      </div>
+    )
+  }
+
   return (
     <ScrollArea className="h-80 border-t">
-      <Table>
-        <TableHeader className="sticky top-0 z-10 bg-background">
-          <TableRow>
-            {columns.map((col) => (
-              <TableHead key={col.header} className={col.className}>
-                {col.header}
-              </TableHead>
-            ))}
-            <TableHead className="w-1 text-right">Acción</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={columns.length + 1} className="h-24 text-center text-sm text-muted-foreground">
-                {emptyMessage}
-              </TableCell>
-            </TableRow>
-          )}
-          {items.map((item, index) => (
-            <TableRow
-              key={getId(item)}
-              data-selected={index === highlightedIndex}
-              onMouseEnter={() => onHighlight(index)}
-              onClick={() => onSelect(item)}
-              className={cn(
-                'cursor-pointer',
-                index === highlightedIndex && 'bg-accent'
-              )}
-            >
+      {/* Mobile (< sm): tarjetas apiladas — una tabla ancha es difícil de leer y de scrollear
+       * horizontalmente con el dedo en pantallas chicas. */}
+      <div className="flex flex-col gap-2 p-2 sm:hidden">
+        {items.map((item, index) => (
+          <div
+            key={getId(item)}
+            onClick={() => onSelect(item)}
+            className={cn(
+              'flex cursor-pointer flex-col gap-2 rounded-lg border p-3',
+              index === highlightedIndex && 'border-accent-foreground/30 bg-accent'
+            )}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
               {columns.map((col) => (
-                <TableCell key={col.header} className={col.className}>
+                <div key={col.header} className="min-w-0">
                   {col.cell(item)}
-                </TableCell>
+                </div>
               ))}
-              <TableCell className="text-right">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={index === highlightedIndex ? 'default' : 'outline'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onSelect(item)
-                  }}
-                >
-                  {selectLabel}
-                </Button>
-              </TableCell>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="w-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelect(item)
+              }}
+            >
+              {selectLabel}
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop (>= sm): tabla clásica */}
+      <div className="hidden sm:block">
+        <Table>
+          <TableHeader className="bg-background sticky top-0 z-10">
+            <TableRow>
+              {columns.map((col) => (
+                <TableHead key={col.header} className={col.className}>
+                  {col.header}
+                </TableHead>
+              ))}
+              <TableHead className="w-1 text-right">Acción</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {items.map((item, index) => (
+              <TableRow
+                key={getId(item)}
+                data-selected={index === highlightedIndex}
+                onMouseEnter={() => onHighlight(index)}
+                onClick={() => onSelect(item)}
+                className={cn('cursor-pointer', index === highlightedIndex && 'bg-accent')}
+              >
+                {columns.map((col) => (
+                  <TableCell key={col.header} className={col.className}>
+                    {col.cell(item)}
+                  </TableCell>
+                ))}
+                <TableCell className="text-right">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={index === highlightedIndex ? 'default' : 'outline'}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelect(item)
+                    }}
+                  >
+                    {selectLabel}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </ScrollArea>
   )
 }

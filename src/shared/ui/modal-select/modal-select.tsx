@@ -77,6 +77,7 @@ export function ModalSelect<T>({
   filterFn,
   onSelect,
   emptyMessage = 'Sin resultados.',
+  emptyAction,
   selectLabel = 'Seleccionar',
   footer,
 }: ModalSelectProps<T>) {
@@ -128,6 +129,7 @@ export function ModalSelect<T>({
             getId={getId}
             columns={columns}
             emptyMessage={emptyMessage}
+            emptyAction={emptyAction}
             selectLabel={selectLabel}
             highlightedIndex={highlightedIndex}
             onHighlight={setHighlightedIndex}

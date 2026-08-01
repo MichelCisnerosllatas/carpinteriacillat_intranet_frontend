@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertCircle, Check, ChevronsUpDown, Loader2, Package, RefreshCw } from 'lucide-react'
+import { AlertCircle, Check, ChevronsUpDown, Loader2, RefreshCw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import {
@@ -12,12 +12,15 @@ import {
   CommandItem,
   CommandList,
 } from '@/shared/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { ImageLightbox } from '@/shared/ui/image-lightbox'
 import { useProductServiceSelectStore } from '../stores/useProductServiceSelectStore'
+import {
+  getProductServiceCoverImageUrl,
+  getProductServiceGalleryImages,
+} from '../lib/getProductServiceGalleryImages'
+import { ProductServiceThumb } from './product-service-thumb'
+import type { ProductServiceJoinApiItem } from '../model/product-service-api-item.dto'
 
 interface ProductServiceSelectProps {
   value?: number | null
@@ -36,89 +39,144 @@ export function ProductServiceSelect({
   showAll = false,
 }: ProductServiceSelectProps) {
   const [open, setOpen] = useState(false)
+  const [previewItem, setPreviewItem] = useState<ProductServiceJoinApiItem | null>(null)
   const { options, isLoading, isError, load, setForceReload } = useProductServiceSelectStore()
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const selected = value != null ? options.find((o) => o.id === value) : null
-  const label    = selected ? selected.name : value === null && showAll ? 'Todos' : placeholder
+  const label = selected ? selected.name : value === null && showAll ? 'Todos' : placeholder
 
-  if (isError) return (
-    <div className="grid grid-cols-2 h-9 w-full items-center rounded-md border border-destructive/40 bg-background px-3 text-sm">
-      <span className="flex items-center gap-1.5 text-destructive text-xs">
-        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-        Error al cargar
-      </span>
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => { setForceReload(true); load() }}
-          className="group flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
-          Reintentar
-        </button>
+  if (isError)
+    return (
+      <div className="border-destructive/40 bg-background grid h-9 w-full grid-cols-2 items-center rounded-md border px-3 text-sm">
+        <span className="text-destructive flex items-center gap-1.5 text-xs">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          Error al cargar
+        </span>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setForceReload(true)
+              load()
+            }}
+            className="group text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+          >
+            <RefreshCw className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-180" />
+            Reintentar
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          disabled={disabled || isLoading}
-          className="w-full justify-between font-normal"
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Cargando...
-            </span>
-          ) : (
-            <span className={cn('flex items-center gap-2 truncate', !selected && value !== null && 'text-muted-foreground')}>
-              {selected && <Package className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-              <span className="truncate">{label}</span>
-            </span>
-          )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Buscar producto o servicio..." />
-          <CommandList>
-            <CommandEmpty>Sin resultados.</CommandEmpty>
-            <CommandGroup>
-              {showAll && (
-                <CommandItem
-                  value="__all__"
-                  onSelect={() => { onValueChange(null); setOpen(false) }}
-                >
-                  <Check className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')} />
-                  Todos
-                </CommandItem>
-              )}
-              {options.map((opt) => (
-                <CommandItem
-                  key={opt.id}
-                  value={opt.name}
-                  onSelect={() => { onValueChange(opt.id); setOpen(false) }}
-                >
-                  <Check className={cn('mr-2 h-4 w-4', value === opt.id ? 'opacity-100' : 'opacity-0')} />
-                  <span className="flex-1 truncate">{opt.name}</span>
-                  <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                    S/ {Number(opt.default_price).toFixed(2)}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            disabled={disabled || isLoading}
+            className="w-full justify-between font-normal"
+          >
+            {isLoading ? (
+              <span className="text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Cargando...
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  'flex items-center gap-2 truncate',
+                  !selected && value !== null && 'text-muted-foreground'
+                )}
+              >
+                {selected && (
+                  <ProductServiceThumb
+                    imageUrl={getProductServiceCoverImageUrl(selected)}
+                    alt={selected.name}
+                    className="size-5 rounded-sm"
+                  />
+                )}
+                <span className="truncate">{label}</span>
+              </span>
+            )}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Buscar producto o servicio..." />
+            <CommandList>
+              <CommandEmpty>Sin resultados.</CommandEmpty>
+              <CommandGroup>
+                {showAll && (
+                  <CommandItem
+                    value="__all__"
+                    onSelect={() => {
+                      onValueChange(null)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn('mr-2 h-4 w-4', value === null ? 'opacity-100' : 'opacity-0')}
+                    />
+                    Todos
+                  </CommandItem>
+                )}
+                {options.map((opt) => (
+                  <CommandItem
+                    key={opt.id}
+                    value={opt.name}
+                    onSelect={() => {
+                      onValueChange(opt.id)
+                      setOpen(false)
+                    }}
+                    className="gap-2"
+                  >
+                    <Check
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        value === opt.id ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <ProductServiceThumb
+                      imageUrl={getProductServiceCoverImageUrl(opt)}
+                      alt={opt.name}
+                      className="size-6 rounded-sm"
+                      onPreview={
+                        getProductServiceGalleryImages(opt).length
+                          ? () => setPreviewItem(opt)
+                          : undefined
+                      }
+                    />
+                    <span className="flex-1 truncate">{opt.name}</span>
+                    <span className="text-muted-foreground ml-2 shrink-0 text-xs">
+                      S/ {Number(opt.default_price).toFixed(2)}
+                    </span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {previewItem && (
+        <ImageLightbox
+          images={getProductServiceGalleryImages(previewItem)}
+          open={Boolean(previewItem)}
+          onOpenChange={(next) => {
+            if (!next) setPreviewItem(null)
+          }}
+          title={previewItem.name}
+        />
+      )}
+    </>
   )
 }

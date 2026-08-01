@@ -31,19 +31,21 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           Cabecera
           <Tooltip>
             <TooltipTrigger asChild>
-              <Info className="size-3.5 text-muted-foreground" />
+              <Info className="text-muted-foreground size-3.5" />
             </TooltipTrigger>
-            <TooltipContent>Datos generales del documento — cliente, plantilla, firma y fechas.</TooltipContent>
+            <TooltipContent>
+              Datos generales del documento — cliente, plantilla, firma y fechas.
+            </TooltipContent>
           </Tooltip>
         </CardTitle>
         {!isEdit && proformaId && (
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
             <CheckCircle2 className="size-3.5 text-teal-600" />
             Proforma registrada — puedes seguir agregando líneas
           </span>
         )}
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <CardContent className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <FormField
           control={form.control}
           name="client_id"
@@ -125,16 +127,19 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
                 Serie
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="size-3.5 text-muted-foreground" />
+                    <Info className="text-muted-foreground size-3.5" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    Si la dejas vacía, el servidor genera una automática (ej: PF26). Ya no se puede cambiar después de registrar.
+                    Si la dejas vacía, el servidor genera una automática (ej: PF26). Ya no se puede
+                    cambiar después de registrar.
                   </TooltipContent>
                 </Tooltip>
               </FormLabel>
               <FormControl>
                 <Input
-                  placeholder={isEdit ? undefined : 'Ej: PF26, se genera automático si se deja vacío'}
+                  placeholder={
+                    isEdit ? undefined : 'Ej: PF26, se genera automático si se deja vacío'
+                  }
                   disabled={isManualSaving || isEdit || Boolean(proformaId)}
                   {...field}
                 />
@@ -169,9 +174,11 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
                 Fecha de vencimiento
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="size-3.5 text-muted-foreground" />
+                    <Info className="text-muted-foreground size-3.5" />
                   </TooltipTrigger>
-                  <TooltipContent>Opcional. Pasada esta fecha, la proforma puede marcarse como Vencida.</TooltipContent>
+                  <TooltipContent>
+                    Opcional. Pasada esta fecha, la proforma puede marcarse como Vencida.
+                  </TooltipContent>
                 </Tooltip>
               </FormLabel>
               <FormControl>
@@ -233,9 +240,11 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
                 Moneda
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="size-3.5 text-muted-foreground" />
+                    <Info className="text-muted-foreground size-3.5" />
                   </TooltipTrigger>
-                  <TooltipContent>Texto libre — escribe el código o elige una sugerencia (PEN, USD).</TooltipContent>
+                  <TooltipContent>
+                    Texto libre — escribe el código o elige una sugerencia (PEN, USD).
+                  </TooltipContent>
                 </Tooltip>
               </FormLabel>
               <FormControl>
@@ -261,7 +270,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           control={form.control}
           name="observation"
           render={({ field }) => (
-            <FormItem className="sm:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
+            <FormItem className="col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
               <FormLabel>Observación</FormLabel>
               <FormControl>
                 <Textarea

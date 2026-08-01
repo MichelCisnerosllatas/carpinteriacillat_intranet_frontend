@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { productsServicesService } from '../services/products-services.service'
 import { getStateOption } from '@/shared/config/entity-states'
+import { getProductServiceCoverImageUrl, getProductServiceGalleryImages } from '../lib/getProductServiceGalleryImages'
 import type { ProductServiceListRequestDto } from '../model/productserviceget.dto'
 import type { ProductServiceJoinApiItem } from '../model/product-service-api-item.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
@@ -40,6 +41,11 @@ const mapFromApi = (item: ProductServiceJoinApiItem): ProductService => {
     id: item.id,
     furnitureId: item.furniture_id,
     furnitureName: item.furniture?.furniture_name ?? null,
+    furnitureCategory: item.furniture?.category?.category_name ?? null,
+    furnitureColor: item.furniture?.type_color?.typecolor_name ?? null,
+    furnitureWood: item.furniture?.type_wood?.typewood_name ?? null,
+    coverImageUrl: getProductServiceCoverImageUrl(item),
+    galleryImages: getProductServiceGalleryImages(item),
     name: item.name,
     description: item.description,
     unit: item.unit,

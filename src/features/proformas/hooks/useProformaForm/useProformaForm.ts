@@ -47,6 +47,10 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
   // Lo mantiene actualizado `ProformaDetailLines` (persistidas + borrador) — se usa para exigir
   // al menos un producto/servicio antes de poder registrar/guardar.
   const [lineCount, setLineCount] = useState(0)
+  // true cuando se intentó registrar/guardar con el carrito vacío — además del swal de
+  // `assertCartNotEmpty`, resalta la sección "Líneas de detalle" para que la falla quede visible
+  // aunque el usuario ya haya cerrado la alerta. Se limpia solo en cuanto se agrega un producto.
+  const [cartError, setCartError] = useState(false)
 
   const form = useForm<ProformaFormValues>({
     resolver: zodResolver(proformaFormSchema),
@@ -71,6 +75,10 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
 
   useEffect(() => () => reset(), [])
 
+  useEffect(() => {
+    if (lineCount > 0) setCartError(false)
+  }, [lineCount])
+
   // Única función que llama `proforma-form.tsx` (vía `form.handleSubmit(onSubmit)`) — el
   // componente no conoce `submitProformaHeader` ni le hace falta. Acá solo se resuelve lo que
   // es 100% de React: bloquear el botón mientras guarda, y navegar al listado cuando termina. El
@@ -80,7 +88,10 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
   // navegar sin perder nada. Ábrelo si el problema es que no guarda bien; si el botón no
   // reacciona o la navegación falla, el problema está acá.
   const onSubmit = async (values: ProformaFormValues) => {
-    if (!assertCartNotEmpty(lineCount)) return
+    if (!assertCartNotEmpty(lineCount)) {
+      setCartError(true)
+      return
+    }
 
     setIsManualSaving(true)
     try {
@@ -100,6 +111,7 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
     proformaId,
     isManualSaving,
     setLineCount,
+    cartError,
     error,
     fieldErrors,
     onSubmit,
