@@ -18,6 +18,7 @@ export type ImageApiItem = {
 export type ImageListRequestDto = {
   per_page?: number
   page?: number
+  search?: string
 }
 
 export type ImageListResponseDto = {

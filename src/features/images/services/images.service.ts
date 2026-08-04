@@ -8,7 +8,7 @@ import { ImagePostRequestDto, ImagePostResponseDto } from '../model/imagepost.dt
 export const imagesService = {
   getList: async (param: ImageListRequestDto): Promise<ImageListResponseDto> => {
     const params = Object.fromEntries(
-      Object.entries(param).filter(([, v]) => v !== undefined && v !== null && v !== 0)
+      Object.entries(param).filter(([, v]) => v !== undefined && v !== null && v !== 0 && v !== '')
     )
     const { data } = await apiClient.get<ImageListResponseDto>(IMAGES_ENDPOINTS.v1.get, { params })
     return data

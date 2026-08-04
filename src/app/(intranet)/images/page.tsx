@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
-import Link from 'next/link'
-import { Button } from '@/shared/ui/button'
-import { Upload } from 'lucide-react'
 import { ImagesGrid } from '@/features/images/ui/list/images-grid'
+import { ImagesHeaderActions } from '@/features/images/ui/list/images-header-actions'
 
 export const metadata: Metadata = { title: 'Imágenes' }
 
@@ -17,9 +15,7 @@ export default function ImagesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Imágenes</h2>
             <p className="text-muted-foreground">Gestiona las imágenes registradas en el sistema</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/images/upload"><Upload size={18} /><span>Subir imagen</span></Link>
-          </Button>
+          <ImagesHeaderActions />
         </div>
         <ImagesGrid />
       </main>

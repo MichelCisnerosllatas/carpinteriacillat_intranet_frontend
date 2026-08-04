@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Lightbox from 'yet-another-react-lightbox'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails'
@@ -8,9 +8,10 @@ import Download from 'yet-another-react-lightbox/plugins/download'
 import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import {
-  LoaderCircle, ImageIcon, CheckSquare, Square,
+  LoaderCircle, ImageIcon, CheckSquare, Square, Search, X,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
@@ -29,8 +30,22 @@ export function ImagesGrid() {
   const [selected,    setSelected]    = useState<Set<number>>(new Set())
   const [lightboxIdx, setLightboxIdx] = useState(-1)
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [search,      setSearch]      = useState(filters.search ?? '')
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
+
+  useEffect(() => {
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
+
+    const t = window.setTimeout(() => {
+      void load({ search, page: 1 })
+    }, 500)
+    return () => window.clearTimeout(t)
+  }, [search])
 
   // Reset selection when items change (e.g. page change)
   useEffect(() => { setSelected(new Set()) }, [items])
@@ -122,20 +137,63 @@ export function ImagesGrid() {
       <div className="flex flex-1 flex-col gap-4">
 
         {/* ── Header bar ── */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-muted-foreground">
             {meta ? `${meta.total ?? 0} imagen(es) en total` : 'Cargando...'}
           </p>
-          <div className="flex items-center gap-2">
-            {isFetching && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-              </div>
-            )}
-            <Button size="sm" variant="outline" onClick={() => void load({ page: 1 })}>
-              Recargar
-            </Button>
+        </div>
+
+        {/* ── Buscador — expandido en desktop, ícono colapsable en mobile ── */}
+        <div className="flex items-center gap-2">
+          {/* Desktop */}
+          <div className="relative hidden w-full sm:block sm:w-[320px]">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre, título o texto alternativo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 pl-8"
+            />
           </div>
+
+          {/* Mobile */}
+          <div className="flex flex-1 items-center gap-2 sm:hidden">
+            {mobileSearchOpen ? (
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  autoFocus
+                  placeholder="Buscar imágenes..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onBlur={() => { if (!search) setMobileSearchOpen(false) }}
+                  className="h-8 pl-8"
+                />
+              </div>
+            ) : (
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="size-8"
+                onClick={() => setMobileSearchOpen(true)}
+              >
+                <Search className="size-4" />
+              </Button>
+            )}
+          </div>
+
+          {search && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isFetching}
+              onClick={() => { setSearch(''); setMobileSearchOpen(false) }}
+            >
+              <X className="size-3.5 sm:hidden" />
+              <span className="hidden sm:inline">Limpiar</span>
+            </Button>
+          )}
         </div>
 
         {/* ── Botón seleccionar todo ── */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
@@ -28,6 +29,7 @@ export function ImagesTable() {
   const [rowSelection, setRowSelection]         = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting]                   = useState<SortingState>([])
+  const [search, setSearch]                     = useState(filters.search ?? '')
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
@@ -35,7 +37,19 @@ export function ImagesTable() {
     pageSize: filters.per_page ?? 15,
   }), [filters.page, filters.per_page])
 
+  const appliedSearch = useRef(search)
+
   useEffect(() => { void load() }, [])
+
+  useEffect(() => {
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
+
+    const t = window.setTimeout(() => {
+      void load({ search, page: 1 })
+    }, 500)
+    return () => window.clearTimeout(t)
+  }, [search])
 
   const table = useReactTable({
     data: items,
@@ -97,6 +111,28 @@ export function ImagesTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
+      {/* Filtros */}
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Buscar</span>
+            <Input
+              placeholder="Nombre, título o texto alternativo..."
+              value={search}
+              disabled={isFetching}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 w-full sm:w-[260px]"
+            />
+          </div>
+          {search && (
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={() => setSearch('')}>
+              Limpiar
+            </Button>
+          )}
+        </div>
+        <DataTableViewOptions table={table} />
+      </div>
+
       {/* Total */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
@@ -107,7 +143,6 @@ export function ImagesTable() {
             <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
           </div>
         )}
-        <DataTableViewOptions table={table} />
       </div>
 
       {/* Tabla */}

@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import {
-  ChevronLeft, ChevronRight, Folder, FolderOpen,
+  ChevronLeft, ChevronRight, Folder, FolderOpen, FolderPlus,
   HardDrive, Loader2, X,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { toastSuccess } from '@/shared/lib/toast'
 import apiClient from '@/shared/api/apiClient'
 import type { StorageFolderListResponseDto, StorageFolderItem } from '@/features/storage-folders/model/storagefolder.get.dto'
+
+type StorageFolderPostResponse = {
+  success: boolean
+  status:  number
+  message: string
+  data:    StorageFolderItem
+}
 
 interface FolderPickerProps {
   value?:       string
@@ -33,6 +42,10 @@ export function FolderPicker({
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([{ name: 'Storage', path: null }])
   const [isLoading, setIsLoading] = useState(false)
   const [parentPath, setParentPath] = useState<string | null>(null)
+  const [showCreate, setShowCreate]         = useState(false)
+  const [newFolderName, setNewFolderName]   = useState('')
+  const [isCreating, setIsCreating]         = useState(false)
+  const [createError, setCreateError]       = useState<string | null>(null)
 
   const fetchFolders = async (path: string | null) => {
     setIsLoading(true)
@@ -69,12 +82,44 @@ export function FolderPicker({
       const initial = rootPath ?? null
       setCurrentPath(initial)
       void fetchFolders(initial)
+    } else {
+      setShowCreate(false)
+      setNewFolderName('')
+      setCreateError(null)
     }
   }, [open])
 
   const navigate = (path: string | null) => {
     setCurrentPath(path)
+    setShowCreate(false)
+    setNewFolderName('')
+    setCreateError(null)
     void fetchFolders(path)
+  }
+
+  const handleCreateFolder = async () => {
+    const trimmed = newFolderName.trim()
+    if (!trimmed) return
+    setIsCreating(true)
+    setCreateError(null)
+    try {
+      const { data } = await apiClient.post<StorageFolderPostResponse>(
+        '/v1/intranet/storage/folders',
+        { name: trimmed, parent_path: currentPath ?? undefined },
+      )
+      if (data.success) {
+        toastSuccess('Carpeta creada', `"${trimmed}" fue creada correctamente.`)
+        setShowCreate(false)
+        setNewFolderName('')
+        await fetchFolders(currentPath)
+      } else {
+        setCreateError(data.message ?? 'No se pudo crear la carpeta.')
+      }
+    } catch (error: any) {
+      setCreateError(error?.response?.data?.message ?? error?.message ?? 'No se pudo crear la carpeta.')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const toRelative = (path: string) => {
@@ -171,6 +216,60 @@ export function FolderPicker({
             </button>
           </div>
         )}
+
+        {/* Crear carpeta rápido, dentro de la carpeta actual */}
+        <div className="px-2 pt-1.5">
+          {showCreate ? (
+            <div className="flex flex-col gap-1 px-2 pb-1">
+              <div className="flex items-center gap-1.5">
+                <Input
+                  autoFocus
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); void handleCreateFolder() }
+                    if (e.key === 'Escape') { setShowCreate(false); setNewFolderName(''); setCreateError(null) }
+                  }}
+                  placeholder="Nombre de la carpeta"
+                  disabled={isCreating}
+                  maxLength={100}
+                  className="h-7 text-xs"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-7 shrink-0 px-2 text-xs"
+                  onClick={handleCreateFolder}
+                  disabled={isCreating || !newFolderName.trim()}
+                >
+                  {isCreating ? <Loader2 className="size-3.5 animate-spin" /> : 'Crear'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 shrink-0 p-0"
+                  onClick={() => { setShowCreate(false); setNewFolderName(''); setCreateError(null) }}
+                  disabled={isCreating}
+                >
+                  <X className="size-3.5" />
+                </Button>
+              </div>
+              {createError && (
+                <p className="rounded bg-destructive/10 px-2 py-1 text-[11px] text-destructive">{createError}</p>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] text-primary hover:opacity-80"
+            >
+              <FolderPlus className="size-3" />
+              <span className="underline underline-offset-2">Nueva carpeta</span>
+            </button>
+          )}
+        </div>
 
         {/* Folder list */}
         <div className="max-h-52 overflow-y-auto px-2 py-2 flex flex-col gap-0.5">
