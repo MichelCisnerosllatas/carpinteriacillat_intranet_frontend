@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle, Navigation2 } from 'lucide-react'
+import { ChevronDown, LoaderCircle, Navigation2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
+import { cn } from '@/shared/lib/utils'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionsGroupTable } from './sections-group-table'
@@ -161,27 +162,36 @@ export function SectionsTable() {
           No hay secciones para mostrar.
         </div>
       ) : (
-        <Accordion type="multiple" value={openGroups} onValueChange={setOpenGroups} className="flex flex-col gap-3">
-          {groups.map((g) => (
-            <AccordionItem key={g.key} value={g.key} className="rounded-lg border px-4 last:border-b">
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex flex-1 items-center gap-3 pr-2">
-                  <Navigation2 className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="font-medium">{g.navigationName}</span>
-                  {g.navigationUrl && (
-                    <code className="hidden rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground sm:inline">{g.navigationUrl}</code>
-                  )}
-                  <Badge variant="secondary" className="ml-auto shrink-0 text-xs font-normal">
-                    {g.sections.length} sección{g.sections.length === 1 ? '' : 'es'}
-                  </Badge>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <SectionsGroupTable sections={g.sections} />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <div className="flex flex-col gap-2">
+          {groups.map((g) => {
+            const isOpen = openGroups.includes(g.key)
+            return (
+              <div key={g.key} className="overflow-hidden rounded-lg border bg-card">
+                <Collapsible
+                  open={isOpen}
+                  onOpenChange={(next) => setOpenGroups((prev) => (next ? [...prev, g.key] : prev.filter((k) => k !== g.key)))}
+                >
+                  <CollapsibleTrigger asChild>
+                    <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/40">
+                      <Navigation2 className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm font-medium">{g.navigationName}</span>
+                      {g.navigationUrl && (
+                        <code className="hidden rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground sm:inline">{g.navigationUrl}</code>
+                      )}
+                      <Badge variant="secondary" className="ml-auto shrink-0 text-xs font-normal">
+                        {g.sections.length} sección{g.sections.length === 1 ? '' : 'es'}
+                      </Badge>
+                      <ChevronDown className={cn('size-4 shrink-0 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="border-t px-3 py-3">
+                    <SectionsGroupTable sections={g.sections} />
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )

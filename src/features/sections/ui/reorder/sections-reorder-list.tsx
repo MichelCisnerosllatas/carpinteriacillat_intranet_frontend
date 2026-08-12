@@ -17,7 +17,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, LayoutGrid, LoaderCircle, Navigation2 } from 'lucide-react'
+import { ChevronDown, GripVertical, LayoutGrid, LoaderCircle, Navigation2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
@@ -86,36 +86,35 @@ function ReorderGroupCard({ group, onChange }: { group: ReorderGroup; onChange: 
   }
 
   return (
-    <Card>
+    <div className="overflow-hidden rounded-lg border bg-card">
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger asChild>
-          <button type="button" className="flex w-full items-center gap-3 px-4 py-3 text-left">
+          <button type="button" className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/40">
             <Navigation2 className="size-4 shrink-0 text-muted-foreground" />
-            <span className="font-medium">{group.navigationName}</span>
+            <span className="text-sm font-medium">{group.navigationName}</span>
             <Badge variant="secondary" className="ml-auto shrink-0 text-xs font-normal">
               {group.items.length} sección{group.items.length === 1 ? '' : 'es'}
             </Badge>
+            <ChevronDown className={cn('size-4 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')} />
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="flex flex-col gap-2 pt-0">
-            {group.items.length === 0 ? (
-              <div className="flex min-h-[80px] items-center justify-center text-sm text-muted-foreground">
-                Sin secciones en esta navegación.
-              </div>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={group.items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                  <div className="flex flex-col gap-2">
-                    {group.items.map((item) => <SortableRow key={item.id} item={item} />)}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
-          </CardContent>
+        <CollapsibleContent className="border-t px-3 py-3">
+          {group.items.length === 0 ? (
+            <div className="flex min-h-[80px] items-center justify-center text-sm text-muted-foreground">
+              Sin secciones en esta navegación.
+            </div>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={group.items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="flex flex-col gap-2">
+                  {group.items.map((item) => <SortableRow key={item.id} item={item} />)}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
         </CollapsibleContent>
       </Collapsible>
-    </Card>
+    </div>
   )
 }
 
