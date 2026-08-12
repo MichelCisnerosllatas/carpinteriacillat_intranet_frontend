@@ -1,51 +1,58 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
-import {
-  type PaginationState, type SortingState, type VisibilityState,
-  flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
-} from '@tanstack/react-table'
-import { cn } from '@/shared/lib/utils'
+import { LoaderCircle, Navigation2 } from 'lucide-react'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { DataTablePagination } from '@/shared/ui/data-table/pagination'
-import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
-import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
-import { toastError, toastSuccess } from '@/shared/lib/toast'
-import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { useSectionListStore } from '../../stores/useSectionListStore'
-import { useSectionDeleteStore } from '../../stores/useSectionDeleteStore'
-import { sectionsColumns } from './sections-columns'
+import { SectionsGroupTable } from './sections-group-table'
 import { SectionStatsBar } from './section-stats-bar'
+import type { Section } from '../../data/schema'
+
+/** Trae todo de una vez (no pagina) — el listado se agrupa por navegación, así que no
+ * tiene sentido paginar server-side: se vería una navegación distinta en cada página. */
+const GROUPED_PER_PAGE = 100
+
+type NavigationGroup = {
+  key: string
+  navigationName: string
+  navigationUrl: string | null
+  sections: Section[]
+}
+
+function groupByNavigation(items: Section[]): NavigationGroup[] {
+  const map = new Map<string, NavigationGroup>()
+  for (const item of items) {
+    const key = item.idNavigation != null ? String(item.idNavigation) : 'none'
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        navigationName: item.navigationName ?? 'Sin navegación',
+        navigationUrl: item.navigationUrl,
+        sections: [],
+      })
+    }
+    map.get(key)!.sections.push(item)
+  }
+  return Array.from(map.values()).sort((a, b) => a.navigationName.localeCompare(b.navigationName))
+}
 
 export function SectionsTable() {
-  const {
-    items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message,
-    load, reset,
-  } = useSectionListStore()
-  const { bulkToggleState, bulkDeleteItems } = useSectionDeleteStore()
+  const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } = useSectionListStore()
 
-  const [rowSelection, setRowSelection]         = useState({})
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting]                   = useState<SortingState>([])
-  const [search, setSearch]                     = useState(filters.search ?? '')
-  const [state, setState]                       = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
-  const [dateFrom, setDateFrom]                 = useState(filters.date_from ?? '')
-  const [dateTo, setDateTo]                     = useState(filters.date_to ?? '')
-  const [isBulkLoading, setIsBulkLoading]       = useState(false)
-
-  const pagination = useMemo<PaginationState>(() => ({
-    pageIndex: Math.max((filters.page ?? 1) - 1, 0),
-    pageSize: filters.per_page ?? 10,
-  }), [filters.page, filters.per_page])
+  const [search, setSearch]     = useState(filters.search ?? '')
+  const [state, setState]       = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
+  const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
+  const [dateTo, setDateTo]     = useState(filters.date_to ?? '')
+  const [openGroups, setOpenGroups] = useState<string[]>([])
 
   const appliedFilters = useRef({ search, state, dateFrom, dateTo })
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => { void load({ per_page: GROUPED_PER_PAGE, page: 1 }) }, [])
 
   useEffect(() => {
     const prev = appliedFilters.current
@@ -58,75 +65,36 @@ export function SectionsTable() {
     if (!changed) return
 
     const t = window.setTimeout(() => {
-      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 })
+      void load({
+        search, state: state === 'all' ? undefined : Number(state),
+        date_from: dateFrom, date_to: dateTo,
+        per_page: GROUPED_PER_PAGE, page: 1,
+      })
     }, 500)
     return () => window.clearTimeout(t)
   }, [search, state, dateFrom, dateTo])
 
-  const table = useReactTable({
-    data: items,
-    columns: sectionsColumns,
-    pageCount: meta?.last_page ?? 1,
-    manualPagination: true,
-    state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
-    onPaginationChange: (updater) => {
-      const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
-    },
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  })
+  const groups = useMemo(() => groupByNavigation(items), [items])
 
-  const selectedRows  = table.getFilteredSelectedRowModel().rows
-  const selectedCount = selectedRows.length
+  // Abre por defecto cualquier grupo nuevo que aparezca (ej. tras un filtro), sin volver
+  // a abrir uno que el usuario haya colapsado manualmente. Se ajusta durante el render
+  // (patrón recomendado por React para derivar estado de un valor que cambia) en vez de
+  // un useEffect, para no disparar un set-state síncrono dentro del efecto.
+  const groupKeys = groups.map((g) => g.key).join(',')
+  const [seenGroupKeys, setSeenGroupKeys] = useState('')
+  if (groupKeys !== seenGroupKeys) {
+    const prevKeys = seenGroupKeys ? seenGroupKeys.split(',') : []
+    const newKeys = groups.map((g) => g.key).filter((k) => !prevKeys.includes(k))
+    setSeenGroupKeys(groupKeys)
+    if (newKeys.length) setOpenGroups((prev) => [...prev, ...newKeys])
+  }
+
   const activeCount   = items.filter((i) => i.stateValue === 1).length
   const inactiveCount = items.filter((i) => i.stateValue !== 1).length
 
   const resetFilters = () => {
     setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
-    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 })
-  }
-
-  const handleBulkActivate = async () => {
-    setIsBulkLoading(true)
-    try {
-      const ids = selectedRows.map((r) => r.original.id)
-      const ok  = await bulkToggleState(ids, 1)
-      if (ok) { toastSuccess('Activados', `${selectedCount} registro(s) activado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron activar todos los registros.')
-    } finally { setIsBulkLoading(false) }
-  }
-
-  const handleBulkDeactivate = async () => {
-    setIsBulkLoading(true)
-    try {
-      const ids = selectedRows.map((r) => r.original.id)
-      const ok  = await bulkToggleState(ids, 0)
-      if (ok) { toastSuccess('Desactivados', `${selectedCount} registro(s) desactivado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron desactivar todos los registros.')
-    } finally { setIsBulkLoading(false) }
-  }
-
-  const handleBulkDelete = async () => {
-    await swalDeleteConfirm(
-      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
-      async ({ close, showError }) => {
-        const ids = selectedRows.map((r) => r.original.id)
-        const ok  = await bulkDeleteItems(ids)
-        if (ok) {
-          toastSuccess('Eliminados', `${selectedCount} registro(s) eliminado(s).`)
-          table.resetRowSelection()
-          close()
-        } else {
-          showError('No se pudieron eliminar todos los registros.')
-        }
-      },
-      { title: 'Eliminando...' }
-    )
+    void load({ search: '', state: undefined, date_from: '', date_to: '', per_page: GROUPED_PER_PAGE, page: 1 })
   }
 
   if (!hasLoaded && !isInitialLoading) {
@@ -143,7 +111,7 @@ export function SectionsTable() {
       <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
         <p className="text-sm font-semibold">Error al cargar secciones</p>
         {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
+        <Button size="sm" variant="outline" onClick={() => { reset(); void load({ per_page: GROUPED_PER_PAGE, page: 1 }) }}>Reintentar</Button>
       </div>
     )
   }
@@ -160,88 +128,61 @@ export function SectionsTable() {
         </div>
       )}
 
-      <div className="flex items-end justify-between gap-2">
-        <div className="flex flex-1 flex-wrap items-end gap-2">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Buscar</span>
-            <Input placeholder="Nombre o descripción..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={state} disabled={isFetching} onValueChange={setState}>
-              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Fecha desde</span>
-            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Fecha hasta</span>
-            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
-          </div>
-          <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
-          </div>
+      <div className="flex flex-1 flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">Buscar</span>
+          <Input placeholder="Nombre o descripción..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
         </div>
-        <DataTableViewOptions table={table} />
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">Estado</span>
+          <Select value={state} disabled={isFetching} onValueChange={setState}>
+            <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">Fecha desde</span>
+          <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">Fecha hasta</span>
+          <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+        </div>
+        <div className="flex flex-col justify-end">
+          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+        </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((h) => (
-                  <TableHead key={h.id} colSpan={h.colSpan} className={cn('bg-muted/50 text-xs', (h.column.columnDef.meta as any)?.className)}>
-                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className={cn('transition-colors', selectedCount > 0 && !row.getIsSelected() && 'opacity-50')}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={sectionsColumns.length} className="h-20 text-center text-sm text-muted-foreground">
-                  No hay secciones para mostrar.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <DataTablePagination table={table} className="mt-auto"
-        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
-      />
-
-      <DataTableBulkActions
-        selectedCount={selectedCount}
-        isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
-        onClear={() => table.resetRowSelection()}
-      />
+      {groups.length === 0 ? (
+        <div className="flex min-h-[160px] items-center justify-center rounded-lg border text-sm text-muted-foreground">
+          No hay secciones para mostrar.
+        </div>
+      ) : (
+        <Accordion type="multiple" value={openGroups} onValueChange={setOpenGroups} className="flex flex-col gap-3">
+          {groups.map((g) => (
+            <AccordionItem key={g.key} value={g.key} className="rounded-lg border px-4 last:border-b">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex flex-1 items-center gap-3 pr-2">
+                  <Navigation2 className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="font-medium">{g.navigationName}</span>
+                  {g.navigationUrl && (
+                    <code className="hidden rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground sm:inline">{g.navigationUrl}</code>
+                  )}
+                  <Badge variant="secondary" className="ml-auto shrink-0 text-xs font-normal">
+                    {g.sections.length} sección{g.sections.length === 1 ? '' : 'es'}
+                  </Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <SectionsGroupTable sections={g.sections} />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      )}
     </div>
   )
 }

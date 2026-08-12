@@ -51,6 +51,18 @@ export const sectionsColumns: ColumnDef<Section>[] = [
   },
 
   {
+    id: 'order',
+    accessorFn: (row) => row.order ?? 0,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Orden" />,
+    cell: ({ row }) => (
+      <Badge variant="outline" className="font-mono text-xs">{row.original.order ?? '—'}</Badge>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'w-[70px]' },
+  },
+
+  {
     id: 'typesection',
     accessorFn: (row) => row.typesectionName,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Tipo de Sección" />,
@@ -122,3 +134,10 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     meta: { className: 'w-[48px]' },
   },
 ]
+
+/**
+ * Igual que `sectionsColumns` pero sin la columna "Navegación" — se usa dentro de cada
+ * grupo del listado agrupado por navegación (`sections-group-table.tsx`), donde el nombre
+ * de la navegación ya se muestra una sola vez en el encabezado del grupo.
+ */
+export const sectionsGroupedColumns: ColumnDef<Section>[] = sectionsColumns.filter((c) => c.id !== 'navigation')

@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
@@ -19,7 +19,9 @@ import { formatDatetime } from '@/shared/lib/utils'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { AlertError } from '@/widgets/alerts_components'
 import { TypeSectionSelect } from '@/features/typesections/ui/typesection-select'
+import { TypeSectionQuickCreateDialog } from '@/features/typesections/ui/typesection-quick-create-dialog'
 import { NavigationSelect } from '@/features/navigations/ui/navigation-select'
+import { NavigationQuickCreateDialog } from '@/features/navigations/ui/navigation-quick-create-dialog'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionFormStore } from '../../stores/useSectionFormStore'
 
@@ -41,6 +43,9 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
   const { isSubmitting, error, fieldErrors, create, update, reset } = useSectionFormStore()
   const isEdit  = mode === 'edit'
   const resolved = currentItem ?? (id ? items.find((i) => i.id === Number(id)) ?? null : null)
+
+  const [showTypeSectionCreate, setShowTypeSectionCreate] = useState(false)
+  const [showNavigationCreate, setShowNavigationCreate]   = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -130,7 +135,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
             <FormField control={form.control} name="id_type_section" render={({ field }) => (
               <FormItem>
-                <FormLabel>Tipo de Sección <span className="text-destructive">*</span></FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Tipo de Sección <span className="text-destructive">*</span></FormLabel>
+                  <button
+                    type="button"
+                    onClick={() => setShowTypeSectionCreate(true)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Plus className="size-3.5" />Nuevo
+                  </button>
+                </div>
                 <FormControl>
                   <TypeSectionSelect
                     value={field.value ?? null}
@@ -144,7 +158,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
             <FormField control={form.control} name="id_navigation" render={({ field }) => (
               <FormItem>
-                <FormLabel>Navegación <span className="text-destructive">*</span></FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Navegación <span className="text-destructive">*</span></FormLabel>
+                  <button
+                    type="button"
+                    onClick={() => setShowNavigationCreate(true)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Plus className="size-3.5" />Nuevo
+                  </button>
+                </div>
                 <FormControl>
                   <NavigationSelect
                     value={field.value ?? null}
@@ -200,6 +223,17 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
           </Button>
         </div>
       </form>
+
+      <TypeSectionQuickCreateDialog
+        open={showTypeSectionCreate}
+        onOpenChange={setShowTypeSectionCreate}
+        onCreated={(item) => form.setValue('id_type_section', item.id_typesection, { shouldValidate: true, shouldDirty: true })}
+      />
+      <NavigationQuickCreateDialog
+        open={showNavigationCreate}
+        onOpenChange={setShowNavigationCreate}
+        onCreated={(item) => form.setValue('id_navigation', item.id_navigation, { shouldValidate: true, shouldDirty: true })}
+      />
     </Form>
   )
 }

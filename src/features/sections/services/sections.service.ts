@@ -8,7 +8,7 @@ import type {
 } from '../model/sectionget.dto'
 import type { SectionPostRequestDto, SectionPostResponseDto } from '../model/sectionpost.dto'
 import type { SectionPutRequestDto, SectionPutResponseDto } from '../model/sectionput.dto'
-import type { SectionReorderResponseDto } from '../model/sectionreorder.dto'
+import type { SectionReorderGroupDto, SectionReorderResponseDto } from '../model/sectionreorder.dto'
 
 export const sectionsService = {
   getList: async (param: SectionListRequestDto): Promise<SectionJoinListResponseDto> => {
@@ -59,8 +59,8 @@ export const sectionsService = {
     return data.success
   },
 
-  reorder: async (ids: number[]): Promise<SectionReorderResponseDto> => {
-    const { data } = await apiClient.post<SectionReorderResponseDto>(SECTIONS_ENDPOINTS.v1.reorder, { ids })
+  reorder: async (groups: SectionReorderGroupDto[]): Promise<SectionReorderResponseDto> => {
+    const { data } = await apiClient.post<SectionReorderResponseDto>(SECTIONS_ENDPOINTS.v1.reorder, { groups })
     return data
   },
 }
