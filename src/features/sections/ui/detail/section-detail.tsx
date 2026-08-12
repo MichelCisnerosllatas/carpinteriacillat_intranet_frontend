@@ -39,6 +39,7 @@ export function SectionDetail({ id }: { id: string }) {
             </div>
             <div className="flex flex-1 flex-col gap-1">
               <h3 className="text-lg font-semibold">{item.name}</h3>
+              {item.title && <p className="text-sm font-medium text-muted-foreground">{item.title}</p>}
               {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
@@ -69,6 +70,13 @@ export function SectionDetail({ id }: { id: string }) {
           )}
         </CardContent>
       </Card>
+
+      {item.content && (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><LayoutGrid className="size-4" />Contenido</CardTitle></CardHeader>
+          <CardContent className="text-sm whitespace-pre-wrap text-muted-foreground">{item.content}</CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>

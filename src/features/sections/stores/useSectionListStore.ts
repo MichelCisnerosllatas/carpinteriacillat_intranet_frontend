@@ -35,7 +35,9 @@ const mapFromApi = (item: SectionJoinApiItem): Section => {
   return {
     id: item.id_section,
     name: item.section_name,
+    title: item.section_title,
     description: item.section_description,
+    content: item.section_content,
     idTypesection: item.id_typesection,
     typesectionName: item.typesection?.typesection_name ?? '',
     idNavigation: item.id_navigation,

@@ -4,7 +4,9 @@ import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
 export type SectionApiItem = {
   id_section: number
   section_name: string
+  section_title: string | null
   section_description: string | null
+  section_content: string | null
   section_order: number | null
   section_state: number
   id_typesection: number

@@ -11,7 +11,7 @@ export default async function SectionEditPage({ params }: { params: Promise<{ id
     <>
       <Header fixed title="Editar Sección" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <SectionsBreadcrumb currentPage="Editar Sección" showHeader={false} />
+        <SectionsBreadcrumb currentPage="Editar Sección" showHeader={true} />
         <SectionForm mode="edit" id={id} />
       </main>
     </>

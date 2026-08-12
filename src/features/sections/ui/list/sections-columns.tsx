@@ -33,11 +33,14 @@ export const sectionsColumns: ColumnDef<Section>[] = [
 
   {
     id: 'info',
-    accessorFn: (row) => `${row.name} ${row.description ?? ''}`,
+    accessorFn: (row) => `${row.name} ${row.title ?? ''} ${row.description ?? ''}`,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Sección" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
         <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        {row.original.title && (
+          <span className="text-xs text-muted-foreground">{row.original.title}</span>
+        )}
         {row.original.description && (
           <span className="text-xs text-muted-foreground">{row.original.description}</span>
         )}

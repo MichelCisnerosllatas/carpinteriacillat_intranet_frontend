@@ -25,7 +25,9 @@ import { useSectionFormStore } from '../../stores/useSectionFormStore'
 
 const schema = z.object({
   section_name:        z.string().min(1, 'El nombre es requerido.').max(255),
+  section_title:        z.string().optional(),
   section_description: z.string().optional(),
+  section_content:     z.string().optional(),
   section_state:       z.number(),
   id_typesection:      z.number({ error: 'Seleccione el tipo de sección.' }),
   id_navigation:       z.number().nullable().optional(),
@@ -42,14 +44,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { section_name: '', section_description: '', section_state: 1, id_typesection: undefined, id_navigation: null },
+    defaultValues: { section_name: '', section_title: '', section_description: '', section_content: '', section_state: 1, id_typesection: undefined, id_navigation: null },
   })
 
   useEffect(() => {
     if (isEdit && resolved) {
       form.reset({
         section_name:        resolved.name,
+        section_title:       resolved.title ?? '',
         section_description: resolved.description ?? '',
+        section_content:     resolved.content ?? '',
         section_state:       resolved.stateValue,
         id_typesection:      resolved.idTypesection,
         id_navigation:       resolved.idNavigation,
@@ -71,7 +75,9 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
     const success = isEdit
       ? await update(resolved!.id, {
           section_name:        values.section_name,
+          section_title:       values.section_title,
           section_description: values.section_description,
+          section_content:     values.section_content,
           section_state:       values.section_state,
           id_typesection:      values.id_typesection,
           id_navigation:       values.id_navigation,
@@ -79,7 +85,9 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
         })
       : await create({
           section_name:        values.section_name,
+          section_title:       values.section_title,
           section_description: values.section_description,
+          section_content:     values.section_content,
           section_state:       values.section_state,
           id_typesection:      values.id_typesection,
           id_navigation:       values.id_navigation,
@@ -103,6 +111,14 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               <FormItem>
                 <FormLabel>Nombre <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input placeholder="Ej: Sección principal" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="section_title" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Título</FormLabel>
+                <FormControl><Input placeholder="Ej: Bienvenido a Carpintería Cillat" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -155,6 +171,14 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               <FormItem>
                 <FormLabel>Descripción</FormLabel>
                 <FormControl><Textarea placeholder="Descripción opcional" className="resize-none" rows={3} {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="section_content" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contenido</FormLabel>
+                <FormControl><Textarea placeholder="Contenido opcional" className="resize-none" rows={5} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

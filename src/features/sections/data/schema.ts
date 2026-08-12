@@ -6,7 +6,9 @@ export type SectionStatus = z.infer<typeof sectionStatusSchema>
 export const sectionSchema = z.object({
   id: z.number(),
   name: z.string(),
+  title: z.string().nullable(),
   description: z.string().nullable(),
+  content: z.string().nullable(),
   idTypesection: z.number(),
   typesectionName: z.string(),
   idNavigation: z.number().nullable(),

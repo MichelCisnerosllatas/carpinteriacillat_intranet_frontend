@@ -10,7 +10,7 @@ export default function SectionImageCreatePage() {
     <>
       <Header fixed title="Nueva Asignación" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <SectionImagesBreadcrumb currentPage="Nueva Asignación" showHeader={false} />
+        <SectionImagesBreadcrumb currentPage="Nueva Asignación" showHeader={true} />
         <SectionImageForm mode="create" />
       </main>
     </>

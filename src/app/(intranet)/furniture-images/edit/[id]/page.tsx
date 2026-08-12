@@ -15,7 +15,7 @@ export default async function FurnitureImageEditPage({
     <>
       <Header fixed title="Editar Asociación" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <FurnitureImagesBreadcrumb currentPage="Editar" showHeader={false} />
+        <FurnitureImagesBreadcrumb currentPage="Editar" showHeader={true} />
         <FurnitureImageForm mode="edit" id={id} />
       </main>
     </>
