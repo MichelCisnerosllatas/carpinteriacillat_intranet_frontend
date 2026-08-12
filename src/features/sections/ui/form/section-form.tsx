@@ -29,7 +29,7 @@ const schema = z.object({
   section_description: z.string().optional(),
   section_content:     z.string().optional(),
   section_state:       z.number(),
-  id_typesection:      z.number({ error: 'Seleccione el tipo de sección.' }),
+  id_type_section:     z.number({ error: 'Seleccione el tipo de sección.' }),
   id_navigation:       z.number().nullable().optional(),
 })
 
@@ -37,15 +37,20 @@ type FormValues = z.infer<typeof schema>
 
 export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string }) {
   const router  = useRouter()
-  const { currentItem, items }                                      = useSectionListStore()
+  const { currentItem, items, loadById, setCurrentItem }            = useSectionListStore()
   const { isSubmitting, error, fieldErrors, create, update, reset } = useSectionFormStore()
   const isEdit  = mode === 'edit'
   const resolved = currentItem ?? (id ? items.find((i) => i.id === Number(id)) ?? null : null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { section_name: '', section_title: '', section_description: '', section_content: '', section_state: 1, id_typesection: undefined, id_navigation: null },
+    defaultValues: { section_name: '', section_title: '', section_description: '', section_content: '', section_state: 1, id_type_section: undefined, id_navigation: null },
   })
+
+  // Siempre trae el registro fresco del backend al editar — no depende de que la tabla ya esté cargada en memoria.
+  useEffect(() => {
+    if (isEdit && id) { void loadById(Number(id)) }
+  }, [isEdit, id])
 
   useEffect(() => {
     if (isEdit && resolved) {
@@ -55,13 +60,13 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
         section_description: resolved.description ?? '',
         section_content:     resolved.content ?? '',
         section_state:       resolved.stateValue,
-        id_typesection:      resolved.idTypesection,
+        id_type_section:     resolved.idTypesection,
         id_navigation:       resolved.idNavigation,
       })
     }
   }, [isEdit, resolved?.id])
 
-  useEffect(() => () => reset(), [])
+  useEffect(() => () => { reset(); setCurrentItem(null) }, [])
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({
@@ -79,7 +84,7 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
           section_description: values.section_description,
           section_content:     values.section_content,
           section_state:       values.section_state,
-          id_typesection:      values.id_typesection,
+          id_type_section:     values.id_type_section,
           id_navigation:       values.id_navigation,
           section_updated_at:  formatDatetime(),
         })
@@ -89,7 +94,7 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
           section_description: values.section_description,
           section_content:     values.section_content,
           section_state:       values.section_state,
-          id_typesection:      values.id_typesection,
+          id_type_section:     values.id_type_section,
           id_navigation:       values.id_navigation,
           section_created_at:  formatDatetime(),
         })
@@ -123,7 +128,7 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               </FormItem>
             )} />
 
-            <FormField control={form.control} name="id_typesection" render={({ field }) => (
+            <FormField control={form.control} name="id_type_section" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo de Sección <span className="text-destructive">*</span></FormLabel>
                 <FormControl>

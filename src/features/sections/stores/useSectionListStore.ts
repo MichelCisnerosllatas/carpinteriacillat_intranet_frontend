@@ -24,6 +24,7 @@ type State = {
 type Action = {
   setForceReload: (value: boolean) => void
   load: (params?: SectionListRequestDto) => Promise<boolean>
+  loadById: (id: number) => Promise<boolean>
   setCurrentItem: (item: Section | null) => void
   reset: () => void
 }
@@ -38,8 +39,8 @@ const mapFromApi = (item: SectionJoinApiItem): Section => {
     title: item.section_title,
     description: item.section_description,
     content: item.section_content,
-    idTypesection: item.id_typesection,
-    typesectionName: item.typesection?.typesection_name ?? '',
+    idTypesection: item.id_type_section,
+    typesectionName: item.type_section?.typesection_name ?? '',
     idNavigation: item.id_navigation,
     navigationName: item.navigation?.navigation_name ?? null,
     order: item.section_order,
@@ -59,6 +60,20 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
 
   setForceReload: (value) => set({ forceReload: value }),
   setCurrentItem: (item) => set({ currentItem: item }),
+
+  loadById: async (id) => {
+    set({ isFetching: true, isError: false, message: null })
+    try {
+      const response = await sectionsService.getById(id)
+      if (!response.success) throw new Error(response.message)
+      const mapped = mapFromApi(response.data)
+      set({ isFetching: false, currentItem: mapped, hasLoaded: true })
+      return true
+    } catch (error: any) {
+      set({ isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      return false
+    }
+  },
 
   load: async (params = {}) => {
     if (get().isFetching) return false

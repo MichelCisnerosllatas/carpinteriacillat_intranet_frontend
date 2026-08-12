@@ -4,7 +4,7 @@ export type SectionPutRequestDto = {
   section_description?: string
   section_content?: string
   section_state: number
-  id_typesection: number
+  id_type_section: number
   id_navigation?: number | null
   section_updated_at: string
 }

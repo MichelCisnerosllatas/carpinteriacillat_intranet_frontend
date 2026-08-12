@@ -9,14 +9,14 @@ export type SectionApiItem = {
   section_content: string | null
   section_order: number | null
   section_state: number
-  id_typesection: number
+  id_type_section: number
   id_navigation: number | null
   section_created_at: string
   section_updated_at: string | null
 }
 
 export type SectionJoinApiItem = SectionApiItem & {
-  typesection: { id_typesection: number; typesection_name: string }
+  type_section: { id_typesection: number; typesection_name: string }
   navigation: { id_navigation: number; navigation_name: string } | null
 }
 
