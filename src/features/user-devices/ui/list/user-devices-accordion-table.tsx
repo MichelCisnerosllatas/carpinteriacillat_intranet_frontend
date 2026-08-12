@@ -431,7 +431,7 @@ export function UserDevicesAccordionTable() {
   const applyFilters = useCallback(
     (overrides: Record<string, unknown> = {}) => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = window.setTimeout(() => {
+      debounceRef.current = setTimeout(() => {
         void load({
           page: 1,
           per_page: 100,
@@ -477,7 +477,7 @@ export function UserDevicesAccordionTable() {
   }
 
   if (isError) {
-    return <UserDevicesError message={message} onRetry={() => void load()} />
+    return <UserDevicesError message={message ?? undefined} onRetry={() => void load()} />
   }
 
   return (

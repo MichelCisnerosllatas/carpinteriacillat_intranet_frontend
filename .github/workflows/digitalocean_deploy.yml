@@ -1,0 +1,453 @@
+# ============================================================
+# DEPLOY AUTOMÁTICO - INTRANET CARPINTERÍA CILLAT
+#
+# DEV
+# rama: dev
+# GitHub Environment: dev
+# carpeta: /var/www/carpinteriacillat/intranet-dev
+# puerto: 3102
+#
+# PROD
+# rama: main
+# GitHub Environment: prod
+# carpeta: /var/www/carpinteriacillat/intranet
+# puerto: 3101
+# ============================================================
+
+name: Deploy Intranet - DigitalOcean
+
+
+# ============================================================
+# EJECUCIÓN
+#
+# Automático:
+#   push a dev
+#   push a main
+#
+# Manual:
+#   Actions -> Run workflow
+# ============================================================
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+  workflow_dispatch:
+
+
+permissions:
+  contents: read
+
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+
+    # ========================================================
+    # SELECCIONAR ENVIRONMENT DE GITHUB
+    #
+    # main -> prod
+    # dev  -> dev
+    #
+    # Gracias a esto ${{ vars.* }} y ${{ secrets.* }}
+    # tomarán los valores del Environment correspondiente.
+    # ========================================================
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
+
+    steps:
+
+      # ======================================================
+      # 1. DESCARGAR CÓDIGO
+      # ======================================================
+
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v7
+
+
+      # ======================================================
+      # 2. CONFIGURAR NODE.JS
+      # ======================================================
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+
+      # ======================================================
+      # 3. INSTALAR DEPENDENCIAS
+      # ======================================================
+
+      - name: Instalar dependencias
+        run: npm ci
+
+
+      # ======================================================
+      # 4. GENERAR .env.production
+      #
+      # Estas variables salen del Environment:
+      #
+      # dev  -> Settings -> Environments -> dev
+      # main -> Settings -> Environments -> prod
+      #
+      # Se genera ANTES de npm run build.
+      # ======================================================
+
+      - name: Preparar variables de entorno
+        env:
+
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+
+          NEXT_PUBLIC_IMAGE_URL: ${{ vars.NEXT_PUBLIC_IMAGE_URL }}
+
+          NEXT_PUBLIC_WEBSOCKET_URL: ${{ vars.NEXT_PUBLIC_WEBSOCKET_URL }}
+
+          NEXT_PUBLIC_APP_VERSION: ${{ vars.NEXT_PUBLIC_APP_VERSION }}
+
+          NEXT_PUBLIC_CLIENT: ${{ vars.NEXT_PUBLIC_CLIENT }}
+
+          # La guardamos como GitHub Secret.
+          # OJO: al ser NEXT_PUBLIC terminará disponible
+          # en el bundle del navegador.
+          NEXT_PUBLIC_GOOGLE_FONTS_API_KEY: ${{ vars.NEXT_PUBLIC_GOOGLE_FONTS_API_KEY }}
+
+        run: |
+
+          echo "Preparando variables para: $GITHUB_REF_NAME"
+
+          {
+            printf 'NEXT_PUBLIC_API_URL=%s\n' \
+              "$NEXT_PUBLIC_API_URL"
+
+            printf 'NEXT_PUBLIC_IMAGE_URL=%s\n' \
+              "$NEXT_PUBLIC_IMAGE_URL"
+
+            printf 'NEXT_PUBLIC_WEBSOCKET_URL=%s\n' \
+              "$NEXT_PUBLIC_WEBSOCKET_URL"
+
+            printf 'NEXT_PUBLIC_APP_VERSION=%s\n' \
+              "$NEXT_PUBLIC_APP_VERSION"
+
+            printf 'NEXT_PUBLIC_CLIENT=%s\n' \
+              "$NEXT_PUBLIC_CLIENT"
+
+            printf 'NEXT_PUBLIC_GOOGLE_FONTS_API_KEY=%s\n' \
+              "$NEXT_PUBLIC_GOOGLE_FONTS_API_KEY"
+
+          } > .env.production
+
+
+          echo ".env.production generado correctamente."
+
+
+      # ======================================================
+      # 5. COMPILAR NEXT.JS
+      #
+      # Next.js ya encuentra .env.production.
+      # Las NEXT_PUBLIC_* se incorporan durante este build.
+      # ======================================================
+
+      - name: Compilar proyecto Next.js
+        run: npm run build
+
+
+      # ======================================================
+      # 6. PREPARAR STANDALONE
+      #
+      # Requiere en next.config:
+      #
+      # output: 'standalone'
+      #
+      # Copiamos:
+      # - servidor
+      # - dependencias mínimas
+      # - static
+      # - public
+      # - .env.production
+      # ======================================================
+
+      - name: Preparar archivos Standalone
+        run: |
+
+          rm -rf deploy
+
+          mkdir -p deploy
+
+
+          # Servidor generado por Next.js
+          cp -a .next/standalone/. deploy/
+
+
+          # Recursos estáticos
+          mkdir -p deploy/.next/static
+
+          cp -a .next/static/. deploy/.next/static/
+
+
+          # Archivos públicos
+          if [ -d public ]; then
+            cp -a public deploy/public
+          fi
+
+
+          # Variables utilizadas para este deploy
+          cp .env.production deploy/.env.production
+
+
+          echo "Standalone preparado correctamente."
+
+
+      # ======================================================
+      # 7. DETERMINAR DEV O PROD
+      #
+      # Las DO_* son Repository Variables.
+      # ======================================================
+
+      - name: Detectar entorno DEV o PROD
+        run: |
+
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+
+            echo "TARGET=${{ vars.DO_TARGET_PROD }}" \
+              >> "$GITHUB_ENV"
+
+            echo "PM2_NAME=carpinteria-intranet-prod" \
+              >> "$GITHUB_ENV"
+
+            echo "APP_PORT=3101" \
+              >> "$GITHUB_ENV"
+
+            echo "DEPLOY_ENV=PROD" \
+              >> "$GITHUB_ENV"
+
+            echo "Entorno seleccionado: PRODUCCIÓN"
+
+          else
+
+            echo "TARGET=${{ vars.DO_TARGET_DEV }}" \
+              >> "$GITHUB_ENV"
+
+            echo "PM2_NAME=carpinteria-intranet-dev" \
+              >> "$GITHUB_ENV"
+
+            echo "APP_PORT=3102" \
+              >> "$GITHUB_ENV"
+
+            echo "DEPLOY_ENV=DEV" \
+              >> "$GITHUB_ENV"
+
+            echo "Entorno seleccionado: DESARROLLO"
+
+          fi
+
+
+      # ======================================================
+      # 8. COMPRIMIR APLICACIÓN
+      # ======================================================
+
+      - name: Comprimir aplicación
+        run: |
+
+          tar -czf deploy.tar.gz -C deploy .
+
+          echo "Aplicación comprimida."
+
+
+      # ======================================================
+      # 9. CONFIGURAR SSH
+      #
+      # Repository Variables:
+      # DO_HOST
+      # DO_PORT
+      #
+      # Repository Secret:
+      # DO_SSH_KEY
+      # ======================================================
+
+      - name: Configurar conexión SSH con DigitalOcean
+        env:
+
+          DO_HOST: ${{ vars.DO_HOST }}
+
+          DO_PORT: ${{ vars.DO_PORT }}
+
+          DO_SSH_KEY: ${{ secrets.DO_SSH_KEY }}
+
+        run: |
+
+          mkdir -p ~/.ssh
+
+
+          # Crear temporalmente la clave SSH
+          printf '%s\n' "$DO_SSH_KEY" \
+            > ~/.ssh/id_ed25519
+
+
+          chmod 600 ~/.ssh/id_ed25519
+
+
+          # Registrar DigitalOcean como host conocido
+          ssh-keyscan \
+            -p "$DO_PORT" \
+            -H "$DO_HOST" \
+            >> ~/.ssh/known_hosts
+
+
+          echo "SSH configurado correctamente."
+
+
+      # ======================================================
+      # 10. SUBIR A DIGITALOCEAN
+      # ======================================================
+
+      - name: Subir aplicación a DigitalOcean
+        env:
+
+          DO_HOST: ${{ vars.DO_HOST }}
+
+          DO_PORT: ${{ vars.DO_PORT }}
+
+          DO_USER: ${{ vars.DO_USER }}
+
+        run: |
+
+          echo "========================================"
+          echo "SUBIENDO INTRANET"
+          echo "Entorno: $DEPLOY_ENV"
+          echo "Destino: $TARGET"
+          echo "========================================"
+
+
+          scp \
+            -P "$DO_PORT" \
+            deploy.tar.gz \
+            "$DO_USER@$DO_HOST:/tmp/carpinteria-intranet-$GITHUB_REF_NAME.tar.gz"
+
+
+          echo "Aplicación subida correctamente."
+
+
+      # ======================================================
+      # 11. PUBLICAR Y EJECUTAR CON PM2
+      # ======================================================
+
+      - name: Publicar aplicación y reiniciar PM2
+        env:
+
+          DO_HOST: ${{ vars.DO_HOST }}
+
+          DO_PORT: ${{ vars.DO_PORT }}
+
+          DO_USER: ${{ vars.DO_USER }}
+
+        run: |
+
+          ssh \
+            -p "$DO_PORT" \
+            "$DO_USER@$DO_HOST" "
+
+              set -e
+
+
+              echo '========================================'
+              echo 'DEPLOY CARPINTERIA INTRANET'
+              echo '========================================'
+
+              echo 'Entorno: $DEPLOY_ENV'
+              echo 'Destino: $TARGET'
+              echo 'Puerto: $APP_PORT'
+              echo 'PM2: $PM2_NAME'
+
+
+              # -----------------------------------------------
+              # Preparar nueva versión
+              # -----------------------------------------------
+
+              rm -rf '${TARGET}.new'
+
+              mkdir -p '${TARGET}.new'
+
+
+              # -----------------------------------------------
+              # Descomprimir aplicación
+              # -----------------------------------------------
+
+              tar -xzf \
+                '/tmp/carpinteria-intranet-$GITHUB_REF_NAME.tar.gz' \
+                -C '${TARGET}.new'
+
+
+              # Eliminar paquete temporal
+              rm -f \
+                '/tmp/carpinteria-intranet-$GITHUB_REF_NAME.tar.gz'
+
+
+              # -----------------------------------------------
+              # Guardar versión anterior
+              # -----------------------------------------------
+
+              rm -rf '${TARGET}.old'
+
+
+              if [ -d '${TARGET}' ]; then
+
+                mv '${TARGET}' '${TARGET}.old'
+
+              fi
+
+
+              # -----------------------------------------------
+              # Activar nueva versión
+              # -----------------------------------------------
+
+              mv '${TARGET}.new' '${TARGET}'
+
+
+              cd '${TARGET}'
+
+
+              # -----------------------------------------------
+              # PM2
+              # -----------------------------------------------
+
+              if pm2 describe '${PM2_NAME}' > /dev/null 2>&1; then
+
+                echo 'Reiniciando proceso PM2 existente...'
+
+
+                PORT='${APP_PORT}' \
+                HOSTNAME=127.0.0.1 \
+                NODE_ENV=production \
+                pm2 restart '${PM2_NAME}' --update-env
+
+              else
+
+                echo 'Creando nuevo proceso PM2...'
+
+
+                PORT='${APP_PORT}' \
+                HOSTNAME=127.0.0.1 \
+                NODE_ENV=production \
+                pm2 start server.js \
+                  --name '${PM2_NAME}'
+
+              fi
+
+
+              # Guardar procesos para reinicios del VPS
+              pm2 save
+
+
+              echo '========================================'
+              echo 'DEPLOY INTRANET COMPLETADO'
+              echo '========================================'
+            "

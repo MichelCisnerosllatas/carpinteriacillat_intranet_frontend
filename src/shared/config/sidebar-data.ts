@@ -30,6 +30,7 @@ import {
   Palette,
   PenTool,
   Phone,
+  Receipt,
   Rows3,
   ServerOff,
   Settings,
@@ -234,6 +235,14 @@ export const sidebarData: SidebarData = {
             { title: 'Redes Sociales',   url: '/company-social-networks',    icon: Share2 },
           ],
         },
+      ],
+    },
+    {
+      title: 'Ventas',
+      items: [
+        { title: 'Ventas',                  url: '/sales',                icon: Receipt },
+        { title: 'Tipos de Comprobante',    url: '/sale-document-types', icon: FileType },
+        { title: 'Configuración de Ventas', url: '/sale-settings',        icon: Settings2 },
       ],
     },
     {

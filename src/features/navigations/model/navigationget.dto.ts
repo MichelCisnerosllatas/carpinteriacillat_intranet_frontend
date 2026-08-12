@@ -14,6 +14,8 @@ export type NavigationApiItem = {
 export type NavigationListRequestDto = {
   search?: string
   state?: number
+  date_from?: string
+  date_to?: string
   per_page?: number
   page?: number
 }

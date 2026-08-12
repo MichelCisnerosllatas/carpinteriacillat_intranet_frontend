@@ -20,7 +20,15 @@ export function formatDatetime(date: Date = new Date()): string {
 }
 
 // Formatea una fecha (ISO "2026-04-16" o datetime "2026-04-16T00:00:00.000000Z") para mostrar
-// al usuario, ej. "16/04/2026". Úsala en toda la UI en vez de imprimir el string crudo del API.
+// al usuario, ej. "16/04/2026". Úsala en toda la UI en vez de imprimir el string crudo del API
+// (ej. sale-payments-section.tsx, cuyo `payment_date` no trae un "_formatted" del backend, a
+// diferencia de otros campos de fecha como `issue_date_formatted`).
+//
+// Fuerza la zona horaria de Perú (America/Lima) — sin esto, `toLocaleDateString` usa la zona del
+// navegador de quien esté mirando la pantalla, y una fecha guardada a medianoche UTC puede
+// mostrarse un día antes o después según en qué país esté ese navegador. Con `timeZone` fijo,
+// todos ven la misma fecha sin importar desde dónde abran la intranet. Se puede sobreescribir
+// pasando tu propio `timeZone` en `options` si algún caso puntual lo necesitara.
 export function formatDisplayDate(
   value: string | null | undefined,
   options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }
@@ -28,7 +36,7 @@ export function formatDisplayDate(
   if (!value) return '—'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('es-PE', options)
+  return date.toLocaleDateString('es-PE', { timeZone: 'America/Lima', ...options })
 }
 
 export function getPageNumbers(currentPage: number, totalPages: number) {

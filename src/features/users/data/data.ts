@@ -1,5 +1,4 @@
 import { CreditCard, Shield, UserCheck, Users } from 'lucide-react'
-import type { UserStatus } from './schema'
 
 // Opciones para el selector de tipo de documento en el formulario.
 // Los valores deben coincidir con los id_typedoc del backend.
@@ -19,7 +18,7 @@ export const roleFormOptions = [
   { label: 'Cajero',        value: 4 },
 ] as const
 
-export const callTypes = new Map<UserStatus, string>([
+export const callTypes = new Map<string, string>([
   ['active',    'bg-teal-100/30 text-teal-900 dark:text-teal-200 border-teal-200'],
   ['inactive',  'bg-neutral-300/40 border-neutral-300'],
   ['invited',   'bg-sky-200/40 text-sky-900 dark:text-sky-100 border-sky-300'],

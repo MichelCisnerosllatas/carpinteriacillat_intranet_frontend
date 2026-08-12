@@ -22,8 +22,8 @@ import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
 import { useSectionImageFormStore } from '../../stores/useSectionImageFormStore'
 
 const schema = z.object({
-  id_section:         z.number({ required_error: 'Seleccione la sección.' }),
-  id_image:           z.number({ required_error: 'Seleccione la imagen.' }),
+  id_section:         z.number({ error: 'Seleccione la sección.' }),
+  id_image:           z.number({ error: 'Seleccione la imagen.' }),
   sectionimage_state: z.number(),
 })
 

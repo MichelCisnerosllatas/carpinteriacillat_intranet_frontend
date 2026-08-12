@@ -27,7 +27,7 @@ const schema = z.object({
   section_name:        z.string().min(1, 'El nombre es requerido.').max(255),
   section_description: z.string().optional(),
   section_state:       z.number(),
-  id_typesection:      z.number({ required_error: 'Seleccione el tipo de sección.' }),
+  id_typesection:      z.number({ error: 'Seleccione el tipo de sección.' }),
   id_navigation:       z.number().nullable().optional(),
 })
 

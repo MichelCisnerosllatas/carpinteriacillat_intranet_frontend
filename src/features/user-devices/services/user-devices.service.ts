@@ -37,7 +37,7 @@ export const userDevicesService = {
 
   getMyDevices: async (params?: MyDeviceListRequestDto): Promise<MyDeviceListResponseDto> => {
     const cleanParams = params
-      ? Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
+      ? Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== 0))
       : {}
     const { data } = await apiClient.get<MyDeviceListResponseDto>(
       USER_DEVICES_ENDPOINTS.v1.myDevices,
