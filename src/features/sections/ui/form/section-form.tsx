@@ -24,13 +24,13 @@ import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionFormStore } from '../../stores/useSectionFormStore'
 
 const schema = z.object({
-  section_name:        z.string().min(1, 'El nombre es requerido.').max(255),
+  section_name:        z.string().max(255).optional(),
   section_title:        z.string().optional(),
   section_description: z.string().optional(),
   section_content:     z.string().optional(),
   section_state:       z.number(),
   id_type_section:     z.number({ error: 'Seleccione el tipo de sección.' }),
-  id_navigation:       z.number().nullable().optional(),
+  id_navigation:       z.number({ error: 'Seleccione la navegación.' }),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -44,7 +44,7 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { section_name: '', section_title: '', section_description: '', section_content: '', section_state: 1, id_type_section: undefined, id_navigation: null },
+    defaultValues: { section_name: '', section_title: '', section_description: '', section_content: '', section_state: 1, id_type_section: undefined, id_navigation: undefined },
   })
 
   // Siempre trae el registro fresco del backend al editar — no depende de que la tabla ya esté cargada en memoria.
@@ -61,7 +61,7 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
         section_content:     resolved.content ?? '',
         section_state:       resolved.stateValue,
         id_type_section:     resolved.idTypesection,
-        id_navigation:       resolved.idNavigation,
+        id_navigation:       resolved.idNavigation ?? undefined,
       })
     }
   }, [isEdit, resolved?.id])
@@ -114,7 +114,7 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
           <CardContent className="pt-6 flex flex-col gap-4">
             <FormField control={form.control} name="section_name" render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>Nombre</FormLabel>
                 <FormControl><Input placeholder="Ej: Sección principal" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -144,13 +144,12 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
             <FormField control={form.control} name="id_navigation" render={({ field }) => (
               <FormItem>
-                <FormLabel>Navegación</FormLabel>
+                <FormLabel>Navegación <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <NavigationSelect
                     value={field.value ?? null}
                     onValueChange={(v) => field.onChange(v)}
-                    placeholder="Sin navegación (opcional)"
-                    showAll
+                    placeholder="Seleccionar navegación"
                   />
                 </FormControl>
                 <FormMessage />

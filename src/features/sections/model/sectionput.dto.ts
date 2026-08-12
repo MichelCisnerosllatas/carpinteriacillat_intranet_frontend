@@ -1,11 +1,11 @@
 export type SectionPutRequestDto = {
-  section_name: string
+  section_name?: string
   section_title?: string
   section_description?: string
   section_content?: string
   section_state: number
   id_type_section: number
-  id_navigation?: number | null
+  id_navigation: number
   section_updated_at: string
 }
 
