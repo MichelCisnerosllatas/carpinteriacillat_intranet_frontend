@@ -15,9 +15,29 @@ export type SectionApiItem = {
   section_updated_at: string | null
 }
 
-export type SectionJoinApiItem = SectionApiItem & {
-  type_section: { id_typesection: number; typesection_name: string }
-  navigation: { id_navigation: number; navigation_name: string } | null
+/**
+ * El endpoint `_join` (indexJoin/showJoin) NO trae `id_type_section`/`id_navigation` planos —
+ * los reemplaza por los objetos anidados `type_section`/`navigation` (ver SectionJoinResource en el backend).
+ * Además trae las fechas de negocio ya formateadas (`section_created_at_format`/`section_updated_at_format`,
+ * ojo: sin "ted" — nombre distinto al que usa el endpoint plano) y la info completa de cada relación.
+ */
+export type SectionJoinApiItem = Omit<SectionApiItem, 'id_type_section' | 'id_navigation'> & {
+  section_created_at_format: string | null
+  section_updated_at_format: string | null
+  type_section: {
+    id_typesection: number
+    typesection_name: string
+    typesection_description: string | null
+    typesection_state: number
+  }
+  navigation: {
+    id_navigation: number
+    navigation_name: string
+    navigation_description: string | null
+    navigation_url: string | null
+    navigation_order: number | null
+    navigation_state: number
+  } | null
 }
 
 export type SectionListRequestDto = {

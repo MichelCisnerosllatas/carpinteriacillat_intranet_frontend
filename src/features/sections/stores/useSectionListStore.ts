@@ -33,22 +33,36 @@ const defaultFilters: SectionListRequestDto = { page: 1, per_page: 10, search: '
 
 const mapFromApi = (item: SectionJoinApiItem): Section => {
   const stateOpt = getStateOption(item.section_state)
+  const typesectionStateOpt = item.type_section ? getStateOption(item.type_section.typesection_state) : null
+  const navigationStateOpt = item.navigation ? getStateOption(item.navigation.navigation_state) : null
   return {
     id: item.id_section,
     name: item.section_name,
     title: item.section_title,
     description: item.section_description,
     content: item.section_content,
-    idTypesection: item.id_type_section,
+    idTypesection: item.type_section?.id_typesection ?? 0,
     typesectionName: item.type_section?.typesection_name ?? '',
-    idNavigation: item.id_navigation,
+    typesectionDescription: item.type_section?.typesection_description ?? null,
+    typesectionStateValue: item.type_section?.typesection_state ?? null,
+    typesectionStateLabel: typesectionStateOpt?.label ?? null,
+    typesectionStateBadge: typesectionStateOpt?.badge ?? null,
+    idNavigation: item.navigation?.id_navigation ?? null,
     navigationName: item.navigation?.navigation_name ?? null,
+    navigationDescription: item.navigation?.navigation_description ?? null,
+    navigationUrl: item.navigation?.navigation_url ?? null,
+    navigationOrder: item.navigation?.navigation_order ?? null,
+    navigationStateValue: item.navigation?.navigation_state ?? null,
+    navigationStateLabel: navigationStateOpt?.label ?? null,
+    navigationStateBadge: navigationStateOpt?.badge ?? null,
     order: item.section_order,
     status: item.section_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.section_state,
     createdAt: item.section_created_at,
     updatedAt: item.section_updated_at ?? '',
+    createdAtFormatted: item.section_created_at_format ?? null,
+    updatedAtFormatted: item.section_updated_at_format ?? null,
   }
 }
 
