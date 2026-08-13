@@ -8,15 +8,17 @@ import Download from 'yet-another-react-lightbox/plugins/download'
 import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import {
-  LoaderCircle, ImageIcon, CheckSquare, Square, Search, X,
+  LoaderCircle, ImageIcon, CheckSquare, Square, Search, X, Folder,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { cn } from '@/shared/lib/utils'
 import { useImageListStore } from '../../stores/useImageListStore'
 import { useImageDeleteStore } from '../../stores/useImageDeleteStore'
+import { getImageFolder } from '../../lib/image-url'
 import type { ImageItem } from '../../data/schema'
 import { ImageCard } from './image-card'
 
@@ -104,6 +106,25 @@ export function ImagesGrid() {
 
   const currentPage = filters.page ?? 1
   const lastPage    = meta?.last_page ?? 1
+
+  // Agrupa las miniaturas de la página actual por carpeta de storage — "Sin carpeta"
+  // (raíz) siempre primero, luego el resto en orden alfabético. Solo agrupa visualmente
+  // lo cargado en esta página; no reordena entre páginas.
+  const groupKeys: string[] = []
+  items.forEach((item) => {
+    const key = getImageFolder(item.patch)
+    if (!groupKeys.includes(key)) groupKeys.push(key)
+  })
+  groupKeys.sort((a, b) => {
+    if (a === b) return 0
+    if (a === '') return -1
+    if (b === '') return 1
+    return a.localeCompare(b)
+  })
+  const groups = groupKeys.map((key) => ({
+    key,
+    items: items.filter((item) => getImageFolder(item.patch) === key),
+  }))
 
   // Lightbox slides — todos los items de la página actual
   const lightboxSlides = items.map((item) => ({
@@ -212,23 +233,50 @@ export function ImagesGrid() {
           </button>
         )}
 
-        {/* ── Grid ── */}
+        {/* ── Grid, agrupado por carpeta ── */}
         {items.length === 0 ? (
           <div className="flex min-h-[300px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed">
             <ImageIcon className="size-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">No hay imágenes para mostrar.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {items.map((item) => (
-              <ImageCard
-                key={item.id}
-                item={item}
-                isSelected={selected.has(item.id)}
-                onToggleSelect={toggleSelect}
-                onOpenLightbox={openLightbox}
-                onDelete={handleDelete}
-              />
+          <div className="flex flex-col gap-5">
+            {groups.map((group) => (
+              <div key={group.key || '__root__'} className="flex flex-col gap-2.5">
+                {/* Encabezado de carpeta — solo si hay más de una carpeta en la página actual */}
+                {groups.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <div className={cn(
+                      'flex size-6 shrink-0 items-center justify-center rounded-md',
+                      group.key ? 'bg-amber-100 dark:bg-amber-900/40' : 'bg-muted',
+                    )}>
+                      {group.key
+                        ? <Folder className="size-3.5 text-amber-600 dark:text-amber-400" />
+                        : <ImageIcon className="size-3.5 text-muted-foreground" />}
+                    </div>
+                    <span className="truncate text-sm font-medium">
+                      {group.key || 'Sin carpeta'}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      {group.items.length}
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  {group.items.map((item) => (
+                    <ImageCard
+                      key={item.id}
+                      item={item}
+                      isSelected={selected.has(item.id)}
+                      onToggleSelect={toggleSelect}
+                      onOpenLightbox={openLightbox}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}

@@ -279,7 +279,11 @@ export function FolderPicker({
               Cargando...
             </div>
           ) : folders.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">Sin subcarpetas</p>
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              {rootPath && currentPath === rootPath
+                ? 'Aún no hay subcarpetas. Crea una con "Nueva carpeta" para poder subir aquí.'
+                : 'Sin subcarpetas'}
+            </p>
           ) : (
             folders.map((folder) => (
               <div
@@ -320,14 +324,28 @@ export function FolderPicker({
           <span className="text-[11px] text-muted-foreground truncate">
             {currentPath ?? 'raíz'}
           </span>
-          <Button
-            size="sm"
-            className="h-7 text-xs shrink-0"
-            onClick={handleSelect}
-            disabled={currentPath === null || (!!rootPath && currentPath === rootPath)}
-          >
-            Usar esta carpeta
-          </Button>
+          {(() => {
+            const atRoot = currentPath === null || (!!rootPath && currentPath === rootPath)
+            const button = (
+              <Button
+                size="sm"
+                className="h-7 text-xs shrink-0"
+                onClick={handleSelect}
+                disabled={atRoot}
+              >
+                Usar esta carpeta
+              </Button>
+            )
+            // El botón queda deshabilitado en la raíz a propósito (no se permite subir
+            // directo ahí) — sin esta explicación, se ve como si nada respondiera al click.
+            if (!atRoot) return button
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild><span>{button}</span></TooltipTrigger>
+                <TooltipContent>Elige o crea una subcarpeta — no se puede usar la raíz directamente.</TooltipContent>
+              </Tooltip>
+            )
+          })()}
         </div>
       </PopoverContent>
     </Popover>
