@@ -28,7 +28,10 @@ type Action = {
   reset: () => void
 }
 
-const defaultFilters: ImageListRequestDto = { page: 1, per_page: 20 }
+// per_page alto a propósito: el filtrado por carpeta en ImagesGrid se hace en el
+// cliente sobre la página cargada, así que necesita traer prácticamente todo de una
+// vez para que el filtro no "pierda" imágenes que quedaron en otra página del server.
+const defaultFilters: ImageListRequestDto = { page: 1, per_page: 60 }
 
 const mapFromApi = (item: ImageApiItem): ImageItem => ({
   id: item.id_image,
