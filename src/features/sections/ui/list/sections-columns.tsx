@@ -33,11 +33,14 @@ export const sectionsColumns: ColumnDef<Section>[] = [
 
   {
     id: 'info',
-    accessorFn: (row) => `${row.name} ${row.description ?? ''}`,
+    accessorFn: (row) => `${row.name} ${row.title ?? ''} ${row.description ?? ''}`,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Sección" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
         <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        {row.original.title && (
+          <span className="text-xs text-muted-foreground">{row.original.title}</span>
+        )}
         {row.original.description && (
           <span className="text-xs text-muted-foreground">{row.original.description}</span>
         )}
@@ -45,6 +48,18 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+  },
+
+  {
+    id: 'order',
+    accessorFn: (row) => row.order ?? 0,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Orden" />,
+    cell: ({ row }) => (
+      <Badge variant="outline" className="font-mono text-xs">{row.original.order ?? '—'}</Badge>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'w-[70px]' },
   },
 
   {
@@ -119,3 +134,10 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     meta: { className: 'w-[48px]' },
   },
 ]
+
+/**
+ * Igual que `sectionsColumns` pero sin la columna "Navegación" — se usa dentro de cada
+ * grupo del listado agrupado por navegación (`sections-group-table.tsx`), donde el nombre
+ * de la navegación ya se muestra una sola vez en el encabezado del grupo.
+ */
+export const sectionsGroupedColumns: ColumnDef<Section>[] = sectionsColumns.filter((c) => c.id !== 'navigation')

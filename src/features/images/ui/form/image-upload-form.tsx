@@ -508,7 +508,8 @@ export function ImageUploadForm() {
               </div>
             )}
 
-            {/* Carpeta destino */}
+            {/* Carpeta destino — distinta de la carpeta de origen elegida arriba: esta es la
+                carpeta del servidor donde se guardarán las imágenes, y es obligatoria. */}
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs">
                 Carpeta destino <span className="text-destructive">*</span>
@@ -522,7 +523,16 @@ export function ImageUploadForm() {
                 placeholder="Seleccionar carpeta destino..."
                 disabled={isUploading}
                 rootPath="images"
+                className={cn(
+                  totalCount > 0 && !folder.trim() && !isUploading &&
+                    'border-destructive/60 ring-1 ring-destructive/30',
+                )}
               />
+              {totalCount > 0 && !folder.trim() && !isUploading && (
+                <p className="text-[11px] text-destructive">
+                  Falta elegir la carpeta destino — el botón &quot;Subir&quot; se activa recién cuando la selecciones.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

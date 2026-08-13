@@ -1,11 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Sofa } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/shared/ui/breadcrumb'
 import { Button } from '@/shared/ui/button'
-import NProgress from 'nprogress'
-import { useRouter } from 'next/navigation'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 interface FurnituresBreadcrumbProps {
   currentPage: string
@@ -13,10 +12,8 @@ interface FurnituresBreadcrumbProps {
 }
 
 export function FurnituresBreadcrumb({ currentPage, showHeader = true }: FurnituresBreadcrumbProps) {
-  const router = useRouter()
-
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -34,21 +31,16 @@ export function FurnituresBreadcrumb({ currentPage, showHeader = true }: Furnitu
       </Breadcrumb>
 
       {showHeader && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sofa className="size-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">{currentPage}</h1>
-          </div>
-          {currentPage !== 'Lista' && (
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push('/furnitures') }}>
-              Volver al listado
-            </Button>
-          )}
-          {currentPage === 'Lista' && (
-            <Button size="sm" onClick={() => { NProgress.start(); router.push('/furnitures/create') }}>
-              Nuevo mueble
-            </Button>
-          )}
+        <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
+                <Link href="/furnitures"><ChevronLeft className="size-4" /></Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Volver a muebles</TooltipContent>
+          </Tooltip>
+          <h2 className="text-xl font-semibold tracking-tight">{currentPage}</h2>
         </div>
       )}
     </div>

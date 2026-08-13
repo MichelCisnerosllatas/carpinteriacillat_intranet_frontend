@@ -10,7 +10,7 @@ export default function FurnitureImageCreatePage() {
     <>
       <Header fixed title="Nueva Asociación" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <FurnitureImagesBreadcrumb currentPage="Nueva asociación" showHeader={false} />
+        <FurnitureImagesBreadcrumb currentPage="Nueva asociación" showHeader={true} />
         <FurnitureImageForm mode="create" />
       </main>
     </>

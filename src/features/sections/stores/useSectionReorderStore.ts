@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { sectionsService } from '../services/sections.service'
 import { useSectionListStore } from '@/features/sections/stores/useSectionListStore'
+import type { SectionReorderGroupDto } from '../model/sectionreorder.dto'
 
 type State = {
   isSubmitting: boolean
@@ -9,17 +10,17 @@ type State = {
 }
 
 type Action = {
-  confirm: (ids: number[]) => Promise<boolean>
+  confirm: (groups: SectionReorderGroupDto[]) => Promise<boolean>
   reset: () => void
 }
 
 export const useSectionReorderStore = create<State & Action>((set) => ({
   isSubmitting: false, error: null, fieldErrors: null,
 
-  confirm: async (ids) => {
+  confirm: async (groups) => {
     set({ isSubmitting: true, error: null, fieldErrors: null })
     try {
-      const res = await sectionsService.reorder(ids)
+      const res = await sectionsService.reorder(groups)
       if (!res.success) {
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false

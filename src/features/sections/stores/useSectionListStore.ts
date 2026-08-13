@@ -24,6 +24,7 @@ type State = {
 type Action = {
   setForceReload: (value: boolean) => void
   load: (params?: SectionListRequestDto) => Promise<boolean>
+  loadById: (id: number) => Promise<boolean>
   setCurrentItem: (item: Section | null) => void
   reset: () => void
 }
@@ -32,20 +33,36 @@ const defaultFilters: SectionListRequestDto = { page: 1, per_page: 10, search: '
 
 const mapFromApi = (item: SectionJoinApiItem): Section => {
   const stateOpt = getStateOption(item.section_state)
+  const typesectionStateOpt = item.type_section ? getStateOption(item.type_section.typesection_state) : null
+  const navigationStateOpt = item.navigation ? getStateOption(item.navigation.navigation_state) : null
   return {
     id: item.id_section,
     name: item.section_name,
+    title: item.section_title,
     description: item.section_description,
-    idTypesection: item.id_typesection,
-    typesectionName: item.typesection?.typesection_name ?? '',
-    idNavigation: item.id_navigation,
+    content: item.section_content,
+    idTypesection: item.type_section?.id_typesection ?? 0,
+    typesectionName: item.type_section?.typesection_name ?? '',
+    typesectionDescription: item.type_section?.typesection_description ?? null,
+    typesectionStateValue: item.type_section?.typesection_state ?? null,
+    typesectionStateLabel: typesectionStateOpt?.label ?? null,
+    typesectionStateBadge: typesectionStateOpt?.badge ?? null,
+    idNavigation: item.navigation?.id_navigation ?? null,
     navigationName: item.navigation?.navigation_name ?? null,
+    navigationDescription: item.navigation?.navigation_description ?? null,
+    navigationUrl: item.navigation?.navigation_url ?? null,
+    navigationOrder: item.navigation?.navigation_order ?? null,
+    navigationStateValue: item.navigation?.navigation_state ?? null,
+    navigationStateLabel: navigationStateOpt?.label ?? null,
+    navigationStateBadge: navigationStateOpt?.badge ?? null,
     order: item.section_order,
     status: item.section_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.section_state,
     createdAt: item.section_created_at,
     updatedAt: item.section_updated_at ?? '',
+    createdAtFormatted: item.section_created_at_format ?? null,
+    updatedAtFormatted: item.section_updated_at_format ?? null,
   }
 }
 
@@ -57,6 +74,20 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
 
   setForceReload: (value) => set({ forceReload: value }),
   setCurrentItem: (item) => set({ currentItem: item }),
+
+  loadById: async (id) => {
+    set({ isFetching: true, isError: false, message: null })
+    try {
+      const response = await sectionsService.getById(id)
+      if (!response.success) throw new Error(response.message)
+      const mapped = mapFromApi(response.data)
+      set({ isFetching: false, currentItem: mapped, hasLoaded: true })
+      return true
+    } catch (error: any) {
+      set({ isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      return false
+    }
+  },
 
   load: async (params = {}) => {
     if (get().isFetching) return false

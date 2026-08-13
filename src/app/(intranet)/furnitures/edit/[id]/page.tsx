@@ -11,7 +11,7 @@ export default async function FurnitureEditPage({ params }: { params: Promise<{ 
     <>
       <Header fixed title="Editar Mueble" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <FurnituresBreadcrumb currentPage="Editar Mueble"  showHeader={false}/>
+        <FurnituresBreadcrumb currentPage="Editar Mueble" showHeader={true} />
         <FurnitureForm mode="edit" id={id}  />
       </main>
     </>
