@@ -13,6 +13,11 @@ export type ImageApiItem = {
   image_height: number | null
   image_created_at: string | null
   image_updated_at: string | null
+  // Timestamps reales del registro — el back los devuelve al nivel raíz, no dentro
+  // de image_created_at/image_updated_at (esos vienen null). Son los que hay que
+  // usar para "más reciente primero".
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export type ImageListRequestDto = {

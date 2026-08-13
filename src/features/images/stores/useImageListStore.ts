@@ -31,7 +31,19 @@ type Action = {
 // per_page alto a propósito: el filtrado por carpeta en ImagesGrid se hace en el
 // cliente sobre la página cargada, así que necesita traer prácticamente todo de una
 // vez para que el filtro no "pierda" imágenes que quedaron en otra página del server.
-const defaultFilters: ImageListRequestDto = { page: 1, per_page: 60 }
+const defaultFilters: ImageListRequestDto = { page: 1, per_page: 100 }
+
+// El back ya devuelve las imágenes más recientes primero (created_at desc) — este
+// sort es solo una red de seguridad para que, si algo cambia server-side, el orden
+// visible siga siendo el mismo. Ojo: createdAt viene de `created_at` (el timestamp
+// real); el campo `image_created_at` casi siempre llega null, no usar ese para esto.
+const sortNewestFirst = (items: ImageItem[]) =>
+  [...items].sort((a, b) => {
+    if (a.createdAt && b.createdAt && a.createdAt !== b.createdAt) {
+      return a.createdAt < b.createdAt ? 1 : -1
+    }
+    return b.id - a.id
+  })
 
 const mapFromApi = (item: ImageApiItem): ImageItem => ({
   id: item.id_image,
@@ -44,8 +56,8 @@ const mapFromApi = (item: ImageApiItem): ImageItem => ({
   size: item.image_size,
   width: item.image_width,
   height: item.image_height,
-  createdAt: item.image_created_at,
-  updatedAt: item.image_updated_at,
+  createdAt: item.created_at ?? item.image_created_at,
+  updatedAt: item.updated_at ?? item.image_updated_at,
 })
 
 export const useImageListStore = create<State & Action>((set, get) => ({
@@ -67,7 +79,7 @@ export const useImageListStore = create<State & Action>((set, get) => ({
       set({
         hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
         message: response.message,
-        items: response.data.map(mapFromApi),
+        items: sortNewestFirst(response.data.map(mapFromApi)),
         links: response.links, meta: response.meta,
         filters: {
           ...nextFilters,

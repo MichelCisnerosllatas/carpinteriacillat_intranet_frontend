@@ -9,16 +9,19 @@ import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import {
   LoaderCircle, ImageIcon, CheckSquare, Square, Search, X, Folder, Menu,
+  PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { cn } from '@/shared/lib/utils'
 import { useImageListStore } from '../../stores/useImageListStore'
 import { useImageDeleteStore } from '../../stores/useImageDeleteStore'
+import { useImagesViewStore } from '../../stores/useImagesViewStore'
 import { getImageFolder } from '../../lib/image-url'
 import type { ImageItem } from '../../data/schema'
 import { ImageCard } from './image-card'
@@ -40,6 +43,7 @@ export function ImagesGrid() {
   const [folderSheetOpen, setFolderSheetOpen] = useState(false)
 
   const { tree: folderTree, isLoading: isFolderTreeLoading } = useImageFolderTree()
+  const { folderSidebarCollapsed, setFolderSidebarCollapsed } = useImagesViewStore()
 
   const appliedSearch = useRef(search)
 
@@ -126,19 +130,16 @@ export function ImagesGrid() {
   const currentPage = filters.page ?? 1
   const lastPage    = meta?.last_page ?? 1
 
-  // Agrupa las miniaturas visibles por carpeta de storage — "Sin carpeta" (raíz)
-  // siempre primero, luego el resto en orden alfabético. Cuando ya se filtró por una
-  // carpeta específica en el sidebar, normalmente queda un solo grupo (encabezado oculto).
+  // Agrupa las miniaturas visibles por carpeta de storage — el ORDEN DE LOS GRUPOS
+  // sigue siendo el mismo que visibleItems (más reciente primero): un grupo aparece
+  // en la posición de su imagen más reciente, no alfabético. Ordenar alfabético acá
+  // rompía el "más nuevo primero" (una carpeta como "camas" podía terminar antes que
+  // "puertas" aunque "puertas" tuviera la imagen recién subida). Dentro de cada grupo
+  // el orden cronológico también se conserva.
   const groupKeys: string[] = []
   visibleItems.forEach((item) => {
     const key = getImageFolder(item.patch)
     if (!groupKeys.includes(key)) groupKeys.push(key)
-  })
-  groupKeys.sort((a, b) => {
-    if (a === b) return 0
-    if (a === '') return -1
-    if (b === '') return 1
-    return a.localeCompare(b)
   })
   const groups = groupKeys.map((key) => ({
     key,
@@ -178,10 +179,10 @@ export function ImagesGrid() {
     <>
       <div className="flex flex-1 flex-col gap-4">
 
-        {/* ── Header bar ── */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm text-muted-foreground">
+        {/* ── Barra compacta: contador + filtro activo + buscador, todo en una fila ── */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="whitespace-nowrap text-sm text-muted-foreground">
               {folderFilter
                 ? `${visibleItems.length} imagen(es) en "${activeFolderLabel}"`
                 : meta ? `${meta.total ?? 0} imagen(es) en total` : 'Cargando...'}
@@ -199,84 +200,121 @@ export function ImagesGrid() {
             )}
           </div>
 
-          {/* Mobile: botón para abrir el árbol de carpetas */}
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="md:hidden"
-            onClick={() => setFolderSheetOpen(true)}
-          >
-            <Menu className="mr-1.5 size-3.5" />
-            Carpetas
-          </Button>
-        </div>
-
-        {/* ── Buscador — expandido en desktop, ícono colapsable en mobile ── */}
-        <div className="flex items-center gap-2">
-          {/* Desktop */}
-          <div className="relative hidden w-full sm:block sm:w-[320px]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nombre, título o texto alternativo..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8"
-            />
-          </div>
-
-          {/* Mobile */}
-          <div className="flex flex-1 items-center gap-2 sm:hidden">
-            {mobileSearchOpen ? (
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  autoFocus
-                  placeholder="Buscar imágenes..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onBlur={() => { if (!search) setMobileSearchOpen(false) }}
-                  className="h-8 pl-8"
-                />
-              </div>
-            ) : (
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                className="size-8"
-                onClick={() => setMobileSearchOpen(true)}
-              >
-                <Search className="size-4" />
-              </Button>
-            )}
-          </div>
-
-          {search && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={isFetching}
-              onClick={() => { setSearch(''); setMobileSearchOpen(false) }}
-            >
-              <X className="size-3.5 sm:hidden" />
-              <span className="hidden sm:inline">Limpiar</span>
-            </Button>
-          )}
-        </div>
-
-        <div className="flex flex-1 gap-4 min-w-0">
-          {/* ── Sidebar de carpetas — desktop, fijo al hacer scroll ── */}
-          <aside className="hidden md:block w-56 shrink-0 self-start sticky top-16">
-            <div className="max-h-[calc(100svh-6rem)] overflow-y-auto rounded-xl border bg-card p-2">
-              <ImagesFolderSidebar
-                tree={folderTree}
-                isLoading={isFolderTreeLoading}
-                activeFolder={folderFilter}
-                totalCount={meta?.total ?? items.length}
-                onSelect={setFolderFilter}
+          {/* Buscador — a la derecha, expandido en desktop, ícono colapsable en mobile */}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Desktop */}
+            <div className="relative hidden sm:block sm:w-56 lg:w-72">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, título o alt..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 pl-8"
               />
             </div>
+
+            {/* Mobile */}
+            <div className="flex items-center gap-2 sm:hidden">
+              {mobileSearchOpen ? (
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    autoFocus
+                    placeholder="Buscar imágenes..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onBlur={() => { if (!search) setMobileSearchOpen(false) }}
+                    className="h-8 w-40 pl-8"
+                  />
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  className="size-8"
+                  onClick={() => setMobileSearchOpen(true)}
+                >
+                  <Search className="size-4" />
+                </Button>
+              )}
+            </div>
+
+            {search && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isFetching}
+                onClick={() => { setSearch(''); setMobileSearchOpen(false) }}
+              >
+                <X className="size-3.5 sm:hidden" />
+                <span className="hidden sm:inline">Limpiar</span>
+              </Button>
+            )}
+
+            {/* Mobile: botón para abrir el árbol de carpetas */}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="md:hidden"
+              onClick={() => setFolderSheetOpen(true)}
+            >
+              <Menu className="mr-1.5 size-3.5" />
+              Carpetas
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 gap-3 min-w-0">
+          {/* ── Sidebar de carpetas — desktop, fijo al hacer scroll, contraíble ── */}
+          <aside
+            className={cn(
+              'hidden md:block shrink-0 self-start sticky top-16 transition-[width] duration-150',
+              folderSidebarCollapsed ? 'w-9' : 'w-56',
+            )}
+          >
+            {folderSidebarCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setFolderSidebarCollapsed(false)}
+                    className="flex size-9 items-center justify-center rounded-xl border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <PanelLeftOpen className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Mostrar carpetas</TooltipContent>
+              </Tooltip>
+            ) : (
+              <div className="max-h-[calc(100svh-6rem)] overflow-y-auto rounded-xl border bg-card p-2">
+                <div className="mb-1.5 flex items-center justify-between border-b px-1 pb-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Carpetas
+                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => setFolderSidebarCollapsed(true)}
+                        className="flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <PanelLeftClose className="size-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Ocultar carpetas</TooltipContent>
+                  </Tooltip>
+                </div>
+                <ImagesFolderSidebar
+                  tree={folderTree}
+                  isLoading={isFolderTreeLoading}
+                  activeFolder={folderFilter}
+                  totalCount={meta?.total ?? items.length}
+                  onSelect={setFolderFilter}
+                />
+              </div>
+            )}
           </aside>
 
           {/* ── Sidebar de carpetas — mobile, en un Sheet lateral ── */}
