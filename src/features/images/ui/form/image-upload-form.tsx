@@ -244,14 +244,24 @@ export function ImageUploadForm() {
                   />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="w-72">
-                  <DropdownMenuItem onClick={() => openPicker('files')}>
+                  {/* Resaltado propio: el hover/focus por defecto (accent-warm) casi no
+                      se distingue del fondo del menú (blanco en modo claro) — se reutiliza
+                      el mismo ámbar ya usado para la carpeta activa en el árbol de carpetas,
+                      con más contraste, para que sea visible al tocar/pasar el mouse. */}
+                  <DropdownMenuItem
+                    onClick={() => openPicker('files')}
+                    className="hover:bg-amber-100 hover:text-amber-800 focus:bg-amber-100 focus:text-amber-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-300 dark:focus:bg-amber-950/40 dark:focus:text-amber-300"
+                  >
                     <ImagePlus className="text-muted-foreground" />
                     <div className="flex flex-col">
                       <span>Imágenes sueltas</span>
                       <span className="text-[11px] font-normal text-muted-foreground">navega y elige varias, con vista previa</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => openPicker('folder')}>
+                  <DropdownMenuItem
+                    onClick={() => openPicker('folder')}
+                    className="hover:bg-amber-100 hover:text-amber-800 focus:bg-amber-100 focus:text-amber-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-300 dark:focus:bg-amber-950/40 dark:focus:text-amber-300"
+                  >
                     <FolderPlus className="text-muted-foreground" />
                     <div className="flex flex-col">
                       <span>Carpeta completa</span>
@@ -302,9 +312,9 @@ export function ImageUploadForm() {
                                 <button
                                   type="button"
                                   onClick={() => removeGroup(group.key)}
-                                  className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                  className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive pointer-coarse:size-9"
                                 >
-                                  <X className="size-3.5" />
+                                  <X className="size-3.5 pointer-coarse:size-4" />
                                 </button>
                               </TooltipTrigger>
                               <TooltipContent>Quitar {group.key ? 'esta carpeta' : 'estas imágenes'}</TooltipContent>
@@ -359,7 +369,9 @@ export function ImageUploadForm() {
                                   <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/30" />
                                 )}
 
-                                {/* Botón X — visible en hover, solo en pending */}
+                                {/* Botón X — en touch siempre visible y con área de toque de
+                                    36px (antes 24px, oculto detrás de :hover e inalcanzable
+                                    con el dedo); con mouse, visible en hover como antes */}
                                 {entry.status === 'pending' && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -367,9 +379,9 @@ export function ImageUploadForm() {
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); removeEntry(entry.id) }}
                                         disabled={isUploading}
-                                        className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
+                                        className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed pointer-coarse:size-9 pointer-coarse:opacity-100 pointer-coarse:bg-black/60"
                                       >
-                                        <X className="size-3.5" />
+                                        <X className="size-3.5 pointer-coarse:size-4" />
                                       </button>
                                     </TooltipTrigger>
                                     <TooltipContent>Quitar de la lista</TooltipContent>
@@ -396,9 +408,10 @@ export function ImageUploadForm() {
                                   </div>
                                 )}
 
-                                {/* Nombre del archivo en hover (solo pending) */}
+                                {/* Nombre del archivo — en touch siempre visible (no hay :hover
+                                    para revelarlo); con mouse, aparece en hover como antes */}
                                 {entry.status === 'pending' && (
-                                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 translate-y-full rounded-b-xl bg-black/80 px-2 py-1 text-[9px] text-white transition-transform group-hover:translate-y-0 truncate">
+                                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 translate-y-full rounded-b-xl bg-black/80 px-2 py-1 text-[9px] text-white transition-transform group-hover:translate-y-0 truncate pointer-coarse:translate-y-0">
                                     {entry.file.name}
                                   </div>
                                 )}
@@ -423,14 +436,24 @@ export function ImageUploadForm() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuItem onClick={() => openPicker('files')}>
+                  {/* Resaltado propio: el hover/focus por defecto (accent-warm) casi no
+                      se distingue del fondo del menú (blanco en modo claro) — se reutiliza
+                      el mismo ámbar ya usado para la carpeta activa en el árbol de carpetas,
+                      con más contraste, para que sea visible al tocar/pasar el mouse. */}
+                  <DropdownMenuItem
+                    onClick={() => openPicker('files')}
+                    className="hover:bg-amber-100 hover:text-amber-800 focus:bg-amber-100 focus:text-amber-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-300 dark:focus:bg-amber-950/40 dark:focus:text-amber-300"
+                  >
                     <ImagePlus className="text-muted-foreground" />
                     <div className="flex flex-col">
                       <span>Imágenes sueltas</span>
                       <span className="text-[11px] font-normal text-muted-foreground">navega y elige varias, con vista previa</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => openPicker('folder')}>
+                  <DropdownMenuItem
+                    onClick={() => openPicker('folder')}
+                    className="hover:bg-amber-100 hover:text-amber-800 focus:bg-amber-100 focus:text-amber-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-300 dark:focus:bg-amber-950/40 dark:focus:text-amber-300"
+                  >
                     <FolderPlus className="text-muted-foreground" />
                     <div className="flex flex-col">
                       <span>Carpeta completa</span>

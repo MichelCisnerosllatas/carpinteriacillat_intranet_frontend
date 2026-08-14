@@ -5,6 +5,7 @@ import { LoaderCircle, ImageIcon, Trash2, ExternalLink, CheckSquare, Square, Mor
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Popover, PopoverAnchor, PopoverContent } from '@/shared/ui/popover'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
@@ -28,6 +29,7 @@ export function ImageCard({
 }) {
   const [imgError, setImgError] = useState(false)
   const [loaded,   setLoaded]   = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const displayName = item.name ?? item.patch.split('/').pop() ?? item.patch
 
   // En touch no hay :hover para revelar el checkbox: mantener presionado la foto activa
@@ -38,6 +40,15 @@ export function ImageCard({
   const tapHandlers = useLongPress({
     onLongPress: () => onToggleSelect(item),
     onTap:       () => onOpenLightbox(item),
+  })
+
+  // Igual que la miniatura: mantener presionado el nombre/detalle también selecciona
+  // (antes esa zona no reaccionaba a la selección en absoluto). El detalle en sí ya no
+  // depende de :hover (que en touch nunca se dispara solo): un tap lo abre/cierra, en
+  // mouse y en touch por igual.
+  const detailsTapHandlers = useLongPress({
+    onLongPress: () => onToggleSelect(item),
+    onTap:       () => setDetailsOpen((v) => !v),
   })
 
   return (
@@ -139,11 +150,17 @@ export function ImageCard({
 
       {/* Footer */}
       <div className="p-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <p className="truncate text-xs font-medium">{displayName}</p>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-xs">
+        <Popover open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <PopoverAnchor asChild>
+            <button
+              type="button"
+              className="block w-full touch-manipulation select-none text-left"
+              {...detailsTapHandlers}
+            >
+              <p className="truncate text-xs font-medium">{displayName}</p>
+            </button>
+          </PopoverAnchor>
+          <PopoverContent side="bottom" align="start" className="w-auto max-w-xs p-3">
             <div className="flex flex-col gap-1 text-xs">
               {item.title  && <span><span className="text-muted-foreground">Título:</span> {item.title}</span>}
               {item.alt    && <span><span className="text-muted-foreground">Alt:</span> {item.alt}</span>}
@@ -154,8 +171,8 @@ export function ImageCard({
                 <span><span className="text-muted-foreground">Dimensiones:</span> {item.width}×{item.height}px</span>
               )}
             </div>
-          </TooltipContent>
-        </Tooltip>
+          </PopoverContent>
+        </Popover>
         <div className="mt-1 flex items-center gap-1">
           {item.type && (
             <Badge variant="outline" className="px-1 py-0 text-[10px]">
