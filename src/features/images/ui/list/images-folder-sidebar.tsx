@@ -97,19 +97,26 @@ function FolderNode({
         )}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
+        {/* Botón de expandir/colapsar — hit-target ampliado (antes 20px de ancho): con un
+            objetivo tan chico, un toque para explorar subcarpetas caía fácilmente sobre el
+            botón de nombre de al lado y filtraba+cerraba el panel sin querer. Misma altura
+            que el botón de nombre (py-2.5) para no invadir filas vecinas. */}
         <button
           type="button"
-          onClick={() => hasChildren && setOpen((v) => !v)}
+          onClick={(e) => { e.stopPropagation(); hasChildren && setOpen((v) => !v) }}
           tabIndex={-1}
-          className={cn('flex size-5 shrink-0 items-center justify-center', !hasChildren && 'cursor-default opacity-0')}
+          className={cn(
+            'flex w-8 shrink-0 items-center justify-center py-2.5',
+            !hasChildren && 'cursor-default opacity-0',
+          )}
         >
-          <ChevronRight className={cn('size-3 transition-transform', open && 'rotate-90')} />
+          <ChevronRight className={cn('size-3.5 transition-transform', open && 'rotate-90')} />
         </button>
 
         <button
           type="button"
           onClick={() => onSelect(relPath)}
-          className="flex flex-1 items-center gap-1.5 overflow-hidden py-1.5 pr-2 text-left"
+          className="flex flex-1 items-center gap-1.5 overflow-hidden py-2.5 pr-2 text-left"
         >
           {open && hasChildren
             ? <FolderOpen className="size-3.5 shrink-0 text-amber-500" />
