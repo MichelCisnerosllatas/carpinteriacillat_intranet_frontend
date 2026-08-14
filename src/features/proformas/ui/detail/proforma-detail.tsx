@@ -21,6 +21,7 @@ export function ProformaDetail({ id }: { id: string }) {
     isFetching,
     activeTab,
     setActiveTab,
+    pdfBlob,
     pdfUrl,
     pdfLoading,
     pdfError,
@@ -91,7 +92,7 @@ export function ProformaDetail({ id }: { id: string }) {
 
         <TabsContent value="pdf" className="flex flex-col">
           <ProformaPdfTab
-            code={item.code}
+            pdfBlob={pdfBlob}
             pdfUrl={pdfUrl}
             isLoading={pdfLoading}
             isError={pdfError}

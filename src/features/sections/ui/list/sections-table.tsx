@@ -129,7 +129,7 @@ export function SectionsTable() {
         </div>
       )}
 
-      <div className="flex flex-1 flex-wrap items-end gap-2">
+      <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Buscar</span>
           <Input placeholder="Nombre o descripción..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />

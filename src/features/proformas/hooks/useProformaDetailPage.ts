@@ -95,6 +95,7 @@ export function useProformaDetailPage(id: string) {
     isFetching,
     activeTab,
     setActiveTab,
+    pdfBlob,
     pdfUrl,
     pdfLoading,
     pdfError,

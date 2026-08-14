@@ -1,13 +1,29 @@
 // src/features/proformas/ui/detail/proforma-pdf-tab.tsx
 'use client'
 
+import dynamic from 'next/dynamic'
 import { AlertTriangle, Download, ExternalLink, FileText, Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
+// pdf.js necesita `canvas`/Web Worker del navegador — sin ssr:false, Next intentaría
+// renderizarlo también en el servidor (como cualquier componente 'use client' en su primer
+// render) y reventaría ahí por falta de esas APIs.
+const ProformaPdfViewer = dynamic(
+  () => import('./proforma-pdf-viewer').then((m) => m.ProformaPdfViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  }
+)
+
 interface ProformaPdfTabProps {
-  code: string
+  pdfBlob: Blob | null
   pdfUrl: string | null
   isLoading: boolean
   isError: boolean
@@ -23,7 +39,7 @@ interface ProformaPdfTabProps {
  * puede vivir aquí sin perderse).
  */
 export function ProformaPdfTab({
-  code,
+  pdfBlob,
   pdfUrl,
   isLoading,
   isError,
@@ -81,9 +97,7 @@ export function ProformaPdfTab({
               </Button>
             </div>
           )}
-          {!isLoading && !isError && pdfUrl && (
-            <iframe src={pdfUrl} title={`Proforma ${code}`} className="h-full w-full" />
-          )}
+          {!isLoading && !isError && pdfBlob && <ProformaPdfViewer file={pdfBlob} />}
         </div>
       </CardContent>
     </Card>
