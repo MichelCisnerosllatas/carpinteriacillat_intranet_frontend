@@ -215,13 +215,15 @@ export function StorageGallery() {
             <div className={cn(
               'flex items-center gap-3 rounded-xl transition-all',
               selectedCount > 0
-                ? 'sticky top-16 z-20 border bg-background/90 px-3 py-1.5 shadow-sm backdrop-blur-sm'
+                // Fondo invertido: bg-background/90 queda casi idéntico al fondo de la
+                // página en modo oscuro y la barra se vuelve invisible al seleccionar.
+                ? 'sticky top-16 z-20 border border-foreground/10 bg-foreground text-background px-3 py-1.5 shadow-md shadow-black/30 dark:shadow-black/60'
                 : ''
             )}>
               <Button
                 size="sm"
                 variant="ghost"
-                className="gap-2 text-muted-foreground h-8 px-2"
+                className={cn('gap-2 h-8 px-2', selectedCount > 0 ? '' : 'text-muted-foreground')}
                 onClick={selectedCount === items.length ? clearSelection : selectAll}
               >
                 {selectedCount === items.length
@@ -238,11 +240,11 @@ export function StorageGallery() {
               </Button>
               {selectedCount > 0 && (
                 <>
-                  <Separator orientation="vertical" className="h-4" />
+                  <Separator orientation="vertical" className="h-4 bg-background/20" />
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/5 h-8 px-2"
+                    className="gap-1.5 h-8 px-2 text-red-400 hover:bg-red-950 hover:text-red-300 dark:text-red-600 dark:hover:bg-red-50 dark:hover:text-red-700"
                     onClick={() => setBulkDialogOpen(true)}
                   >
                     <Trash2 className="size-3.5" />
@@ -251,7 +253,7 @@ export function StorageGallery() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="gap-1.5 text-muted-foreground h-8 px-2"
+                    className="gap-1.5 h-8 px-2"
                     onClick={clearSelection}
                   >
                     <X className="size-3.5" />
