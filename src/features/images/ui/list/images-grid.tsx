@@ -345,7 +345,7 @@ export function ImagesGrid() {
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                className="flex w-fit items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex w-fit items-center gap-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground pointer-coarse:py-2"
               >
                 {selected.size === visibleItems.length && visibleItems.length > 0
                   ? <CheckSquare className="size-4 text-primary" />
@@ -398,7 +398,6 @@ export function ImagesGrid() {
                           key={item.id}
                           item={item}
                           isSelected={selected.has(item.id)}
-                          anySelected={selected.size > 0}
                           onToggleSelect={toggleSelect}
                           onOpenLightbox={openLightbox}
                           onDelete={handleDelete}
