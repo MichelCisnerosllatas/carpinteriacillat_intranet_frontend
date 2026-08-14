@@ -1,22 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { LoaderCircle, ImageIcon, Trash2, ExternalLink, CheckSquare, Square } from 'lucide-react'
+import { LoaderCircle, ImageIcon, Trash2, ExternalLink, CheckSquare, Square, MoreVertical } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { useLongPress } from '@/shared/lib/use-long-press'
 import { formatBytes } from '../../lib/image-url'
 import type { ImageItem } from '../../data/schema'
 
 export function ImageCard({
   item,
   isSelected,
+  anySelected,
   onToggleSelect,
   onOpenLightbox,
   onDelete,
 }: {
   item:           ImageItem
   isSelected:     boolean
+  anySelected:    boolean // hay al menos una imagen seleccionada en el grid (modo selección activo)
   onToggleSelect: (item: ImageItem) => void
   onOpenLightbox: (item: ImageItem) => void
   onDelete:       (item: ImageItem) => void
@@ -24,6 +30,15 @@ export function ImageCard({
   const [imgError, setImgError] = useState(false)
   const [loaded,   setLoaded]   = useState(false)
   const displayName = item.name ?? item.patch.split('/').pop() ?? item.patch
+
+  // En touch no hay :hover para revelar el checkbox/acciones ni para distinguir
+  // "seleccionar" de "ver": mantener presionado activa el modo selección (como en
+  // Google Photos); con el modo ya activo, un tap normal alterna la selección en vez
+  // de abrir el lightbox. El mouse conserva su comportamiento de siempre (hover + click).
+  const tapHandlers = useLongPress({
+    onLongPress: () => onToggleSelect(item),
+    onTap:       () => { if (anySelected) onToggleSelect(item); else onOpenLightbox(item) },
+  })
 
   return (
     <div
@@ -40,11 +55,11 @@ export function ImageCard({
                 <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
               </div>
             )}
-            {/* Clic en imagen → lightbox */}
+            {/* Tap → lightbox (o alternar selección si el modo selección ya está activo) · mantener presionado → activarlo */}
             <button
               type="button"
-              className="h-full w-full cursor-zoom-in"
-              onClick={() => onOpenLightbox(item)}
+              className="h-full w-full cursor-zoom-in touch-manipulation select-none"
+              {...tapHandlers}
             >
               <img
                 src={item.url}
@@ -62,11 +77,12 @@ export function ImageCard({
           </div>
         )}
 
-        {/* Checkbox de selección — visible en hover o cuando está seleccionado */}
+        {/* Checkbox de selección — en touch siempre visible (pointer-coarse); con mouse,
+            visible en hover o cuando ya está seleccionada */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onToggleSelect(item) }}
-          className={`absolute left-1.5 top-1.5 z-10 transition-opacity ${
+          className={`absolute left-1.5 top-1.5 z-10 transition-opacity pointer-coarse:opacity-100 ${
             isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
@@ -75,33 +91,38 @@ export function ImageCard({
             : <Square className="size-5 text-white drop-shadow" />}
         </button>
 
-        {/* Overlay de acciones al hacer hover */}
-        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
-          <div className="pointer-events-auto flex gap-2">
+        {/* Menú de acciones — en touch siempre visible (pointer-coarse); con mouse, en hover.
+            Reemplaza el overlay central de antes: en touch un overlay que solo aparecía con
+            :hover dejaba "Ver"/"Eliminar" inalcanzables. */}
+        <div
+          className="absolute right-1.5 top-1.5 z-10 opacity-0 transition-opacity group-hover:opacity-100 pointer-coarse:opacity-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="secondary" className="size-8" asChild>
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                    <ExternalLink className="size-4" />
-                  </a>
-                </Button>
+                <span className="inline-flex">
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="secondary" className="size-7 bg-black/50 text-white hover:bg-black/70">
+                      <MoreVertical className="size-4" />
+                      <span className="sr-only">Más acciones</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                </span>
               </TooltipTrigger>
-              <TooltipContent>Abrir original</TooltipContent>
+              <TooltipContent>Más acciones</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="size-8"
-                  onClick={(e) => { e.stopPropagation(); onDelete(item) }}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Eliminar</TooltipContent>
-            </Tooltip>
-          </div>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem asChild>
+                <a href={item.url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 size-4" /> Abrir original
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-500!" onClick={() => onDelete(item)}>
+                <Trash2 className="mr-2 size-4" /> Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

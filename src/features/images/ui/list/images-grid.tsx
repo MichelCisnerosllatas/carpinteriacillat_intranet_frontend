@@ -317,7 +317,11 @@ export function ImagesGrid() {
             )}
           </aside>
 
-          {/* ── Sidebar de carpetas — mobile, en un Sheet lateral ── */}
+          {/* ── Sidebar de carpetas — mobile, en un Sheet lateral ──
+              No se cierra al elegir una carpeta: si cerrara solo, cada toque para
+              explorar una subcarpeta obligaba a volver a abrir el panel para seguir
+              filtrando. Se cierra solo con la X, tocando fuera o Escape (comportamiento
+              propio del Sheet). */}
           <Sheet open={folderSheetOpen} onOpenChange={setFolderSheetOpen}>
             <SheetContent side="left" className="w-64 p-4">
               <SheetHeader className="mb-3">
@@ -328,7 +332,7 @@ export function ImagesGrid() {
                 isLoading={isFolderTreeLoading}
                 activeFolder={folderFilter}
                 totalCount={meta?.total ?? items.length}
-                onSelect={(f) => { setFolderFilter(f); setFolderSheetOpen(false) }}
+                onSelect={setFolderFilter}
               />
             </SheetContent>
           </Sheet>
@@ -394,6 +398,7 @@ export function ImagesGrid() {
                           key={item.id}
                           item={item}
                           isSelected={selected.has(item.id)}
+                          anySelected={selected.size > 0}
                           onToggleSelect={toggleSelect}
                           onOpenLightbox={openLightbox}
                           onDelete={handleDelete}
