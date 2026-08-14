@@ -26,15 +26,15 @@ export function ProformaSummaryTab({ item }: ProformaSummaryTabProps) {
 
           <div className="flex flex-col gap-1.5 p-3">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><CalendarDays className="size-3.5" />Emisión</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="size-3.5" />{item.placeOfIssue ?? '—'}</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Clock className="size-3.5" />Plazo: {item.deliveryTime ?? '—'}</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Landmark className="size-3.5" />Moneda: {item.currency}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="size-3.5 shrink-0 text-muted-foreground" />{item.placeOfIssue ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><Clock className="size-3.5 shrink-0 text-muted-foreground" />Plazo: {item.deliveryTime ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><Landmark className="size-3.5 shrink-0 text-muted-foreground" />Moneda: {item.currency}</span>
           </div>
 
           <div className="flex flex-col gap-1.5 p-3">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><FileText className="size-3.5" />Documento</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="size-3.5" />Plantilla: {item.templateName ?? '—'}</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><PenTool className="size-3.5" />Firma: {item.signerName ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><FileText className="size-3.5 shrink-0 text-muted-foreground" />Plantilla: {item.templateName ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><PenTool className="size-3.5 shrink-0 text-muted-foreground" />Firma: {item.signerName ?? '—'}</span>
           </div>
         </CardContent>
       </Card>

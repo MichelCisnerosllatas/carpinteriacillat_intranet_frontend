@@ -1,4 +1,4 @@
-// src/features/proformas/ui/detail/proforma-pdf-viewer.tsx
+// src/shared/ui/pdf-viewer.tsx
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
@@ -17,28 +17,35 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString()
 
-interface ProformaPdfViewerProps {
-  file: Blob
+interface PdfViewerProps {
+  /** Blob ya descargado, o una URL (http(s):// firmada, o blob:) — react-pdf hace fetch()
+   * internamente cuando es string, así que ambos casos funcionan igual. */
+  file: Blob | string
+  onLoadSuccess?: (numPages: number) => void
+  onLoadError?: () => void
 }
 
 /**
- * Render del PDF con pdf.js (canvas), en vez de `<iframe src="blob:...">`. Los navegadores de
+ * Render del PDF con pdf.js (canvas), en vez de `<iframe src="...">`. Los navegadores de
  * escritorio traen un visor de PDF nativo que sabe pintar ese iframe, pero los navegadores
- * mobile (Safari iOS, Chrome/WebView Android) no lo tienen: ahí un iframe con blob: termina
- * ofreciendo "abrir en otra app" en vez de mostrar el documento inline. Renderizando el PDF
- * nosotros mismos con canvas no dependemos del visor nativo, así que se ve igual en desktop
- * y mobile — dentro de la misma tarjeta, sin salir a otra pestaña.
+ * mobile (Safari iOS, Chrome/WebView Android) no lo tienen: ahí un iframe con un PDF (blob:
+ * o URL normal) termina ofreciendo "abrir en otra app" en vez de mostrar el documento inline.
+ * Renderizando el PDF nosotros mismos con canvas no dependemos del visor nativo, así que se ve
+ * igual en desktop y mobile — dentro de la misma tarjeta, sin salir a otra pestaña. Compartido
+ * entre `proformas` (blob ya descargado) y `proforma-templates` (blob o URL firmada) — ver
+ * ambos consumidores antes de cambiar la firma de props.
  */
-export function ProformaPdfViewer({ file }: ProformaPdfViewerProps) {
+export function PdfViewer({ file, onLoadSuccess, onLoadError }: PdfViewerProps) {
   const [numPages, setNumPages] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
   const [renderError, setRenderError] = useState(false)
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Nuevo blob (reintento / refresh) → volver a la primera página y limpiar error previo.
-  // Se ajusta durante el render (no en un efecto) siguiendo el patrón de React para "resetear
-  // estado cuando cambia una prop": evita el commit extra que un efecto forzaría aquí.
+  // Nuevo archivo (reintento / refresh / nueva vista previa) → volver a la primera página y
+  // limpiar error previo. Se ajusta durante el render (no en un efecto) siguiendo el patrón de
+  // React para "resetear estado cuando cambia una prop": evita el commit extra que un efecto
+  // forzaría aquí.
   const [prevFile, setPrevFile] = useState(file)
   if (file !== prevFile) {
     setPrevFile(file)
@@ -72,8 +79,14 @@ export function ProformaPdfViewer({ file }: ProformaPdfViewerProps) {
       <div ref={containerRef} className="flex-1 overflow-auto">
         <Document
           file={file}
-          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          onLoadError={() => setRenderError(true)}
+          onLoadSuccess={({ numPages }) => {
+            setNumPages(numPages)
+            onLoadSuccess?.(numPages)
+          }}
+          onLoadError={() => {
+            setRenderError(true)
+            onLoadError?.()
+          }}
           loading={
             <div className="flex h-full min-h-[400px] items-center justify-center p-8">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
