@@ -200,9 +200,9 @@ export function FurnitureGalleryUpload({
                     <button
                       type="button"
                       onClick={() => removeEntry(entry.id)}
-                      className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-opacity"
+                      className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-opacity pointer-coarse:size-8 pointer-coarse:opacity-100"
                     >
-                      <X className="size-3" />
+                      <X className="size-3 pointer-coarse:size-4" />
                     </button>
                   )}
                   {entry.status === 'uploading' && (

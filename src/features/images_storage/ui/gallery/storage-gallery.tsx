@@ -213,7 +213,7 @@ export function StorageGallery() {
           {/* Selection bar — sticky debajo del header cuando hay selección */}
           {items.length > 0 && (
             <div className={cn(
-              'flex items-center gap-3 rounded-xl transition-all',
+              'flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl transition-all sm:gap-3',
               selectedCount > 0
                 // Fondo invertido: bg-background/90 queda casi idéntico al fondo de la
                 // página en modo oscuro y la barra se vuelve invisible al seleccionar.
@@ -223,7 +223,7 @@ export function StorageGallery() {
               <Button
                 size="sm"
                 variant="ghost"
-                className={cn('gap-2 h-8 px-2', selectedCount > 0 ? '' : 'text-muted-foreground')}
+                className={cn('shrink-0 gap-2 h-8 px-2', selectedCount > 0 ? '' : 'text-muted-foreground')}
                 onClick={selectedCount === items.length ? clearSelection : selectAll}
               >
                 {selectedCount === items.length
@@ -232,7 +232,7 @@ export function StorageGallery() {
                     ? <SquareMinus className="size-4 text-primary" />
                     : <SquareMinus className="size-4 opacity-30" />
                 }
-                <span className="text-xs">
+                <span className="whitespace-nowrap text-xs">
                   {selectedCount > 0
                     ? `${selectedCount} seleccionado${selectedCount > 1 ? 's' : ''}`
                     : 'Seleccionar todos'}
@@ -240,24 +240,24 @@ export function StorageGallery() {
               </Button>
               {selectedCount > 0 && (
                 <>
-                  <Separator orientation="vertical" className="h-4 bg-background/20" />
+                  <Separator orientation="vertical" className="h-4 shrink-0 bg-background/20" />
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="gap-1.5 h-8 px-2 text-red-400 hover:bg-red-950 hover:text-red-300 dark:text-red-600 dark:hover:bg-red-50 dark:hover:text-red-700"
+                    className="shrink-0 gap-1.5 h-8 px-2 text-red-400 hover:bg-red-950 hover:text-red-300 dark:text-red-600 dark:hover:bg-red-50 dark:hover:text-red-700"
                     onClick={() => setBulkDialogOpen(true)}
                   >
                     <Trash2 className="size-3.5" />
-                    <span className="text-xs">Eliminar seleccionados</span>
+                    <span className="hidden text-xs sm:inline">Eliminar seleccionados</span>
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="gap-1.5 h-8 px-2"
+                    className="shrink-0 gap-1.5 h-8 px-2"
                     onClick={clearSelection}
                   >
                     <X className="size-3.5" />
-                    <span className="text-xs">Deseleccionar</span>
+                    <span className="hidden text-xs sm:inline">Deseleccionar</span>
                   </Button>
                 </>
               )}

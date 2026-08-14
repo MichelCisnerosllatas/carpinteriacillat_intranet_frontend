@@ -5,12 +5,15 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   rectSortingStrategy,
   arrayMove,
   useSortable,
@@ -57,11 +60,15 @@ function SortableItem({
   disabled,
   onRemove,
   onClick,
+  onMoveBack,
+  onMoveForward,
 }: {
   entry: GalleryEntry
   disabled: boolean
   onRemove: () => void
   onClick: () => void
+  onMoveBack?: () => void
+  onMoveForward?: () => void
 }) {
   const {
     attributes, listeners, setNodeRef,
@@ -74,19 +81,20 @@ function SortableItem({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn('group/item relative', isDragging && 'z-50 opacity-75')}
     >
-      {/* Drag handle — visible on hover */}
+      {/* Drag handle — en touch siempre visible y con más área de toque (antes 20px,
+          oculto detrás de :hover: en touch no había forma de verlo ni de acertarlo) */}
       {!disabled && (
         <Tooltip>
           <TooltipTrigger asChild>
             <div
               {...attributes}
               {...listeners}
-              className="absolute left-1 top-1 z-10 flex size-5 cursor-grab items-center justify-center rounded bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover/item:opacity-100 active:cursor-grabbing"
+              className="absolute left-1 top-1 z-10 flex size-5 cursor-grab touch-none items-center justify-center rounded bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover/item:opacity-100 active:cursor-grabbing pointer-coarse:size-8 pointer-coarse:opacity-100"
             >
-              <GripVertical className="size-3" />
+              <GripVertical className="size-3 pointer-coarse:size-4" />
             </div>
           </TooltipTrigger>
-          <TooltipContent>Arrastra para reordenar</TooltipContent>
+          <TooltipContent>Mantén presionado para reordenar</TooltipContent>
         </Tooltip>
       )}
       <FurnitureGalleryItem
@@ -97,6 +105,8 @@ function SortableItem({
         isDragging={isDragging}
         onRemove={onRemove}
         onClick={onClick}
+        onMoveBack={onMoveBack}
+        onMoveForward={onMoveForward}
       />
     </div>
   )
@@ -118,8 +128,14 @@ export function FurnitureGalleryManager({
   const [uploadOpen, setUploadOpen]     = useState(false)
   const [lightboxIdx, setLightboxIdx]   = useState(-1)
 
+  // PointerSensor cubre mouse (distancia chica: el mouse no tiembla). TouchSensor aparte
+  // para touch, con activación por demora (mantener el dedo quieto un instante) en vez de
+  // distancia — sin esto, cualquier intento de hacer scroll sobre la galería se confundía
+  // con un arrastre. KeyboardSensor agrega reordenar con flechas para quien no puede arrastrar.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
   // Notify parent whenever items change
@@ -172,6 +188,17 @@ export function FurnitureGalleryManager({
     })
   }
 
+  // Alternativa al arrastre que siempre funciona (mouse, touch o teclado) — el drag con
+  // dnd-kit puede fallar en touch por gesto/handle, esto no depende de ninguno de los dos.
+  const moveItem = (localKey: string, direction: -1 | 1) => {
+    setItems((prev) => {
+      const idx = prev.findIndex((i) => i.localKey === localKey)
+      const newIdx = idx + direction
+      if (idx < 0 || newIdx < 0 || newIdx >= prev.length) return prev
+      return arrayMove(prev, idx, newIdx)
+    })
+  }
+
   const lightboxSlides = items
     .filter((i) => i.imageUrl)
     .map((i) => ({ src: i.imageUrl!, alt: i.imageName ?? '' }))
@@ -192,16 +219,18 @@ export function FurnitureGalleryManager({
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={items.map((i) => i.localKey)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6">
-              {items.map((entry) => (
+              {items.map((entry, idx) => (
                 <SortableItem
                   key={entry.localKey}
                   entry={entry}
                   disabled={disabled}
                   onRemove={() => handleRemove(entry)}
                   onClick={() => {
-                    const idx = getLbIdx(entry.localKey)
-                    if (idx >= 0) setLightboxIdx(idx)
+                    const lbIdx = getLbIdx(entry.localKey)
+                    if (lbIdx >= 0) setLightboxIdx(lbIdx)
                   }}
+                  onMoveBack={!disabled && idx > 0 ? () => moveItem(entry.localKey, -1) : undefined}
+                  onMoveForward={!disabled && idx < items.length - 1 ? () => moveItem(entry.localKey, 1) : undefined}
                 />
               ))}
             </div>

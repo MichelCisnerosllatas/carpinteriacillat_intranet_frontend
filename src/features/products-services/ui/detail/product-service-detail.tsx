@@ -59,7 +59,9 @@ export function ProductServiceDetail({ id }: { id: string }) {
               {hasImages ? (
                 <>
                   <img src={item.galleryImages[0].src} alt={item.name} className="size-full object-cover" />
-                  <span className="absolute inset-0 hidden items-center justify-center bg-black/40 group-hover:flex">
+                  {/* En touch no hay :hover para revelar el ícono — el tap ya abre el
+                      lightbox igual, esto es solo la pista visual, también en touch */}
+                  <span className="absolute inset-0 hidden items-center justify-center bg-black/40 group-hover:flex pointer-coarse:flex">
                     <ZoomIn className="size-6 text-white" />
                   </span>
                 </>
