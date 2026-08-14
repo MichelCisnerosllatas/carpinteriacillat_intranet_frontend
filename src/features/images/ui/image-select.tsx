@@ -114,7 +114,7 @@ export function ImageSelect({
           role="combobox"
           aria-expanded={open}
           disabled={disabled || loadingSelected}
-          className="w-full h-auto min-h-[40px] justify-between font-normal py-1.5 px-3"
+          className="w-full h-auto min-h-[40px] justify-between font-normal py-1.5 px-3 data-[state=open]:border-primary data-[state=open]:ring-2 data-[state=open]:ring-primary/30"
         >
           <span className="flex items-center gap-2 min-w-0 flex-1">
             {loadingSelected ? (
@@ -153,7 +153,7 @@ export function ImageSelect({
                 <TooltipContent>Quitar imagen seleccionada</TooltipContent>
               </Tooltip>
             )}
-            <ChevronsUpDown className="size-4 opacity-50" />
+            <ChevronsUpDown className={cn('size-4 opacity-50 transition-transform duration-150', open && 'rotate-180 opacity-100')} />
           </span>
         </Button>
       </PopoverTrigger>

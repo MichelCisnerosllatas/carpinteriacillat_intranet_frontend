@@ -39,6 +39,25 @@ type FileEntry = {
 let idCounter = 0
 const nextId  = () => String(++idCounter)
 
+// Extensiones de imagen que algunos navegadores no reconocen por MIME type (file.type
+// llega vacío o distinto de "image/..."), notablemente HEIC/HEIF de iPhone. Se validan
+// también por extensión para no descartarlas en silencio.
+const IMAGE_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'avif', 'tif', 'tiff', 'heic', 'heif',
+])
+
+const isImageFile = (file: File) => {
+  if (file.type.startsWith('image/')) return true
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  return !!ext && IMAGE_EXTENSIONS.has(ext)
+}
+
+// Cuántos archivos se procesan por lote antes de ceder el hilo al navegador. Con una
+// carpeta de miles de fotos (típico al elegirla desde el celular), crear todas las
+// miniaturas de una sola pasada síncrona congela la pestaña sin poder pintar ningún
+// indicador de carga — de a lotes, React puede pintar el progreso entre cada uno.
+const PROCESS_CHUNK_SIZE = 30
+
 // "Fotos Cocina 2024" → "fotos_cocina_2024"
 const normalizeFolderSegment = (segment: string) =>
   segment.trim().toLowerCase().replace(/\s+/g, '_')
@@ -66,6 +85,9 @@ export function ImageUploadForm() {
   const [dragOver,    setDragOver]    = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [lightboxIdx, setLightboxIdx] = useState(-1)
+  const [previewErrors, setPreviewErrors] = useState<Set<string>>(new Set())
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false)
+  const [processProgress,   setProcessProgress]   = useState({ done: 0, total: 0 })
   const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -91,17 +113,48 @@ export function ImageUploadForm() {
     }
   }, [])
 
-  const addFiles = (files: File[]) => {
-    const valid: FileEntry[] = files
-      .filter((f) => f.type.startsWith('image/'))
-      .map((file) => ({
+  const addFiles = async (files: File[]) => {
+    const imageFiles = files.filter(isImageFile)
+    const skipped    = files.length - imageFiles.length
+
+    if (imageFiles.length === 0) {
+      if (skipped > 0) {
+        toastError(
+          'Sin imágenes válidas',
+          `${skipped} archivo${skipped !== 1 ? 's' : ''} no ${skipped !== 1 ? 'son imágenes' : 'es una imagen'} y se omitió${skipped !== 1 ? 'eron' : ''}.`,
+        )
+      }
+      return
+    }
+
+    setIsProcessingFiles(true)
+    setProcessProgress({ done: 0, total: imageFiles.length })
+
+    // De a lotes: crear miles de object URLs y agregarlos todos de una sola vez congela
+    // la pestaña sin pintar ningún indicador. Entre lote y lote se cede el hilo (setTimeout
+    // 0) para que React tenga oportunidad de pintar el progreso — y de paso, la grilla se
+    // va llenando en vivo en vez de aparecer toda junta al final.
+    for (let i = 0; i < imageFiles.length; i += PROCESS_CHUNK_SIZE) {
+      const chunk: FileEntry[] = imageFiles.slice(i, i + PROCESS_CHUNK_SIZE).map((file) => ({
         id:          nextId(),
         file,
         preview:     URL.createObjectURL(file),
         status:      'pending',
         relativeDir: getRelativeDir(file),
       }))
-    setEntries((prev) => [...prev, ...valid])
+      setEntries((prev) => [...prev, ...chunk])
+      setProcessProgress({ done: Math.min(i + PROCESS_CHUNK_SIZE, imageFiles.length), total: imageFiles.length })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+
+    setIsProcessingFiles(false)
+
+    if (skipped > 0) {
+      toastInfo(
+        'Algunos archivos se omitieron',
+        `${skipped} archivo${skipped !== 1 ? 's' : ''} no ${skipped !== 1 ? 'son imágenes' : 'es una imagen'} y no se agregó${skipped !== 1 ? 'aron' : ''} a la lista.`,
+      )
+    }
   }
 
   const removeEntry = (id: string) => {
@@ -214,7 +267,7 @@ export function ImageUploadForm() {
 
   // Lightbox slides (solo entradas con preview) — mismo orden en que se renderizan los grupos
   const orderedEntries  = groups.flatMap((g) => g.entries)
-  const previewEntries  = orderedEntries.filter((e) => e.preview)
+  const previewEntries  = orderedEntries.filter((e) => e.preview && !previewErrors.has(e.id))
   const lightboxSlides  = previewEntries.map((e) => ({ src: e.preview!, alt: e.file.name }))
   const getLbIdx        = (entryId: string) => previewEntries.findIndex((e) => e.id === entryId)
 
@@ -229,17 +282,27 @@ export function ImageUploadForm() {
         <Card>
           <CardContent className="flex flex-col gap-3">
 
+            {/* Indicador de carga al procesar archivos — con una carpeta de miles de fotos
+                (típico al elegirla desde el celular), armar todas las miniaturas tarda y,
+                sin este aviso, la pantalla parecía trabada sin dar ninguna señal. */}
+            {isProcessingFiles && (
+              <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2.5 text-xs text-muted-foreground">
+                <Loader2 className="size-4 shrink-0 animate-spin" />
+                Procesando {processProgress.done} de {processProgress.total} imagen{processProgress.total !== 1 ? 'es' : ''}...
+              </div>
+            )}
+
             {/* ── Estado vacío: un solo selector — al hacer clic, elige qué agregar ── */}
             {totalCount === 0 && (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild disabled={isUploading}>
+                <DropdownMenuTrigger asChild disabled={isUploading || isProcessingFiles}>
                   <DropZone
                     dragOver={dragOver}
                     onDragOver={() => setDragOver(true)}
                     onDragLeave={() => setDragOver(false)}
-                    onDrop={(files) => { setDragOver(false); addFiles(files) }}
+                    onDrop={(files) => { setDragOver(false); void addFiles(files) }}
                     onClick={() => {}}
-                    disabled={isUploading}
+                    disabled={isUploading || isProcessingFiles}
                     compact={false}
                   />
                 </DropdownMenuTrigger>
@@ -322,14 +385,11 @@ export function ImageUploadForm() {
                           )}
                         </div>
 
-                        <div
-                          className={cn(
-                            'grid gap-2',
-                            totalCount <= 4  && 'grid-cols-4',
-                            totalCount > 4   && 'grid-cols-5',
-                            totalCount > 10  && 'grid-cols-6',
-                          )}
-                        >
+                        {/* auto-fill con un mínimo de 110px: antes las columnas subían con
+                            totalCount (4→5→6) y las miniaturas se iban achicando cuanta más
+                            imágenes había. Con auto-fill nunca bajan de ese tamaño mínimo —
+                            si no entran todas en una fila, bajan de línea en vez de encogerse. */}
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2">
                           {group.entries.map((entry) => {
                             const lbIdx = getLbIdx(entry.id)
                             return (
@@ -342,8 +402,12 @@ export function ImageUploadForm() {
                                   entry.status === 'uploading' && 'ring-primary',
                                 )}
                               >
-                                {/* Miniatura — clic abre lightbox */}
-                                {entry.preview ? (
+                                {/* Miniatura — clic abre lightbox. Si el navegador no puede decodificar
+                                    el archivo (ej. HEIC de iPhone: es una imagen válida, pero la mayoría
+                                    de navegadores de escritorio no la renderizan vía <img>), se cae a un
+                                    ícono en vez de mostrar una imagen rota — igual sigue en la lista y se
+                                    intenta subir normalmente. */}
+                                {entry.preview && !previewErrors.has(entry.id) ? (
                                   <button
                                     type="button"
                                     onClick={() => entry.status !== 'uploading' && setLightboxIdx(lbIdx)}
@@ -356,11 +420,15 @@ export function ImageUploadForm() {
                                       src={entry.preview}
                                       alt={entry.file.name}
                                       className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                      onError={() => setPreviewErrors((prev) => new Set(prev).add(entry.id))}
                                     />
                                   </button>
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center bg-muted">
+                                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-muted p-1 text-center">
                                     <ImagePlus className="size-5 text-muted-foreground" />
+                                    {previewErrors.has(entry.id) && (
+                                      <span className="text-[8px] leading-tight text-muted-foreground">Sin vista previa</span>
+                                    )}
                                   </div>
                                 )}
 
@@ -429,8 +497,8 @@ export function ImageUploadForm() {
             {/* Botón para agregar más, una vez ya hay archivos en la lista */}
             {totalCount > 0 && !isUploading && !allDone && (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="self-start">
+                <DropdownMenuTrigger asChild disabled={isProcessingFiles}>
+                  <Button type="button" variant="outline" size="sm" className="self-start" disabled={isProcessingFiles}>
                     <Plus className="mr-1.5 size-3.5" />
                     Agregar más
                   </Button>
@@ -474,12 +542,12 @@ export function ImageUploadForm() {
               onChange={(e) => {
                 if (e.target.files) {
                   const files = Array.from(e.target.files)
-                  addFiles(files)
                   const folderRelPath = (files[0] as File & { webkitRelativePath?: string })?.webkitRelativePath
                   const folderName    = folderRelPath?.split('/')[0]
                   if (folderName) {
                     toastInfo(`Carpeta "${folderName}" agregada`, '¿Tienes más carpetas? Usa el mismo botón para seleccionar otra.')
                   }
+                  void addFiles(files)
                 }
                 e.target.value = ''
               }}
@@ -494,7 +562,7 @@ export function ImageUploadForm() {
                 )}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(Array.from(e.dataTransfer.files)) }}
+                onDrop={(e) => { e.preventDefault(); setDragOver(false); void addFiles(Array.from(e.dataTransfer.files)) }}
               />
             )}
 
