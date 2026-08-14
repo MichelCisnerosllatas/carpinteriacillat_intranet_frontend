@@ -322,14 +322,11 @@ export function ImageUploadForm() {
                           )}
                         </div>
 
-                        <div
-                          className={cn(
-                            'grid gap-2',
-                            totalCount <= 4  && 'grid-cols-4',
-                            totalCount > 4   && 'grid-cols-5',
-                            totalCount > 10  && 'grid-cols-6',
-                          )}
-                        >
+                        {/* auto-fill con un mínimo de 110px: antes las columnas subían con
+                            totalCount (4→5→6) y las miniaturas se iban achicando cuanta más
+                            imágenes había. Con auto-fill nunca bajan de ese tamaño mínimo —
+                            si no entran todas en una fila, bajan de línea en vez de encogerse. */}
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2">
                           {group.entries.map((entry) => {
                             const lbIdx = getLbIdx(entry.id)
                             return (
