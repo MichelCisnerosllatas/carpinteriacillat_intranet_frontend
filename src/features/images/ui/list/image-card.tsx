@@ -9,20 +9,19 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { useLongPress } from '@/shared/lib/use-long-press'
+import { cn } from '@/shared/lib/utils'
 import { formatBytes } from '../../lib/image-url'
 import type { ImageItem } from '../../data/schema'
 
 export function ImageCard({
   item,
   isSelected,
-  anySelected,
   onToggleSelect,
   onOpenLightbox,
   onDelete,
 }: {
   item:           ImageItem
   isSelected:     boolean
-  anySelected:    boolean // hay al menos una imagen seleccionada en el grid (modo selección activo)
   onToggleSelect: (item: ImageItem) => void
   onOpenLightbox: (item: ImageItem) => void
   onDelete:       (item: ImageItem) => void
@@ -31,13 +30,14 @@ export function ImageCard({
   const [loaded,   setLoaded]   = useState(false)
   const displayName = item.name ?? item.patch.split('/').pop() ?? item.patch
 
-  // En touch no hay :hover para revelar el checkbox/acciones ni para distinguir
-  // "seleccionar" de "ver": mantener presionado activa el modo selección (como en
-  // Google Photos); con el modo ya activo, un tap normal alterna la selección en vez
-  // de abrir el lightbox. El mouse conserva su comportamiento de siempre (hover + click).
+  // En touch no hay :hover para revelar el checkbox: mantener presionado la foto activa
+  // el modo selección. Pero el tap sobre la foto SIEMPRE abre la vista previa —incluso con
+  // el modo selección ya activo—, para no perder el "ver" mientras se seleccionan varias.
+  // Sumar/quitar imágenes de la selección se hace tocando el checkbox (ya siempre visible
+  // en touch) o con otro mantener-presionado.
   const tapHandlers = useLongPress({
     onLongPress: () => onToggleSelect(item),
-    onTap:       () => { if (anySelected) onToggleSelect(item); else onOpenLightbox(item) },
+    onTap:       () => onOpenLightbox(item),
   })
 
   return (
@@ -77,25 +77,29 @@ export function ImageCard({
           </div>
         )}
 
-        {/* Checkbox de selección — en touch siempre visible (pointer-coarse); con mouse,
-            visible en hover o cuando ya está seleccionada */}
+        {/* Checkbox de selección — en touch siempre visible (pointer-coarse) y con un
+            área de toque de 40px (el dedo no acierta un ícono de 20px "pelado"); con
+            mouse, visible en hover o cuando ya está seleccionada, del tamaño de siempre. */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onToggleSelect(item) }}
-          className={`absolute left-1.5 top-1.5 z-10 transition-opacity pointer-coarse:opacity-100 ${
-            isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}
+          className={cn(
+            'absolute left-0.5 top-0.5 z-10 flex items-center justify-center rounded-full p-1 transition-opacity',
+            'pointer-coarse:p-2.5 pointer-coarse:bg-black/40 pointer-coarse:opacity-100',
+            isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+          )}
         >
           {isSelected
             ? <CheckSquare className="size-5 text-primary drop-shadow" />
             : <Square className="size-5 text-white drop-shadow" />}
         </button>
 
-        {/* Menú de acciones — en touch siempre visible (pointer-coarse); con mouse, en hover.
-            Reemplaza el overlay central de antes: en touch un overlay que solo aparecía con
-            :hover dejaba "Ver"/"Eliminar" inalcanzables. */}
+        {/* Menú de acciones — en touch siempre visible (pointer-coarse), con un botón de
+            40px de área de toque (antes 28px, insuficiente para el dedo). Reemplaza el
+            overlay central de antes: en touch un overlay que solo aparecía con :hover
+            dejaba "Ver"/"Eliminar" inalcanzables. */}
         <div
-          className="absolute right-1.5 top-1.5 z-10 opacity-0 transition-opacity group-hover:opacity-100 pointer-coarse:opacity-100"
+          className="absolute right-0.5 top-0.5 z-10 opacity-0 transition-opacity group-hover:opacity-100 pointer-coarse:opacity-100"
           onClick={(e) => e.stopPropagation()}
         >
           <DropdownMenu>
@@ -103,8 +107,12 @@ export function ImageCard({
               <TooltipTrigger asChild>
                 <span className="inline-flex">
                   <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="secondary" className="size-7 bg-black/50 text-white hover:bg-black/70">
-                      <MoreVertical className="size-4" />
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="size-7 bg-black/50 text-white hover:bg-black/70 pointer-coarse:size-10"
+                    >
+                      <MoreVertical className="size-4 pointer-coarse:size-5" />
                       <span className="sr-only">Más acciones</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -113,12 +121,15 @@ export function ImageCard({
               <TooltipContent>Más acciones</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="pointer-coarse:py-2.5">
                 <a href={item.url} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 size-4" /> Abrir original
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-500!" onClick={() => onDelete(item)}>
+              <DropdownMenuItem
+                className="text-red-500! pointer-coarse:py-2.5"
+                onClick={() => onDelete(item)}
+              >
                 <Trash2 className="mr-2 size-4" /> Eliminar
               </DropdownMenuItem>
             </DropdownMenuContent>
