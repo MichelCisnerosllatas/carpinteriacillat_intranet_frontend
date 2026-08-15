@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { userDevicesColumns } from './user-devices-columns'
@@ -61,6 +62,8 @@ export function UserDevicesTable() {
   const [deviceType, setDeviceType]             = useState<string>('all')
   const [dateFrom, setDateFrom]                 = useState(filters.date_from ?? '')
   const [dateTo, setDateTo]                     = useState(filters.date_to ?? '')
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
@@ -84,6 +87,7 @@ export function UserDevicesTable() {
     if (!changed) return
 
     const timeout = window.setTimeout(() => {
+      setIsUserFetching(true)
       void load({
         search,
         is_active: status === 'all' ? undefined : (Number(status) as 0 | 1),
@@ -92,7 +96,7 @@ export function UserDevicesTable() {
         date_from: dateFrom,
         date_to: dateTo,
         page: 1,
-      })
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(timeout)
   }, [search, status, platform, deviceType, dateFrom, dateTo])
@@ -106,7 +110,8 @@ export function UserDevicesTable() {
     enableRowSelection: false,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -118,10 +123,11 @@ export function UserDevicesTable() {
   const resetFilters = () => {
     setSearch(''); setStatus('all'); setPlatform('all')
     setDeviceType('all'); setDateFrom(''); setDateTo('')
+    setIsUserFetching(true)
     void load({
       search: '', is_active: undefined, platform: undefined,
       device_type: undefined, date_from: '', date_to: '', page: 1,
-    })
+    }).finally(() => setIsUserFetching(false))
   }
 
   if (!hasLoaded && !isInitialLoading) {
@@ -147,14 +153,7 @@ export function UserDevicesTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />
-            Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       {/* Filtros */}
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -238,7 +237,10 @@ export function UserDevicesTable() {
                 variant="outline"
                 className="size-8"
                 disabled={isFetching}
-                onClick={() => void load({ page: 1 })}
+                onClick={() => {
+                  setIsUserFetching(true)
+                  void load({ page: 1 }).finally(() => setIsUserFetching(false))
+                }}
               >
                 <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
               </Button>

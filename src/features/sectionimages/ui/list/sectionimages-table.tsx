@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -36,6 +37,8 @@ export function SectionImagesTable() {
   const [dateFrom, setDateFrom]                 = useState(filters.date_from ?? '')
   const [dateTo, setDateTo]                     = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
@@ -57,7 +60,8 @@ export function SectionImagesTable() {
     if (!changed) return
 
     const t = window.setTimeout(() => {
-      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 })
+      setIsUserFetching(true)
+      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
   }, [search, state, dateFrom, dateTo])
@@ -71,7 +75,8 @@ export function SectionImagesTable() {
     enableRowSelection: true,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -85,7 +90,8 @@ export function SectionImagesTable() {
 
   const resetFilters = () => {
     setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
-    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 })
+    setIsUserFetching(true)
+    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   const handleBulkActivate = async () => {
@@ -147,13 +153,7 @@ export function SectionImagesTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">

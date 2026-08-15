@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { cn } from '@/shared/lib/utils'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionsGroupTable } from './sections-group-table'
 import { SectionStatsBar } from './section-stats-bar'
@@ -50,6 +51,8 @@ export function SectionsTable() {
   const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
   const [dateTo, setDateTo]     = useState(filters.date_to ?? '')
   const [openGroups, setOpenGroups] = useState<string[]>([])
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching] = useState(false)
 
   const appliedFilters = useRef({ search, state, dateFrom, dateTo })
 
@@ -66,11 +69,12 @@ export function SectionsTable() {
     if (!changed) return
 
     const t = window.setTimeout(() => {
+      setIsUserFetching(true)
       void load({
         search, state: state === 'all' ? undefined : Number(state),
         date_from: dateFrom, date_to: dateTo,
         per_page: GROUPED_PER_PAGE, page: 1,
-      })
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
   }, [search, state, dateFrom, dateTo])
@@ -95,7 +99,8 @@ export function SectionsTable() {
 
   const resetFilters = () => {
     setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
-    void load({ search: '', state: undefined, date_from: '', date_to: '', per_page: GROUPED_PER_PAGE, page: 1 })
+    setIsUserFetching(true)
+    void load({ search: '', state: undefined, date_from: '', date_to: '', per_page: GROUPED_PER_PAGE, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   if (!hasLoaded && !isInitialLoading) {
@@ -121,13 +126,7 @@ export function SectionsTable() {
     <div className="relative flex flex-1 flex-col gap-4">
       <SectionStatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
 
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">

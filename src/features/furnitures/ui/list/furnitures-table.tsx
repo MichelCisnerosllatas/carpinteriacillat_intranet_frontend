@@ -9,6 +9,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
@@ -33,6 +34,8 @@ export function FurnituresTable() {
   const [dateFrom, setDateFrom]         = useState(filters.date_from ?? '')
   const [dateTo, setDateTo]             = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching] = useState(false)
 
   const appliedFilters = useRef({ search, state, dateFrom, dateTo })
 
@@ -49,7 +52,8 @@ export function FurnituresTable() {
     if (!changed) return
 
     const t = window.setTimeout(() => {
-      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 })
+      setIsUserFetching(true)
+      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
   }, [search, state, dateFrom, dateTo])
@@ -69,7 +73,8 @@ export function FurnituresTable() {
 
   const resetFilters = () => {
     setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
-    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 })
+    setIsUserFetching(true)
+    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   // ── Card actions ──
@@ -177,13 +182,7 @@ export function FurnituresTable() {
       <FurnitureStatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
 
       {/* Fetching indicator */}
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-2">
@@ -260,8 +259,8 @@ export function FurnituresTable() {
       {meta && (
         <FurnitureGridPagination
           meta={meta}
-          onPageChange={(page) => void load({ page })}
-          onPageSizeChange={(per_page) => void load({ per_page, page: 1 })}
+          onPageChange={(page) => { setIsUserFetching(true); void load({ page }).finally(() => setIsUserFetching(false)) }}
+          onPageSizeChange={(per_page) => { setIsUserFetching(true); void load({ per_page, page: 1 }).finally(() => setIsUserFetching(false)) }}
         />
       )}
 
