@@ -41,6 +41,9 @@ export const companyBranchesColumns: ColumnDef<CompanyBranch>[] = [
         {row.original.address && (
           <span className="text-xs text-muted-foreground">{row.original.address}</span>
         )}
+        {row.original.schedule && (
+          <span className="text-xs text-muted-foreground/70">{row.original.schedule}</span>
+        )}
       </div>
     ),
     enableSorting: true,

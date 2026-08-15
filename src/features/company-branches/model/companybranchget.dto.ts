@@ -5,6 +5,9 @@ export type CompanyBranchApiItem = {
   id: number
   name: string
   address: string
+  schedule: string | null
+  latitude: number | null
+  longitude: number | null
   status: number
   created_at: string
   updated_at: string | null
