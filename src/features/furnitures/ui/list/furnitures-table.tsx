@@ -37,26 +37,52 @@ export function FurnituresTable() {
   /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
   const [isUserFetching, setIsUserFetching] = useState(false)
 
-  const appliedFilters = useRef({ search, state, dateFrom, dateTo })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.state !== state ||
-      prev.dateFrom !== dateFrom ||
-      prev.dateTo !== dateTo
-    appliedFilters.current = { search, state, dateFrom, dateTo }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
-      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 }).finally(() => setIsUserFetching(false))
+      void load({
+        search,
+        state: state === 'all' ? undefined : Number(state),
+        date_from: dateFrom,
+        date_to: dateTo,
+        page: 1,
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, state, dateFrom, dateTo])
+  }, [search])
+
+  // Estado/Fecha son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: {
+    state?: string
+    dateFrom?: string
+    dateTo?: string
+  }) => {
+    const nextState = overrides.state ?? state
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      state: nextState === 'all' ? undefined : Number(nextState),
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStateChange = (value: string) => { setState(value); applyFilters({ state: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   useEffect(() => { setSelected(new Set()) }, [filters.page])
 
@@ -72,6 +98,7 @@ export function FurnituresTable() {
   const toggleAll    = () => setSelected(allSelected ? new Set() : new Set(items.map((i) => i.id)))
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
     setIsUserFetching(true)
     void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
@@ -197,7 +224,7 @@ export function FurnituresTable() {
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Estado</span>
-          <Select value={state} disabled={isFetching} onValueChange={setState}>
+          <Select value={state} disabled={isFetching} onValueChange={handleStateChange}>
             <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>
@@ -207,11 +234,11 @@ export function FurnituresTable() {
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Fecha desde</span>
-          <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => handleDateFromChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Fecha hasta</span>
-          <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
         <div className="flex flex-col justify-end">
           <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>

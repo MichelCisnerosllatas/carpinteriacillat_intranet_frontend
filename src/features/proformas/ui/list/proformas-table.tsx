@@ -64,22 +64,17 @@ export function ProformasTable() {
     [filters.page, filters.per_page]
   )
 
-  const appliedFilters = useRef({ search, status, clientId, dateFrom, dateTo })
+  const appliedSearch = useRef(search)
 
   useEffect(() => {
     void load()
   }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.status !== status ||
-      prev.clientId !== clientId ||
-      prev.dateFrom !== dateFrom ||
-      prev.dateTo !== dateTo
-    appliedFilters.current = { search, status, clientId, dateFrom, dateTo }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
@@ -93,7 +88,35 @@ export function ProformasTable() {
       }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, status, clientId, dateFrom, dateTo])
+  }, [search])
+
+  // Estado/Cliente/Fecha son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: {
+    status?: string
+    clientId?: number | null
+    dateFrom?: string
+    dateTo?: string
+  }) => {
+    const nextStatus = overrides.status ?? status
+    const nextClientId = overrides.clientId !== undefined ? overrides.clientId : clientId
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      status: nextStatus === 'all' ? undefined : (nextStatus as ProformaStatus),
+      client_id: nextClientId ?? undefined,
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
+  const handleClientIdChange = (value: number | null) => { setClientId(value); applyFilters({ clientId: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: items,
@@ -120,6 +143,7 @@ export function ProformasTable() {
   const selectedCount = selectedRows.length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch('')
     setStatus('all')
     setClientId(null)
@@ -201,7 +225,7 @@ export function ProformasTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -220,7 +244,7 @@ export function ProformasTable() {
             <div className="w-full sm:w-[200px]">
               <ClientSelect
                 value={clientId}
-                onValueChange={setClientId}
+                onValueChange={handleClientIdChange}
                 showAll
                 disabled={isFetching}
                 placeholder="Todos"
@@ -233,7 +257,7 @@ export function ProformasTable() {
               type="date"
               value={dateFrom}
               disabled={isFetching}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={(e) => handleDateFromChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>
@@ -243,7 +267,7 @@ export function ProformasTable() {
               type="date"
               value={dateTo}
               disabled={isFetching}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={(e) => handleDateToChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>

@@ -44,15 +44,15 @@ export function ProductsServicesTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  const appliedFilters = useRef({ search, type, status })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed = prev.search !== search || prev.type !== type || prev.status !== status
-    appliedFilters.current = { search, type, status }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
@@ -64,7 +64,24 @@ export function ProductsServicesTable() {
       }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, type, status])
+  }, [search])
+
+  // Tipo/Estado son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: { type?: string; status?: string }) => {
+    const nextType = overrides.type ?? type
+    const nextStatus = overrides.status ?? status
+    setIsUserFetching(true)
+    void load({
+      search,
+      type: nextType === 'all' ? undefined : (nextType as 'product' | 'service'),
+      status: nextStatus === 'all' ? undefined : Number(nextStatus),
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleTypeChange = (value: string) => { setType(value); applyFilters({ type: value }) }
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
 
   const table = useReactTable({
     data: items,
@@ -93,6 +110,7 @@ export function ProductsServicesTable() {
   const activeCount   = items.filter((i) => i.stateValue === 1).length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setType('all'); setStatus('all')
     setIsUserFetching(true)
     void load({ search: '', type: undefined, status: undefined, page: 1 }).finally(() => setIsUserFetching(false))
@@ -167,7 +185,7 @@ export function ProductsServicesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Tipo</span>
-            <Select value={type} disabled={isFetching} onValueChange={setType}>
+            <Select value={type} disabled={isFetching} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8 w-full sm:w-[150px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los tipos</SelectItem>
@@ -177,7 +195,7 @@ export function ProductsServicesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>

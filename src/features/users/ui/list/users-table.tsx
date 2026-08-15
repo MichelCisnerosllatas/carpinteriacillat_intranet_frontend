@@ -51,23 +51,18 @@ export function UsersTable() {
 
   const { bulkToggleState, bulkDeleteItems } = useUserDeleteStore()
 
-  const appliedFilters = useRef({ search, state, role, dateFrom, dateTo })
+  const appliedSearch = useRef(search)
 
   useEffect(() => {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.state !== state ||
-      prev.role !== role ||
-      prev.dateFrom !== dateFrom ||
-      prev.dateTo !== dateTo
-    appliedFilters.current = { search, state, role, dateFrom, dateTo }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const timeout = window.setTimeout(() => {
       setIsUserFetching(true)
@@ -83,7 +78,30 @@ export function UsersTable() {
 
     return () => window.clearTimeout(timeout)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, state, role, dateFrom, dateTo])
+  }, [search])
+
+  // Estado/Rol/Fecha son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: { state?: string; role?: string; dateFrom?: string; dateTo?: string }) => {
+    const nextState = overrides.state ?? state
+    const nextRole = overrides.role ?? role
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      state: nextState === 'all' ? undefined : Number(nextState),
+      role: nextRole === 'all' ? undefined : Number(nextRole),
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStateChange = (value: string) => { setState(value); applyFilters({ state: value }) }
+  const handleRoleChange = (value: string) => { setRole(value); applyFilters({ role: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: users,
@@ -112,6 +130,7 @@ export function UsersTable() {
   const selectedCount = selectedRows.length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch('')
     setState('all')
     setRole('all')
@@ -203,7 +222,7 @@ export function UsersTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={state} disabled={isFetching} onValueChange={setState}>
+            <Select value={state} disabled={isFetching} onValueChange={handleStateChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
@@ -213,7 +232,7 @@ export function UsersTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Rol</span>
-            <Select value={role} disabled={isFetching} onValueChange={setRole}>
+            <Select value={role} disabled={isFetching} onValueChange={handleRoleChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Rol" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>
@@ -225,11 +244,11 @@ export function UsersTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Fecha desde</span>
-            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => handleDateFromChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Fecha hasta</span>
-            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col justify-end">
             <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>

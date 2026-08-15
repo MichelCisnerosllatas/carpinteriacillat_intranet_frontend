@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImageOff, LoaderCircle } from 'lucide-react'
 import NProgress from 'nprogress'
@@ -38,22 +38,15 @@ export function FurnitureImagesGrid() {
   /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
   const [isUserFetching, setIsUserFetching] = useState(false)
 
-  const appliedFilters = useRef({ stateFilter })
-
   useEffect(() => { void load() }, [])
 
-  useEffect(() => {
-    const prev = appliedFilters.current
-    const changed = prev.stateFilter !== stateFilter
-    appliedFilters.current = { stateFilter }
-    if (!changed) return
-
-    const t = window.setTimeout(() => {
-      setIsUserFetching(true)
-      void load({ state: stateFilter === 'all' ? undefined : Number(stateFilter), page: 1 }).finally(() => setIsUserFetching(false))
-    }, 300)
-    return () => window.clearTimeout(t)
-  }, [stateFilter])
+  // Estado es una acción discreta (una selección), no texto que se esté escribiendo: se
+  // dispara de inmediato, sin debounce.
+  const handleStateFilterChange = (value: string) => {
+    setStateFilter(value)
+    setIsUserFetching(true)
+    void load({ state: value === 'all' ? undefined : Number(value), page: 1 }).finally(() => setIsUserFetching(false))
+  }
 
   useEffect(() => { setSelected(new Set()) }, [filters.page])
 
@@ -188,7 +181,7 @@ export function FurnitureImagesGrid() {
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Estado</span>
-          <Select value={stateFilter} disabled={isFetching} onValueChange={setStateFilter}>
+          <Select value={stateFilter} disabled={isFetching} onValueChange={handleStateFilterChange}>
             <SelectTrigger className="h-8 w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>

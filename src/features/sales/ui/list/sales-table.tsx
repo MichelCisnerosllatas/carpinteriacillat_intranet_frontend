@@ -55,23 +55,17 @@ export function SalesTable() {
     [filters.page, filters.per_page]
   )
 
-  const appliedFilters = useRef({ search, status, paymentStatus, clientId, dateFrom, dateTo })
+  const appliedSearch = useRef(search)
 
   useEffect(() => {
     void load()
   }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.status !== status ||
-      prev.paymentStatus !== paymentStatus ||
-      prev.clientId !== clientId ||
-      prev.dateFrom !== dateFrom ||
-      prev.dateTo !== dateTo
-    appliedFilters.current = { search, status, paymentStatus, clientId, dateFrom, dateTo }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
@@ -86,7 +80,39 @@ export function SalesTable() {
       }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, status, paymentStatus, clientId, dateFrom, dateTo])
+  }, [search])
+
+  // Estado/Cobro/Cliente/Fecha son acciones discretas (un clic o una selección), no texto que
+  // se esté escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: {
+    status?: string
+    paymentStatus?: string
+    clientId?: number | null
+    dateFrom?: string
+    dateTo?: string
+  }) => {
+    const nextStatus = overrides.status ?? status
+    const nextPaymentStatus = overrides.paymentStatus ?? paymentStatus
+    const nextClientId = overrides.clientId !== undefined ? overrides.clientId : clientId
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      status: nextStatus === 'all' ? undefined : (nextStatus as SaleStatus),
+      payment_status: nextPaymentStatus === 'all' ? undefined : (nextPaymentStatus as SalePaymentStatus),
+      client_id: nextClientId ?? undefined,
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
+  const handlePaymentStatusChange = (value: string) => { setPaymentStatus(value); applyFilters({ paymentStatus: value }) }
+  const handleClientIdChange = (value: number | null) => { setClientId(value); applyFilters({ clientId: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: items,
@@ -111,6 +137,7 @@ export function SalesTable() {
   const selectedCount = selectedRows.length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch('')
     setStatus('all')
     setPaymentStatus('all')
@@ -194,7 +221,7 @@ export function SalesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[140px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -210,7 +237,7 @@ export function SalesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Cobro</span>
-            <Select value={paymentStatus} disabled={isFetching} onValueChange={setPaymentStatus}>
+            <Select value={paymentStatus} disabled={isFetching} onValueChange={handlePaymentStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[140px]">
                 <SelectValue placeholder="Cobro" />
               </SelectTrigger>
@@ -229,7 +256,7 @@ export function SalesTable() {
             <div className="w-full sm:w-[200px]">
               <ClientSelect
                 value={clientId}
-                onValueChange={setClientId}
+                onValueChange={handleClientIdChange}
                 showAll
                 disabled={isFetching}
                 placeholder="Todos"
@@ -242,7 +269,7 @@ export function SalesTable() {
               type="date"
               value={dateFrom}
               disabled={isFetching}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={(e) => handleDateFromChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>
@@ -252,7 +279,7 @@ export function SalesTable() {
               type="date"
               value={dateTo}
               disabled={isFetching}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={(e) => handleDateToChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>

@@ -44,15 +44,15 @@ export function CompanyContactsTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  const appliedFilters = useRef({ search, status, type })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed = prev.search !== search || prev.status !== status || prev.type !== type
-    appliedFilters.current = { search, status, type }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
@@ -64,7 +64,24 @@ export function CompanyContactsTable() {
       }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, status, type])
+  }, [search])
+
+  // Estado/Tipo son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: { status?: string; type?: string }) => {
+    const nextStatus = overrides.status ?? status
+    const nextType = overrides.type ?? type
+    setIsUserFetching(true)
+    void load({
+      search,
+      status: nextStatus === 'all' ? undefined : Number(nextStatus),
+      type: nextType === 'all' ? undefined : (nextType as any),
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
+  const handleTypeChange = (value: string) => { setType(value); applyFilters({ type: value }) }
 
   const table = useReactTable({
     data: items,
@@ -92,6 +109,7 @@ export function CompanyContactsTable() {
   const onWebsiteCount = items.filter((i) => i.showOnWebsite).length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setStatus('all'); setType('all')
     setIsUserFetching(true)
     void load({ search: '', status: undefined, type: undefined, page: 1 }).finally(() => setIsUserFetching(false))
@@ -166,7 +184,7 @@ export function CompanyContactsTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Tipo</span>
-            <Select value={type} disabled={isFetching} onValueChange={setType}>
+            <Select value={type} disabled={isFetching} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8 w-full sm:w-[140px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los tipos</SelectItem>
@@ -176,7 +194,7 @@ export function CompanyContactsTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>

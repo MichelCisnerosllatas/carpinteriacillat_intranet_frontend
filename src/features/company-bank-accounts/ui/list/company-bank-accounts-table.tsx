@@ -47,18 +47,15 @@ export function CompanyBankAccountsTable() {
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  const appliedFilters = useRef({ search, status, currency })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.status !== status ||
-      prev.currency !== currency
-    appliedFilters.current = { search, status, currency }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
@@ -70,7 +67,24 @@ export function CompanyBankAccountsTable() {
       }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, status, currency])
+  }, [search])
+
+  // Estado/Moneda son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: { status?: string; currency?: string }) => {
+    const nextStatus = overrides.status ?? status
+    const nextCurrency = overrides.currency ?? currency
+    setIsUserFetching(true)
+    void load({
+      search,
+      status: nextStatus === 'all' ? undefined : Number(nextStatus),
+      currency: nextCurrency === 'all' ? undefined : nextCurrency,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
+  const handleCurrencyChange = (value: string) => { setCurrency(value); applyFilters({ currency: value }) }
 
   const table = useReactTable({
     data: items,
@@ -98,6 +112,7 @@ export function CompanyBankAccountsTable() {
   const inactiveCount = items.filter((i) => i.status !== 1).length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setStatus('all'); setCurrency('all')
     setIsUserFetching(true)
     void load({ search: '', status: undefined, currency: undefined, page: 1 }).finally(() => setIsUserFetching(false))
@@ -175,7 +190,7 @@ export function CompanyBankAccountsTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
@@ -185,7 +200,7 @@ export function CompanyBankAccountsTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Moneda</span>
-            <Select value={currency} disabled={isFetching} onValueChange={setCurrency}>
+            <Select value={currency} disabled={isFetching} onValueChange={handleCurrencyChange}>
               <SelectTrigger className="h-8 w-full sm:w-[140px]"><SelectValue placeholder="Moneda" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
