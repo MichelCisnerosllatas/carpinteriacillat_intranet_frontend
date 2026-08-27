@@ -5,9 +5,16 @@ import { useCartDraftsStore } from '../../../stores/useCartDraftsStore'
 import { usePendingCartItemsStore } from '../../../stores/usePendingCartItemsStore'
 import { autofillFromProductService } from '../autofillFromProductService'
 import { getSavedItemValue } from './getSavedItemValue'
+import type { ProductServiceOption } from '../types'
 
 interface AutofillCartItemDeps {
   productServiceId: number | null
+  /** Producto/servicio ya conocido (ej. recién elegido o recién creado en el modal) — si se pasa,
+   * se usa directo para autocompletar en vez de rebuscarlo en `useProductServiceSelectStore`. Es
+   * necesario para el caso "crear producto rápido y agregarlo": justo después de crearlo, la
+   * recarga del catálogo (`load()`) todavía no terminó, así que buscarlo por id en el caché del
+   * store devolvía `undefined` y la línea quedaba con la descripción vacía. */
+  productService?: ProductServiceOption
   /** Fila ya guardada que se está editando — pásala para autocompletar esa edición en curso. */
   savedRow?: ProformaDetail
   /** tempId de un producto pendiente — pásalo para autocompletar ese producto en memoria. */
@@ -25,7 +32,9 @@ interface AutofillCartItemDeps {
  */
 export function autofillCartItem(deps: AutofillCartItemDeps) {
   const { productServiceId, savedRow, pendingTempId } = deps
-  const picked = useProductServiceSelectStore.getState().options.find((o) => o.id === productServiceId)
+  const picked =
+    deps.productService ??
+    useProductServiceSelectStore.getState().options.find((o) => o.id === productServiceId)
 
   // GUARDADO
   if (savedRow) {

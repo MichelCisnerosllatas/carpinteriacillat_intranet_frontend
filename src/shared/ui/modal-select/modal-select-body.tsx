@@ -78,7 +78,9 @@ export function ModalSelectBody<T>({
   return (
     <ScrollArea className="h-full border-t">
       {/* Mobile (< sm): tarjetas apiladas — una tabla ancha es difícil de leer y de scrollear
-       * horizontalmente con el dedo en pantallas chicas. */}
+       * horizontalmente con el dedo en pantallas chicas. Sin botón "{selectLabel}" al pie: la
+       * tarjeta entera ya es el control de selección (onClick abajo) — el usuario ya sabe que
+       * tocarla la selecciona, así que el botón sería redundante y solo resta espacio. */}
       <div className="flex flex-col gap-2 p-2 sm:hidden">
         {items.map((item, index) => (
           <div
@@ -96,17 +98,6 @@ export function ModalSelectBody<T>({
                 </div>
               ))}
             </div>
-            <Button
-              type="button"
-              size="sm"
-              className="w-full"
-              onClick={(e) => {
-                e.stopPropagation()
-                onSelect(item)
-              }}
-            >
-              {selectLabel}
-            </Button>
           </div>
         ))}
       </div>

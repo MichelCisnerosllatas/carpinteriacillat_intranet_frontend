@@ -3,6 +3,7 @@ export { useProformaTemplateFormStore } from './stores/useProformaTemplateFormSt
 export { useProformaTemplateSelectStore } from './stores/useProformaTemplateSelectStore'
 export { useProformaTemplateDeleteStore } from './stores/useProformaTemplateDeleteStore'
 export { proformaTemplatesService } from './services/proforma-templates.service'
+export { getTemplateDefaultText } from './lib/getTemplateDefaultText'
 export { ProformaTemplatesTable } from './ui/list/proforma-templates-table'
 export { ProformaTemplateForm } from './ui/form/proforma-template-form'
 export { ProformaTemplateDetail } from './ui/detail/proforma-template-detail'

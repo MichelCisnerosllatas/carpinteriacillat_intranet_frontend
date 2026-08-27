@@ -14,6 +14,7 @@ type State = {
 
 type Action = {
   addPendingNote: (item: NoteItem) => void
+  updatePendingNote: (tempId: string, changes: Partial<NoteItem>) => void
   removePendingNote: (tempId: string) => void
   setUploadingTempId: (tempId: string | null) => void
   /** Vacía la lista — se llama al cerrar/cancelar el formulario de creación. */
@@ -26,6 +27,10 @@ export const usePendingNotesStore = create<State & Action>((set) => ({
 
   addPendingNote: (item) => set((state) => ({
     pendingNotes: [...state.pendingNotes, { ...item, tempId: `pending-${++nextTempId}` }],
+  })),
+
+  updatePendingNote: (tempId, changes) => set((state) => ({
+    pendingNotes: state.pendingNotes.map((p) => (p.tempId === tempId ? { ...p, ...changes } : p)),
   })),
 
   removePendingNote: (tempId) => set((state) => ({
