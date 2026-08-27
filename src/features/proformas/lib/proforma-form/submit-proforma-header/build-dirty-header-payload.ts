@@ -36,6 +36,7 @@ export function buildDirtyHeaderPayload(
     delivery_time: values.delivery_time || undefined,
     currency: values.currency || undefined,
     observation: values.observation || undefined,
+    payment_method: values.payment_method || undefined,
   }
 
   const dirtyKeys = Object.keys(dirtyFields) as (keyof ProformaFormValues)[]

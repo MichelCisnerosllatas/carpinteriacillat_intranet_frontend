@@ -1,7 +1,7 @@
 // src/features/proformas/ui/detail/proforma-summary-tab.tsx
 'use client'
 
-import { Building2, CalendarDays, Clock, FileText, Landmark, MapPin, Package, PenTool, User } from 'lucide-react'
+import { Building2, CalendarDays, Clock, FileText, Landmark, MapPin, Package, PenTool, StickyNote, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { formatProformaCurrency } from '../../data/data'
 import type { Proforma } from '../../data/schema'
@@ -108,6 +108,27 @@ export function ProformaSummaryTab({ item }: ProformaSummaryTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Notas adicionales — lista abierta que se muestra debajo de "Tiempo de entrega" en el PDF */}
+      {item.notes.length > 0 && (
+        <Card className="gap-2 py-3">
+          <CardHeader className="px-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <StickyNote className="size-4" />
+              Notas adicionales
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4">
+            <ul className="flex flex-col gap-1">
+              {item.notes.map((note) => (
+                <li key={note.id} className="text-sm text-muted-foreground">
+                  ➢ {note.text}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -3,6 +3,8 @@ import type { UseFormReturn } from 'react-hook-form'
 import { swalConfirmAction } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
+import { usePendingNotesStore, uploadPendingNotes } from '@/features/proforma-notes'
+import { resolveOrCreateClient } from '@/features/clients'
 import { useProformaFormStore } from '../../../stores/useProformaFormStore'
 import { usePendingCartItemsStore } from '../../../stores/usePendingCartItemsStore'
 import { uploadPendingItems } from '../../proforma-cart'
@@ -36,7 +38,8 @@ interface SubmitProformaHeaderDeps {
  *   3. Llama a `create`/`update` del store.
  *   4. Solo al CREAR: si hay productos pendientes en el carrito (`usePendingCartItemsStore`),
  *      espera a que `uploadPendingItems` termine de subirlos TODOS antes de seguir — el modal
- *      se queda abierto (con el título actualizado) durante esa subida.
+ *      se queda abierto (con el título actualizado) durante esa subida. Lo mismo con las notas
+ *      pendientes (`usePendingNotesStore` / `uploadPendingNotes`), justo después.
  *   5. Si sale bien: toast de éxito y cierra el swal. Si sale mal: pinta los errores de campo
  *      en el propio `form` y muestra el mensaje dentro del swal (no navega, el usuario se queda
  *      corrigiendo).
@@ -62,6 +65,19 @@ export async function submitProformaHeader(
     cancelText: 'Cancelar',
     loading: { title: isCreating ? 'Registrando...' : 'Guardando...' },
     action: async ({ close, showError, update }) => {
+      // El cliente puede venir "sin resolver": el usuario escribió el nombre a mano en
+      // <ClientNamePickerField /> sin pasar por el modal de búsqueda, así que `client_id` todavía
+      // es null. Se resuelve acá, justo antes de armar el payload — reutiliza el cliente si ya
+      // existe uno con ese nombre exacto, o lo crea automáticamente si no.
+      if (values.client_id == null) {
+        const resolvedClient = await resolveOrCreateClient(values.client_name ?? '')
+        if (!resolvedClient) {
+          showError('No se pudo verificar/crear el cliente. Intenta nuevamente.')
+          return
+        }
+        values = { ...values, client_id: resolvedClient.id, client_name: resolvedClient.business_name }
+      }
+
       if (isCreating) {
         const payload = buildHeaderPayload(values)
         const newId = await useProformaFormStore.getState().create(payload)
@@ -78,6 +94,13 @@ export async function submitProformaHeader(
         if (usePendingCartItemsStore.getState().pendingCartItems.length > 0) {
           update({ title: 'Guardando líneas de detalle...' })
           await uploadPendingItems({ proformaId: newId })
+        }
+
+        // Igual que con las líneas del carrito: las notas agregadas antes de tener id solo viven
+        // en memoria hasta acá — se suben recién ahora que la proforma ya tiene id real.
+        if (usePendingNotesStore.getState().pendingNotes.length > 0) {
+          update({ title: 'Guardando notas adicionales...' })
+          await uploadPendingNotes({ proformaId: newId })
         }
 
         resultId = newId

@@ -6,6 +6,10 @@ import { z } from 'zod'
 export const proformaFormSchema = z
   .object({
     client_id: z.number().nullable(),
+    // Campo solo-de-formulario (no se envía en el DTO): el texto libre que escribió/eligió el
+    // usuario en <ClientNamePickerField />. `client_id` puede quedar en null hasta que se resuelva
+    // en el submit (ver `resolveOrCreateClient` en `submitProformaHeader`).
+    client_name: z.string().optional(),
     proforma_type_id: z.number().nullable(),
     template_id: z.number().nullable(),
     signature_id: z.number().nullable(),
@@ -17,12 +21,18 @@ export const proformaFormSchema = z
     delivery_time: z.string().optional(),
     currency: z.string().optional(),
     observation: z.string().optional(),
+    payment_method: z.string().optional(),
   })
   // superRefine en vez de .refine() por campo: agrega los issues sin cambiar el tipo
   // inferido de cada campo (sigue siendo `number | null`, como espera el resto del form).
   .superRefine((data, ctx) => {
+    // El cliente ya no exige `client_id` (puede resolverse recién en el submit) — exige que el
+    // usuario haya escrito o elegido algún nombre.
+    if (!data.client_name || !data.client_name.trim()) {
+      ctx.addIssue({ code: 'custom', path: ['client_name'], message: 'El cliente es requerido.' })
+    }
+
     const requiredFields: { key: keyof typeof data; label: string }[] = [
-      { key: 'client_id', label: 'El cliente' },
       { key: 'proforma_type_id', label: 'El tipo de proforma' },
       { key: 'template_id', label: 'La plantilla' },
       { key: 'signature_id', label: 'La firma' },

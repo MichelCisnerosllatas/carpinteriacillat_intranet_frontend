@@ -44,7 +44,7 @@ export function ModalSelectBody<T>({
 }: ModalSelectBodyProps<T>) {
   if (isError) {
     return (
-      <div className="flex flex-col items-center gap-2 px-6 py-10">
+      <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 px-6 py-10">
         <AlertCircle className="text-destructive size-6" />
         <p className="text-destructive text-sm">{errorMessage ?? 'Error al cargar los datos'}</p>
         {onRetry && (
@@ -59,16 +59,16 @@ export function ModalSelectBody<T>({
 
   if (isLoading) {
     return (
-      <div className="text-muted-foreground flex items-center justify-center gap-2 px-6 py-10 text-sm">
-        <Loader2 className="size-4 animate-spin" />
-        Cargando...
+      <div className="text-muted-foreground flex h-full min-h-64 flex-col items-center justify-center gap-3 px-6 py-10">
+        <Loader2 className="size-7 animate-spin" />
+        <span className="text-sm">Cargando...</span>
       </div>
     )
   }
 
   if (items.length === 0) {
     return (
-      <div className="text-muted-foreground flex flex-col items-center gap-3 px-6 py-10 text-center text-sm">
+      <div className="text-muted-foreground flex h-full min-h-64 flex-col items-center justify-center gap-3 px-6 py-10 text-center text-sm">
         {emptyMessage}
         {emptyAction}
       </div>
@@ -76,7 +76,7 @@ export function ModalSelectBody<T>({
   }
 
   return (
-    <ScrollArea className="h-80 border-t">
+    <ScrollArea className="h-full border-t">
       {/* Mobile (< sm): tarjetas apiladas — una tabla ancha es difícil de leer y de scrollear
        * horizontalmente con el dedo en pantallas chicas. */}
       <div className="flex flex-col gap-2 p-2 sm:hidden">

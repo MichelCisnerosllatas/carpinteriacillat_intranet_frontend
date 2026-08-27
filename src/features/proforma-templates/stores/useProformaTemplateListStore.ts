@@ -97,6 +97,7 @@ export const mapProformaTemplateFromApi = (item: ProformaTemplateJoinApiItem): P
       showItemsTable: sections.show_items_table ?? true,
       showSummaryTotal: sections.show_summary_total ?? true,
       showDeliveryTime: sections.show_delivery_time ?? true,
+      showAdditionalNotes: sections.show_additional_notes ?? true,
 
       showCompanyData: sections.show_company_data ?? true,
       showCompanyTaxId: sections.show_company_tax_id ?? true,

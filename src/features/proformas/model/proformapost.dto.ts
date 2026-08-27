@@ -17,6 +17,7 @@ export type ProformaPostRequestDto = {
   currency?: string
   status?: ProformaStatusApi
   observation?: string
+  payment_method?: string
 }
 
 export type ProformaPostResponseDto = {

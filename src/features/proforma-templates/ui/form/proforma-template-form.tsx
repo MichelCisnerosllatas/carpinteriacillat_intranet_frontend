@@ -145,6 +145,7 @@ export function ProformaTemplateForm({ mode, id }: { mode: 'create' | 'edit'; id
         showItemsTable: resolved.sections.showItemsTable,
         showSummaryTotal: resolved.sections.showSummaryTotal,
         showDeliveryTime: resolved.sections.showDeliveryTime,
+        showAdditionalNotes: resolved.sections.showAdditionalNotes,
         showCompanyData: resolved.sections.showCompanyData,
         showCompanyTaxId: resolved.sections.showCompanyTaxId,
         showCompanyAddress: resolved.sections.showCompanyAddress,

@@ -21,7 +21,7 @@ export function LinesSection({ proformaId, currency, onCountChange, cartError }:
     <Card className={cn(cartError && 'border-destructive/50')}>
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
-          Carrito
+          Productos/Servicios
           <Tooltip>
             <TooltipTrigger asChild>
               <Info className="size-3.5 text-muted-foreground" />

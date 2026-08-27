@@ -43,7 +43,9 @@
 
 import { useMemo } from 'react'
 import { useState } from 'react'
+import { useIsMobile } from '@/shared/lib/use-mobile'
 import { Dialog, DialogContent } from '@/shared/ui/dialog'
+import { Sheet, SheetContent } from '@/shared/ui/sheet'
 import { ModalSelectHeader } from './modal-select-header'
 import { ModalSelectBody } from './modal-select-body'
 import { ModalSelectFooter } from './modal-select-footer'
@@ -80,7 +82,10 @@ export function ModalSelect<T>({
   emptyAction,
   selectLabel = 'Seleccionar',
   footer,
+  onCreateNew,
+  createLabel,
 }: ModalSelectProps<T>) {
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -101,43 +106,67 @@ export function ModalSelect<T>({
     }
   )
 
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next)
-        if (!next) setSearch('')
-      }}
-    >
-      <DialogContent className="flex max-h-[85vh] w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col gap-0 p-0 sm:max-w-xl lg:max-w-2xl">
-        <ModalSelectHeader
-          title={title}
-          description={description}
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder={searchPlaceholder}
-          onSearchKeyDown={onKeyDown}
+  const handleOpenChange = (next: boolean) => {
+    onOpenChange(next)
+    if (!next) setSearch('')
+  }
+
+  const content = (
+    <>
+      <ModalSelectHeader
+        title={title}
+        description={description}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={searchPlaceholder}
+        onSearchKeyDown={onKeyDown}
+        onCreateNew={onCreateNew}
+        createLabel={createLabel}
+      />
+
+      <div onKeyDown={onKeyDown} tabIndex={-1} className="min-h-0 flex-1">
+        <ModalSelectBody
+          items={filtered}
+          isLoading={isLoading}
+          isError={isError}
+          errorMessage={errorMessage}
+          onRetry={onRetry}
+          getId={getId}
+          columns={columns}
+          emptyMessage={emptyMessage}
+          emptyAction={emptyAction}
+          selectLabel={selectLabel}
+          highlightedIndex={highlightedIndex}
+          onHighlight={setHighlightedIndex}
+          onSelect={handleSelect}
         />
+      </div>
 
-        <div onKeyDown={onKeyDown} tabIndex={-1} className="min-h-0 flex-1">
-          <ModalSelectBody
-            items={filtered}
-            isLoading={isLoading}
-            isError={isError}
-            errorMessage={errorMessage}
-            onRetry={onRetry}
-            getId={getId}
-            columns={columns}
-            emptyMessage={emptyMessage}
-            emptyAction={emptyAction}
-            selectLabel={selectLabel}
-            highlightedIndex={highlightedIndex}
-            onHighlight={setHighlightedIndex}
-            onSelect={handleSelect}
-          />
-        </div>
+      <ModalSelectFooter>{footer}</ModalSelectFooter>
+    </>
+  )
 
-        <ModalSelectFooter>{footer}</ModalSelectFooter>
+  // Mobile: sheet a pantalla casi completa en vez de un Dialog chico centrado — mismo patrón que
+  // <FolderPicker /> (Popover en desktop, Sheet en mobile). Un Dialog de ~85vh en un celular deja
+  // franjas de la página de atrás visibles arriba/abajo y hace la lista de resultados muy chica;
+  // el Sheet aprovecha casi todo el alto real de la pantalla.
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent
+          side="bottom"
+          className="flex h-[92vh] max-h-[92vh] flex-col gap-0 rounded-t-2xl p-0"
+        >
+          {content}
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="flex max-h-[85vh] w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col gap-0 p-0 sm:max-w-xl lg:max-w-2xl">
+        {content}
       </DialogContent>
     </Dialog>
   )

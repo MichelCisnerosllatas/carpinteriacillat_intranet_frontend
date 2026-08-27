@@ -117,6 +117,11 @@ export const SECTION_GROUPS: {
         label: 'Mostrar tiempo de entrega',
         tip: 'Muestra el plazo de entrega indicado en la proforma.',
       },
+      {
+        name: 'showAdditionalNotes',
+        label: 'Mostrar notas adicionales',
+        tip: 'Muestra, debajo del tiempo de entrega, la lista de notas adicionales agregadas en la proforma (ej: garantía, validez de la oferta).',
+      },
     ],
   },
   {

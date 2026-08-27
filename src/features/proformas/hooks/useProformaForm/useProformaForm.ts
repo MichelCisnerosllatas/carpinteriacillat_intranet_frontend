@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useProformaTypeSelectStore } from '@/features/proforma-types'
 import { useProformaTemplateSelectStore } from '@/features/proforma-templates'
-import { useClientSelectStore } from '@/features/clients'
 import { useCompanySignatureSelectStore } from '@/features/company-signatures'
 import { useProformaFormStore } from '../../stores/useProformaFormStore'
 import {
@@ -63,12 +62,13 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
   // edición nunca se toca (el efecto de `form.reset` con los datos reales corre después y
   // siempre gana). No se llama a `load()` aquí — cada combobox ya carga sus propias opciones al
   // montarse; el store deduplica, así que hacerlo también acá era 100% redundante.
+  // El cliente queda afuera de este auto-select: ahora es texto libre (<ClientNamePickerField />)
+  // resuelto recién en el submit, no un combobox — preseleccionar el primer cliente de la lista
+  // dejaría `client_id` con un valor "silencioso" sin que el input muestre ningún nombre.
   const { options: typeOptions } = useProformaTypeSelectStore()
   const { options: templateOptions } = useProformaTemplateSelectStore()
-  const { options: clientOptions } = useClientSelectStore()
   const { options: signatureOptions } = useCompanySignatureSelectStore()
 
-  useAutoSelectFirstOption(form, 'client_id', !isEdit, clientOptions)
   useAutoSelectFirstOption(form, 'signature_id', !isEdit, signatureOptions)
   useAutoSelectFirstOption(form, 'proforma_type_id', !isEdit, typeOptions)
   useAutoSelectFirstOption(form, 'template_id', !isEdit, templateOptions)

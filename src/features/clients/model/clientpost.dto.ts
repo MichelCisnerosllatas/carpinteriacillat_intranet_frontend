@@ -1,3 +1,5 @@
+import type { ClientApiItem } from './client-api-item.dto'
+
 export type ClientPostRequestDto = {
   id_typedoc?: number | null
   business_name: string
@@ -13,6 +15,6 @@ export type ClientPostResponseDto = {
   success: boolean
   status: number
   message: string
-  data: { id: number }
+  data: ClientApiItem
   errors?: Record<string, string[]>
 }

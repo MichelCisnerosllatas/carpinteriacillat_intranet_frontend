@@ -25,6 +25,14 @@ export const proformaDetailViewSchema = z.object({
 })
 export type ProformaDetailView = z.infer<typeof proformaDetailViewSchema>
 
+// Nota adicional tal como viene del join (solo lectura, usada en el detalle/documento).
+export const proformaNoteViewSchema = z.object({
+  id: z.number(),
+  text: z.string(),
+  order: z.number().nullable(),
+})
+export type ProformaNoteView = z.infer<typeof proformaNoteViewSchema>
+
 export const proformaSchema = z.object({
   id: z.number(),
   clientId: z.number().nullable(),
@@ -66,6 +74,7 @@ export const proformaSchema = z.object({
   status: proformaStatusSchema,
   observation: z.string().nullable(),
   details: z.array(proformaDetailViewSchema),
+  notes: z.array(proformaNoteViewSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
 })

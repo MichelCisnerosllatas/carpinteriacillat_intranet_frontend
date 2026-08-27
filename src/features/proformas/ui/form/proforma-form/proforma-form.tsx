@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { Separator } from '@/shared/ui/separator'
 import { Form } from '@/shared/ui/form'
 import { AlertError } from '@/widgets/alerts_components'
+import { NotesSection } from '@/features/proforma-notes'
 import { useProformaForm } from '../../../hooks'
 import { HeaderSection } from './header-section'
 import { LinesSection } from './lines-section'
@@ -50,6 +51,8 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
       <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-4">
         <HeaderSection form={form} isEdit={isEdit} proformaId={proformaId} isManualSaving={isManualSaving} />
 
+        <NotesSection proformaId={proformaId} />
+        
         <LinesSection
           proformaId={proformaId}
           currency={form.watch('currency') || 'S/.'}

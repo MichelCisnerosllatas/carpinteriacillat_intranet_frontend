@@ -45,6 +45,11 @@ export function ProductServicePickerModal({
     void load()
   }, [])
 
+  const handleCreateNew = () => {
+    setOpen(false)
+    setQuickCreateOpen(true)
+  }
+
   const handleCreated = (item: ProductServiceApiItem) => {
     // El item recién creado todavía no está en el caché del select — se recarga para que quede
     // disponible de inmediato si el usuario abre el combobox de esa misma línea para editarla.
@@ -105,22 +110,15 @@ export function ProductServicePickerModal({
         searchPlaceholder="Buscar producto o servicio..."
         emptyMessage="No se encontraron productos o servicios."
         emptyAction={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => {
-              setOpen(false)
-              setQuickCreateOpen(true)
-            }}
-          >
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleCreateNew}>
             <PackagePlus className="size-4" />
             Crear producto o servicio
           </Button>
         }
         selectLabel="Agregar"
         onSelect={onSelect}
+        onCreateNew={handleCreateNew}
+        createLabel="Nuevo"
       />
 
       {previewItem && (
