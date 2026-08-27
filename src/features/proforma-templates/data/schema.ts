@@ -30,6 +30,7 @@ export const proformaTemplateSectionsSchema = z.object({
   showItemsTable: z.boolean(),
   showSummaryTotal: z.boolean(),
   showDeliveryTime: z.boolean(),
+  showAdditionalNotes: z.boolean(),
 
   showCompanyData: z.boolean(),
   showCompanyTaxId: z.boolean(),

@@ -3,6 +3,9 @@ import type { CompanyBranchApiItem } from './companybranchget.dto'
 export type CompanyBranchPostRequestDto = {
   name: string
   address: string
+  schedule?: string
+  latitude?: number
+  longitude?: number
   status?: number
 }
 

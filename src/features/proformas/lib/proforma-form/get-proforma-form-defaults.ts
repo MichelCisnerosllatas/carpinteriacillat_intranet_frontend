@@ -7,6 +7,7 @@ import type { ProformaFormValues } from './schema'
 export function getProformaFormDefaults(): ProformaFormValues {
   return {
     client_id: null,
+    client_name: '',
     proforma_type_id: null,
     template_id: null,
     signature_id: null,
@@ -16,7 +17,8 @@ export function getProformaFormDefaults(): ProformaFormValues {
     place_of_issue: 'Iquitos',
     client_attention: '',
     delivery_time: '15 días hábiles',
-    currency: 'PEN',
+    currency: 'S/.',
     observation: '',
+    payment_method: '',
   }
 }

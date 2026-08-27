@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { ClientSelect } from '@/features/clients'
@@ -43,6 +44,8 @@ export function SalesTable() {
   const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
   const [dateTo, setDateTo] = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching] = useState(false)
 
   const pagination = useMemo<PaginationState>(
     () => ({
@@ -52,25 +55,20 @@ export function SalesTable() {
     [filters.page, filters.per_page]
   )
 
-  const appliedFilters = useRef({ search, status, paymentStatus, clientId, dateFrom, dateTo })
+  const appliedSearch = useRef(search)
 
   useEffect(() => {
     void load()
   }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.status !== status ||
-      prev.paymentStatus !== paymentStatus ||
-      prev.clientId !== clientId ||
-      prev.dateFrom !== dateFrom ||
-      prev.dateTo !== dateTo
-    appliedFilters.current = { search, status, paymentStatus, clientId, dateFrom, dateTo }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
+      setIsUserFetching(true)
       void load({
         search,
         status: status === 'all' ? undefined : (status as SaleStatus),
@@ -79,10 +77,42 @@ export function SalesTable() {
         date_from: dateFrom,
         date_to: dateTo,
         page: 1,
-      })
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, status, paymentStatus, clientId, dateFrom, dateTo])
+  }, [search])
+
+  // Estado/Cobro/Cliente/Fecha son acciones discretas (un clic o una selección), no texto que
+  // se esté escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: {
+    status?: string
+    paymentStatus?: string
+    clientId?: number | null
+    dateFrom?: string
+    dateTo?: string
+  }) => {
+    const nextStatus = overrides.status ?? status
+    const nextPaymentStatus = overrides.paymentStatus ?? paymentStatus
+    const nextClientId = overrides.clientId !== undefined ? overrides.clientId : clientId
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      status: nextStatus === 'all' ? undefined : (nextStatus as SaleStatus),
+      payment_status: nextPaymentStatus === 'all' ? undefined : (nextPaymentStatus as SalePaymentStatus),
+      client_id: nextClientId ?? undefined,
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
+  const handlePaymentStatusChange = (value: string) => { setPaymentStatus(value); applyFilters({ paymentStatus: value }) }
+  const handleClientIdChange = (value: number | null) => { setClientId(value); applyFilters({ clientId: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: items,
@@ -93,7 +123,8 @@ export function SalesTable() {
     enableRowSelection: true,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -106,12 +137,14 @@ export function SalesTable() {
   const selectedCount = selectedRows.length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch('')
     setStatus('all')
     setPaymentStatus('all')
     setClientId(null)
     setDateFrom('')
     setDateTo('')
+    setIsUserFetching(true)
     void load({
       search: '',
       status: undefined,
@@ -120,7 +153,7 @@ export function SalesTable() {
       date_from: '',
       date_to: '',
       page: 1,
-    })
+    }).finally(() => setIsUserFetching(false))
   }
 
   const handleBulkDelete = async () => {
@@ -172,14 +205,7 @@ export function SalesTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="bg-background text-muted-foreground mt-2 flex items-center gap-2 rounded-full border px-3 py-1 text-xs shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />
-            Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">
@@ -195,7 +221,7 @@ export function SalesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[140px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -211,7 +237,7 @@ export function SalesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Cobro</span>
-            <Select value={paymentStatus} disabled={isFetching} onValueChange={setPaymentStatus}>
+            <Select value={paymentStatus} disabled={isFetching} onValueChange={handlePaymentStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[140px]">
                 <SelectValue placeholder="Cobro" />
               </SelectTrigger>
@@ -230,7 +256,7 @@ export function SalesTable() {
             <div className="w-full sm:w-[200px]">
               <ClientSelect
                 value={clientId}
-                onValueChange={setClientId}
+                onValueChange={handleClientIdChange}
                 showAll
                 disabled={isFetching}
                 placeholder="Todos"
@@ -243,7 +269,7 @@ export function SalesTable() {
               type="date"
               value={dateFrom}
               disabled={isFetching}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={(e) => handleDateFromChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>
@@ -253,7 +279,7 @@ export function SalesTable() {
               type="date"
               value={dateTo}
               disabled={isFetching}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={(e) => handleDateToChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>

@@ -1,13 +1,29 @@
 // src/features/proformas/ui/detail/proforma-pdf-tab.tsx
 'use client'
 
+import dynamic from 'next/dynamic'
 import { AlertTriangle, Download, ExternalLink, FileText, Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
+// pdf.js necesita `canvas`/Web Worker del navegador — sin ssr:false, Next intentaría
+// renderizarlo también en el servidor (como cualquier componente 'use client' en su primer
+// render) y reventaría ahí por falta de esas APIs.
+const PdfViewer = dynamic(
+  () => import('@/shared/ui/pdf-viewer').then((m) => m.PdfViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  }
+)
+
 interface ProformaPdfTabProps {
-  code: string
+  pdfBlob: Blob | null
   pdfUrl: string | null
   isLoading: boolean
   isError: boolean
@@ -23,7 +39,7 @@ interface ProformaPdfTabProps {
  * puede vivir aquí sin perderse).
  */
 export function ProformaPdfTab({
-  code,
+  pdfBlob,
   pdfUrl,
   isLoading,
   isError,
@@ -33,16 +49,16 @@ export function ProformaPdfTab({
 }: ProformaPdfTabProps) {
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between border-b">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 border-b">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <FileText className="size-4" /> Vista previa del documento
+          <FileText className="size-4 shrink-0" /> Vista previa del documento
         </CardTitle>
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" disabled={!pdfUrl} onClick={() => pdfUrl && window.open(pdfUrl, '_blank')}>
-                <ExternalLink className="mr-1 size-4" />
-                Abrir en pestaña
+                <ExternalLink className="size-4 sm:mr-1" />
+                <span className="hidden sm:inline">Abrir en pestaña</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Abrir el PDF en una pestaña nueva</TooltipContent>
@@ -50,8 +66,12 @@ export function ProformaPdfTab({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" disabled={isDownloading} onClick={onDownload}>
-                {isDownloading ? <Loader2 className="mr-1 size-4 animate-spin" /> : <Download className="mr-1 size-4" />}
-                Descargar
+                {isDownloading ? (
+                  <Loader2 className="size-4 animate-spin sm:mr-1" />
+                ) : (
+                  <Download className="size-4 sm:mr-1" />
+                )}
+                <span className="hidden sm:inline">Descargar</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Descargar el PDF (reutiliza el ya generado)</TooltipContent>
@@ -81,9 +101,7 @@ export function ProformaPdfTab({
               </Button>
             </div>
           )}
-          {!isLoading && !isError && pdfUrl && (
-            <iframe src={pdfUrl} title={`Proforma ${code}`} className="h-full w-full" />
-          )}
+          {!isLoading && !isError && pdfBlob && <PdfViewer file={pdfBlob} />}
         </div>
       </CardContent>
     </Card>

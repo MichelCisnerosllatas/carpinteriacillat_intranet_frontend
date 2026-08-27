@@ -24,6 +24,15 @@ export type ProformaDetailApiItem = {
   updated_at: string | null
 }
 
+export type ProformaNoteApiItem = {
+  id: number
+  proforma_id: number
+  text: string
+  order: number | null
+  created_at: string
+  updated_at: string | null
+}
+
 // Item plano — devuelto por GET /proformas (sin relaciones)
 export type ProformaApiItem = {
   id: number
@@ -83,4 +92,7 @@ export type ProformaJoinApiItem = ProformaApiItem & {
     code: string | null
   } | null
   details: ProformaDetailApiItem[]
+  // Opcional: el backend puede no incluirlo todavía si el eager-load de `notes` en
+  // ProformaJoinResource se despliega más tarde — el mapeo trata la ausencia como lista vacía.
+  notes?: ProformaNoteApiItem[]
 }

@@ -69,7 +69,9 @@ export function ProductServiceThumb({
       )}
     >
       {img}
-      <span className="absolute inset-0 hidden items-center justify-center bg-black/40 group-hover:flex">
+      {/* En touch no hay :hover para revelar el ícono — el tap ya abre el preview igual,
+          esto es solo la pista visual, así que también se muestra en pantallas táctiles */}
+      <span className="absolute inset-0 hidden items-center justify-center bg-black/40 group-hover:flex pointer-coarse:flex">
         <ZoomIn className="size-3.5 text-white" />
       </span>
     </button>

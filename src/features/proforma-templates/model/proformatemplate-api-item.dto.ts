@@ -19,6 +19,7 @@ export type PdfTemplateSections = {
   show_items_table?: boolean
   show_summary_total?: boolean
   show_delivery_time?: boolean
+  show_additional_notes?: boolean
   // Datos de la empresa (línea por línea)
   show_company_data?: boolean
   show_company_tax_id?: boolean

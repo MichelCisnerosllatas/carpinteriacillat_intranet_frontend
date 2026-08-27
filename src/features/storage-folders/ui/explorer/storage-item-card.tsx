@@ -2,6 +2,7 @@
 
 import { Calendar, Download, Eye, FolderOpen, MoreVertical, MoveRight, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { useLongPress } from '@/shared/lib/use-long-press'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Button } from '@/shared/ui/button'
 import {
@@ -21,6 +22,7 @@ export type FolderEntry = {
   item:       StorageFolder
   onNavigate: () => void
   onRename:   () => void
+  onMove:     () => void
   onDelete:   () => void
 }
 
@@ -74,11 +76,18 @@ export function StorageItemCard({
   const isFolder  = entry.kind === 'folder'
   const canDrag   = canDragProp ?? true // both files and folders are draggable
 
-  const handleCardClick = () => {
-    if (anySelected) { onSelect(); return }
-    if (isFolder) (entry as FolderEntry).onNavigate()
-    else (entry as FileEntry).onPreview()
-  }
+  // En touch no hay :hover para revelar el checkbox: mantener presionado la tarjeta
+  // activa selección (igual que en la galería de imágenes). El tap normal conserva su
+  // comportamiento de siempre: si ya hay algo seleccionado, alterna selección; si no,
+  // navega/abre — así el tap no deja de servir para "ver" mientras se selecciona.
+  const tapHandlers = useLongPress({
+    onLongPress: onSelect,
+    onTap: () => {
+      if (anySelected) { onSelect(); return }
+      if (isFolder) (entry as FolderEntry).onNavigate()
+      else (entry as FileEntry).onPreview()
+    },
+  })
 
   return (
     <div
@@ -90,13 +99,13 @@ export function StorageItemCard({
       onDrop={isFolder ? onDrop : undefined}
       className={cn(
         'group relative flex flex-col rounded-2xl border bg-card transition-all duration-150',
-        'hover:shadow-md hover:border-border/80 cursor-pointer select-none',
+        'hover:shadow-md hover:border-border/80 cursor-pointer select-none touch-manipulation',
         selected  && 'ring-2 ring-primary border-primary/50 shadow-sm',
         isDragOver && 'ring-2 ring-emerald-500 border-emerald-500/60 shadow-lg scale-[1.02] bg-emerald-50/30 dark:bg-emerald-950/20',
         isDragging && 'opacity-40 scale-95',
         canDrag   && 'active:cursor-grabbing',
       )}
-      onClick={handleCardClick}
+      {...tapHandlers}
       onDoubleClick={() => {
         if (isFolder) (entry as FolderEntry).onNavigate()
       }}
@@ -110,10 +119,12 @@ export function StorageItemCard({
         </div>
       )}
 
-      {/* ── Checkbox (top-left) ─────────────────────────────────────── */}
+      {/* ── Checkbox (top-left) — en touch siempre visible (pointer-coarse) y con más
+          área de toque; con mouse, visible en hover o cuando ya está seleccionada ── */}
       <div
         className={cn(
-          'absolute top-2 left-2 z-10 transition-opacity duration-100',
+          'absolute top-1 left-1 z-10 rounded-full p-1 transition-opacity duration-100',
+          'pointer-coarse:p-2 pointer-coarse:bg-black/10 pointer-coarse:opacity-100',
           anySelected || selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
           isDragOver && 'opacity-0',
         )}
@@ -121,15 +132,16 @@ export function StorageItemCard({
       >
         <Checkbox
           checked={selected}
-          className="size-4 rounded-[4px] border-2 bg-background/80 backdrop-blur-sm"
+          className="size-4 rounded-[4px] border-2 bg-background/80 backdrop-blur-sm pointer-coarse:size-5"
         />
       </div>
 
-      {/* ── Context menu (top-right) ─────────────────────────────────── */}
+      {/* ── Context menu (top-right) — en touch siempre visible (pointer-coarse), con
+          un botón de 36px de área de toque (antes 24px, inalcanzable con el dedo) ── */}
       <div
         className={cn(
           'absolute top-2 right-2 z-10 transition-opacity duration-100',
-          'opacity-0 group-hover:opacity-100',
+          'opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100',
           isDragOver && 'opacity-0',
         )}
         onClick={(e) => e.stopPropagation()}
@@ -142,16 +154,16 @@ export function StorageItemCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-6 rounded-lg bg-background/70 backdrop-blur-sm hover:bg-background"
+                    className="size-6 rounded-lg bg-background/70 backdrop-blur-sm hover:bg-background pointer-coarse:size-9"
                   >
-                    <MoreVertical className="size-3.5" />
+                    <MoreVertical className="size-3.5 pointer-coarse:size-4" />
                   </Button>
                 </DropdownMenuTrigger>
               </span>
             </TooltipTrigger>
             <TooltipContent>Más acciones</TooltipContent>
           </Tooltip>
-          <DropdownMenuContent align="end" className="min-w-36">
+          <DropdownMenuContent align="end" className="min-w-36 [&_[data-slot=dropdown-menu-item]]:pointer-coarse:py-2.5">
             {isFolder ? (
               <>
                 <DropdownMenuItem onClick={() => (entry as FolderEntry).onNavigate()}>
@@ -161,6 +173,10 @@ export function StorageItemCard({
                 <DropdownMenuItem onClick={() => (entry as FolderEntry).onRename()}>
                   <Pencil className="size-3.5 mr-2" />Renombrar
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => (entry as FolderEntry).onMove()}>
+                  <MoveRight className="size-3.5 mr-2" />Mover
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => (entry as FolderEntry).onDelete()}

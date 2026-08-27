@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { ProformaTypeSelect } from '@/features/proforma-types'
 import { ProformaTemplateSelect } from '@/features/proforma-templates'
-import { ClientSelect } from '@/features/clients'
+import { ClientNamePickerField } from '@/features/clients'
 import { CompanySignatureSelect } from '@/features/company-signatures'
 import { PROFORMA_CURRENCIES } from '../../../data/data'
 import type { UseFormReturn } from 'react-hook-form'
@@ -45,18 +45,25 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           </span>
         )}
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <FormField
           control={form.control}
-          name="client_id"
-          render={({ field }) => (
+          name="client_name"
+          render={() => (
             <FormItem>
               <FormLabel>
                 Cliente <span className="text-destructive">*</span>
               </FormLabel>
-              <ClientSelect
-                value={field.value ?? null}
-                onValueChange={field.onChange}
+              <ClientNamePickerField
+                clientId={form.watch('client_id')}
+                clientName={form.watch('client_name') ?? ''}
+                onChange={({ clientId, clientName }) => {
+                  // Ambos campos se marcan dirty juntos: aunque `clientId` venga null (el usuario
+                  // escribió a mano, todavía sin resolver), el submit lo resuelve recién ahí — si
+                  // no queda dirty acá, `buildDirtyHeaderPayload` no lo incluiría en el PATCH.
+                  form.setValue('client_id', clientId, { shouldDirty: true })
+                  form.setValue('client_name', clientName, { shouldDirty: true })
+                }}
                 disabled={isManualSaving}
               />
               <FormMessage />
@@ -249,7 +256,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
               </FormLabel>
               <FormControl>
                 <Input
-                  placeholder="PEN"
+                  placeholder="S/."
                   className="uppercase"
                   list="proforma-currencies"
                   disabled={isManualSaving}
@@ -270,11 +277,31 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           control={form.control}
           name="observation"
           render={({ field }) => (
-            <FormItem className="col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
+            <FormItem className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
               <FormLabel>Observación</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Observaciones opcionales"
+                  className="resize-none"
+                  rows={3}
+                  disabled={isManualSaving}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="payment_method"
+          render={({ field }) => (
+            <FormItem className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
+              <FormLabel>Forma de pago</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Ej: 50% adelanto, 50% contra entrega"
                   className="resize-none"
                   rows={3}
                   disabled={isManualSaving}

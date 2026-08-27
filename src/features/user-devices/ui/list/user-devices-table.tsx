@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { userDevicesColumns } from './user-devices-columns'
@@ -61,29 +62,26 @@ export function UserDevicesTable() {
   const [deviceType, setDeviceType]             = useState<string>('all')
   const [dateFrom, setDateFrom]                 = useState(filters.date_from ?? '')
   const [dateTo, setDateTo]                     = useState(filters.date_to ?? '')
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
     pageSize: filters.per_page ?? 15,
   }), [filters.page, filters.per_page])
 
-  const appliedFilters = useRef({ search, status, platform, deviceType, dateFrom, dateTo })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed =
-      prev.search !== search ||
-      prev.status !== status ||
-      prev.platform !== platform ||
-      prev.deviceType !== deviceType ||
-      prev.dateFrom !== dateFrom ||
-      prev.dateTo !== dateTo
-    appliedFilters.current = { search, status, platform, deviceType, dateFrom, dateTo }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const timeout = window.setTimeout(() => {
+      setIsUserFetching(true)
       void load({
         search,
         is_active: status === 'all' ? undefined : (Number(status) as 0 | 1),
@@ -92,10 +90,42 @@ export function UserDevicesTable() {
         date_from: dateFrom,
         date_to: dateTo,
         page: 1,
-      })
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(timeout)
-  }, [search, status, platform, deviceType, dateFrom, dateTo])
+  }, [search])
+
+  // Estado/Plataforma/Tipo/Fecha son acciones discretas (un clic o una selección), no texto
+  // que se esté escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: {
+    status?: string
+    platform?: string
+    deviceType?: string
+    dateFrom?: string
+    dateTo?: string
+  }) => {
+    const nextStatus = overrides.status ?? status
+    const nextPlatform = overrides.platform ?? platform
+    const nextDeviceType = overrides.deviceType ?? deviceType
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      is_active: nextStatus === 'all' ? undefined : (Number(nextStatus) as 0 | 1),
+      platform: nextPlatform === 'all' ? undefined : nextPlatform,
+      device_type: nextDeviceType === 'all' ? undefined : nextDeviceType,
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
+  const handlePlatformChange = (value: string) => { setPlatform(value); applyFilters({ platform: value }) }
+  const handleDeviceTypeChange = (value: string) => { setDeviceType(value); applyFilters({ deviceType: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: devices,
@@ -106,7 +136,8 @@ export function UserDevicesTable() {
     enableRowSelection: false,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -116,12 +147,14 @@ export function UserDevicesTable() {
   })
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setStatus('all'); setPlatform('all')
     setDeviceType('all'); setDateFrom(''); setDateTo('')
+    setIsUserFetching(true)
     void load({
       search: '', is_active: undefined, platform: undefined,
       device_type: undefined, date_from: '', date_to: '', page: 1,
-    })
+    }).finally(() => setIsUserFetching(false))
   }
 
   if (!hasLoaded && !isInitialLoading) {
@@ -147,14 +180,7 @@ export function UserDevicesTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />
-            Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       {/* Filtros */}
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -173,7 +199,7 @@ export function UserDevicesTable() {
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -183,7 +209,7 @@ export function UserDevicesTable() {
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Plataforma</span>
-            <Select value={platform} disabled={isFetching} onValueChange={setPlatform}>
+            <Select value={platform} disabled={isFetching} onValueChange={handlePlatformChange}>
               <SelectTrigger className="h-8 w-full sm:w-[175px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {PLATFORM_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -193,7 +219,7 @@ export function UserDevicesTable() {
 
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Tipo</span>
-            <Select value={deviceType} disabled={isFetching} onValueChange={setDeviceType}>
+            <Select value={deviceType} disabled={isFetching} onValueChange={handleDeviceTypeChange}>
               <SelectTrigger className="h-8 w-full sm:w-[175px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {DEVICE_TYPE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -207,7 +233,7 @@ export function UserDevicesTable() {
               type="date"
               value={dateFrom}
               disabled={isFetching}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={(e) => handleDateFromChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>
@@ -218,7 +244,7 @@ export function UserDevicesTable() {
               type="date"
               value={dateTo}
               disabled={isFetching}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={(e) => handleDateToChange(e.target.value)}
               className="h-8 w-full sm:w-[145px]"
             />
           </div>
@@ -238,7 +264,10 @@ export function UserDevicesTable() {
                 variant="outline"
                 className="size-8"
                 disabled={isFetching}
-                onClick={() => void load({ page: 1 })}
+                onClick={() => {
+                  setIsUserFetching(true)
+                  void load({ page: 1 }).finally(() => setIsUserFetching(false))
+                }}
               >
                 <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
               </Button>

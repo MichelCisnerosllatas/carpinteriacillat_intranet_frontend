@@ -21,6 +21,7 @@ export function useSyncProformaFormValues(
     if (isEdit && resolved) {
       form.reset({
         client_id: resolved.clientId,
+        client_name: resolved.clientBusinessName ?? '',
         proforma_type_id: resolved.proformaTypeId,
         template_id: resolved.templateId,
         signature_id: resolved.signatureId,
@@ -32,6 +33,7 @@ export function useSyncProformaFormValues(
         delivery_time: resolved.deliveryTime ?? '',
         currency: resolved.currency,
         observation: resolved.observation ?? '',
+        payment_method: resolved.paymentMethod ?? '',
       })
     }
   }, [isEdit, resolved?.id])

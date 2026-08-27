@@ -1,4 +1,3 @@
-export { FileGrid } from './ui/grid/file-grid'
 export { useStorageFileListStore } from './stores/useStorageFileListStore'
 export { useStorageFileActionStore } from './stores/useStorageFileActionStore'
 export { storageFilesService } from './services/storage-files.service'

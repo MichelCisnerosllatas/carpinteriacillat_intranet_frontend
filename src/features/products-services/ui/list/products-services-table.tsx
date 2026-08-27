@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -35,32 +36,52 @@ export function ProductsServicesTable() {
   const [type, setType]                         = useState<string>(filters.type ?? 'all')
   const [status, setStatus]                     = useState<string>(filters.status !== undefined ? String(filters.status) : 'all')
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  const appliedFilters = useRef({ search, type, status })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed = prev.search !== search || prev.type !== type || prev.status !== status
-    appliedFilters.current = { search, type, status }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
+      setIsUserFetching(true)
       void load({
         search,
         type: type === 'all' ? undefined : (type as 'product' | 'service'),
         status: status === 'all' ? undefined : Number(status),
         page: 1,
-      })
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, type, status])
+  }, [search])
+
+  // Tipo/Estado son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: { type?: string; status?: string }) => {
+    const nextType = overrides.type ?? type
+    const nextStatus = overrides.status ?? status
+    setIsUserFetching(true)
+    void load({
+      search,
+      type: nextType === 'all' ? undefined : (nextType as 'product' | 'service'),
+      status: nextStatus === 'all' ? undefined : Number(nextStatus),
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleTypeChange = (value: string) => { setType(value); applyFilters({ type: value }) }
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
 
   const table = useReactTable({
     data: items,
@@ -71,7 +92,8 @@ export function ProductsServicesTable() {
     enableRowSelection: true,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -88,8 +110,10 @@ export function ProductsServicesTable() {
   const activeCount   = items.filter((i) => i.stateValue === 1).length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setType('all'); setStatus('all')
-    void load({ search: '', type: undefined, status: undefined, page: 1 })
+    setIsUserFetching(true)
+    void load({ search: '', type: undefined, status: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   const handleBulkActivate = async () => {
@@ -151,13 +175,7 @@ export function ProductsServicesTable() {
     <div className="relative flex flex-1 flex-col gap-4">
       <ProductServiceStatsBar total={meta?.total ?? 0} products={productsCount} services={servicesCount} active={activeCount} />
 
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">
@@ -167,7 +185,7 @@ export function ProductsServicesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Tipo</span>
-            <Select value={type} disabled={isFetching} onValueChange={setType}>
+            <Select value={type} disabled={isFetching} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8 w-full sm:w-[150px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los tipos</SelectItem>
@@ -177,7 +195,7 @@ export function ProductsServicesTable() {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>

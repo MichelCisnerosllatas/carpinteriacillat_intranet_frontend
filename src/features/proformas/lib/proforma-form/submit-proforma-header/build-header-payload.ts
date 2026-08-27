@@ -32,6 +32,7 @@ export function buildHeaderPayload(values: ProformaFormValues): ProformaPostRequ
     delivery_time: values.delivery_time || undefined,
     currency: values.currency || undefined,
     observation: values.observation || undefined,
+    payment_method: values.payment_method || undefined,
   }
   // series no debería enviarse si el usuario no la editó — el servidor la genera.
   if (!values.series) delete payload.series

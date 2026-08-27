@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { LoaderCircle, HardDrive, RefreshCw, ServerCrash } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useImageStorageStore } from '../../stores/useImageStorageStore'
@@ -15,6 +16,9 @@ export function ImageStorageGallery() {
     items, meta, filters, hasLoaded, isFetching, isError, message,
     load, deleteFile, reset,
   } = useImageStorageStore()
+
+  /** true solo mientras hay un fetch disparado por el usuario (paginación/recarga manual) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching] = useState(false)
 
   useEffect(() => { void load() }, [])
 
@@ -54,7 +58,9 @@ export function ImageStorageGallery() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
+    <div className="relative flex flex-1 flex-col gap-4">
+      <TableLoadingBar active={isUserFetching} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -66,12 +72,14 @@ export function ImageStorageGallery() {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
-          {isFetching && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-            </div>
-          )}
-          <Button size="sm" variant="outline" onClick={() => void load({ page: 1 })}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setIsUserFetching(true)
+              void load({ page: 1 }).finally(() => setIsUserFetching(false))
+            }}
+          >
             <RefreshCw className="size-3.5 mr-1.5" />Recargar
           </Button>
         </div>
@@ -102,7 +110,10 @@ export function ImageStorageGallery() {
               size="sm"
               variant="outline"
               disabled={currentPage <= 1 || isFetching}
-              onClick={() => void load({ page: currentPage - 1 })}
+              onClick={() => {
+                setIsUserFetching(true)
+                void load({ page: currentPage - 1 }).finally(() => setIsUserFetching(false))
+              }}
             >
               Anterior
             </Button>
@@ -113,7 +124,10 @@ export function ImageStorageGallery() {
               size="sm"
               variant="outline"
               disabled={currentPage >= lastPage || isFetching}
-              onClick={() => void load({ page: currentPage + 1 })}
+              onClick={() => {
+                setIsUserFetching(true)
+                void load({ page: currentPage + 1 }).finally(() => setIsUserFetching(false))
+              }}
             >
               Siguiente
             </Button>

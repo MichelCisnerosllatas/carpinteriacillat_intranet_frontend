@@ -1,12 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { AlertTriangle, Eye, EyeOff, Loader2, Maximize2, RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
+
+// pdf.js necesita `canvas`/Web Worker del navegador — sin ssr:false, Next intentaría
+// renderizarlo también en el servidor (como cualquier componente 'use client' en su primer
+// render) y reventaría ahí por falta de esas APIs.
+const PdfViewer = dynamic(() => import('@/shared/ui/pdf-viewer').then((m) => m.PdfViewer), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  ),
+})
 
 interface TemplatePreviewCardProps {
   previewUrl: string | null
@@ -22,7 +35,8 @@ interface TemplatePreviewCardProps {
 
 // Componente reutilizable: se usa tanto en el formulario de edición (preview en vivo,
 // sin guardar) como en el detalle (preview de una plantilla ya guardada) — ambos casos
-// solo necesitan mostrar una URL de PDF dentro de un iframe con un botón de refrescar.
+// solo necesitan mostrar una URL de PDF (con <PdfViewer>, no <iframe>: ver su doc) con un
+// botón de refrescar.
 export function TemplatePreviewCard({
   previewUrl,
   isLoading,
@@ -32,8 +46,8 @@ export function TemplatePreviewCard({
   isVisible = true,
   onToggleVisible,
 }: TemplatePreviewCardProps) {
-  // El PDF real puede tardar en renderizarse DENTRO del iframe (es una navegación aparte
-  // del navegador, no la request que trae la URL/blob) — sin esto se ve en blanco un buen
+  // El PDF real puede tardar en parsearse DENTRO de PdfViewer (pdf.js hace su propio fetch +
+  // render, aparte de la request que trae la URL/blob) — sin esto se ve en blanco un buen
   // rato aunque `isLoading` ya haya terminado.
   const [isRendering, setIsRendering] = useState(false)
   // Pantalla completa en un Dialog (no Fullscreen API): el recuadro fijo de 500px se queda
@@ -131,16 +145,15 @@ export function TemplatePreviewCard({
             </p>
           ) : (
             <div className="relative h-[500px] w-full overflow-hidden rounded-md border">
-              {/* Mientras está en pantalla completa, este iframe NO se monta — el backend local
-                  (php artisan serve) atiende una request a la vez, así que dos iframes cargando
-                  el mismo PDF en paralelo hacen que el segundo se quede esperando al primero
+              {/* Mientras está en pantalla completa, este visor NO se monta — el backend local
+                  (php artisan serve) atiende una request a la vez, así que dos vistas pidiendo
+                  el mismo PDF en paralelo hacen que la segunda se quede esperando a la primera
                   indefinidamente (pantalla en negro, sin spinner ni error). */}
               {previewUrl && !isFullscreen && (
-                <iframe
-                  src={previewUrl}
-                  onLoad={() => setIsRendering(false)}
-                  className="h-full w-full"
-                  title="Vista previa de la plantilla"
+                <PdfViewer
+                  file={previewUrl}
+                  onLoadSuccess={() => setIsRendering(false)}
+                  onLoadError={() => setIsRendering(false)}
                 />
               )}
               {isFullscreen && (
@@ -168,13 +181,7 @@ export function TemplatePreviewCard({
             <DialogTitle>Vista previa</DialogTitle>
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-hidden rounded-md border">
-            {previewUrl && isFullscreen && (
-              <iframe
-                src={previewUrl}
-                className="h-full w-full"
-                title="Vista previa en pantalla completa"
-              />
-            )}
+            {previewUrl && isFullscreen && <PdfViewer file={previewUrl} />}
           </div>
         </DialogContent>
       </Dialog>

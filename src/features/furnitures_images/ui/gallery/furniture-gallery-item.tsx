@@ -1,6 +1,6 @@
 'use client'
 
-import { X, ImageOff } from 'lucide-react'
+import { X, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -12,6 +12,11 @@ interface FurnitureGalleryItemProps {
   isDragging?: boolean
   onRemove: () => void
   onClick: () => void
+  // Alternativa fija al arrastre para reordenar — arrastrar con dnd-kit no es confiable
+  // en touch (handle chico, gesto no siempre disponible); estos botones siempre funcionan
+  // igual con mouse, touch o teclado. Se omiten (undefined) en los extremos de la lista.
+  onMoveBack?:    () => void
+  onMoveForward?: () => void
 }
 
 export function FurnitureGalleryItem({
@@ -22,6 +27,8 @@ export function FurnitureGalleryItem({
   isDragging = false,
   onRemove,
   onClick,
+  onMoveBack,
+  onMoveForward,
 }: FurnitureGalleryItemProps) {
   return (
     <div
@@ -60,6 +67,8 @@ export function FurnitureGalleryItem({
         </div>
       )}
 
+      {/* Quitar de la galería — en touch siempre visible (pointer-coarse) y con más
+          área de toque (antes 20px, inalcanzable con el dedo) */}
       <Tooltip>
         <TooltipTrigger asChild>
           <button
@@ -69,15 +78,41 @@ export function FurnitureGalleryItem({
               onRemove()
             }}
             disabled={disabled}
-            className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed"
+            className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-red-500 group-hover:opacity-100 disabled:cursor-not-allowed pointer-coarse:size-8 pointer-coarse:opacity-100"
           >
-            <X className="size-3" />
+            <X className="size-3 pointer-coarse:size-4" />
           </button>
         </TooltipTrigger>
         <TooltipContent>Quitar de la galería</TooltipContent>
       </Tooltip>
 
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 translate-y-full rounded-b-xl bg-black/80 px-1.5 py-1 text-[9px] text-white transition-transform duration-150 group-hover:translate-y-0 truncate">
+      {/* Mover atrás/adelante — alternativa al arrastre: en touch siempre visible (el drag
+          no es confiable ahí), en mouse aparece en hover igual que el resto de controles
+          (el drag ya funciona bien con mouse, no hace falta duplicar el control siempre).
+          A los costados (no arriba/abajo) para no chocar con el handle, la "X" de quitar,
+          ni el nombre del archivo que se desliza desde abajo. */}
+      {(onMoveBack || onMoveForward) && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveBack?.() }}
+            disabled={disabled || !onMoveBack}
+            className="absolute left-1 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-black/70 group-hover:opacity-100 disabled:pointer-events-none disabled:opacity-0 pointer-coarse:size-8 pointer-coarse:opacity-100"
+          >
+            <ChevronLeft className="size-3.5 pointer-coarse:size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMoveForward?.() }}
+            disabled={disabled || !onMoveForward}
+            className="absolute right-1 top-1/2 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:bg-black/70 group-hover:opacity-100 disabled:pointer-events-none disabled:opacity-0 pointer-coarse:size-8 pointer-coarse:opacity-100"
+          >
+            <ChevronRight className="size-3.5 pointer-coarse:size-4" />
+          </button>
+        </>
+      )}
+
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 translate-y-full rounded-b-xl bg-black/80 px-1.5 py-1 text-[9px] text-white transition-transform duration-150 group-hover:translate-y-0 truncate pointer-coarse:translate-y-0">
         {imageName ?? 'sin nombre'}
       </div>
     </div>

@@ -11,7 +11,7 @@ export default async function ProformaEditPage({ params }: { params: Promise<{ i
     <>
       <Header fixed title="Proformas" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ProformasBreadcrumb currentPage="Editar Proforma" />
+        <ProformasBreadcrumb currentPage="Editar Proforma" showHeader={true} />
         <ProformaForm mode="edit" id={id} />
       </main>
     </>

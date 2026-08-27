@@ -59,6 +59,17 @@ export interface ModalSelectProps<T> {
   selectLabel?: string
 
   /**
+   * Botón persistente "Nuevo" junto al buscador, SIEMPRE visible (a diferencia de `emptyAction`,
+   * que solo aparece cuando la búsqueda no encuentra nada) — para que el usuario no tenga que
+   * vaciar el buscador para darse cuenta de que puede crear uno. Quien lo use decide qué hacer al
+   * hacer clic: lo típico es cerrar este modal y abrir un quick-create dialog aparte (nunca dejar
+   * dos modales abiertos a la vez) — ver `ClientPickerModal`/`ProductServicePickerModal`.
+   */
+  onCreateNew?: () => void
+  /** Texto del botón de `onCreateNew`. Por defecto "Nuevo". */
+  createLabel?: string
+
+  /**
    * Contenido del footer. Si se omite, el footer no se renderiza
    * (este modal es de selección directa, no necesita botones de confirmar/cancelar).
    */

@@ -29,7 +29,8 @@ import { FileUploadModal } from '@/features/storage-files/ui/modals/file-upload-
 import { FileRenameModal } from '@/features/storage-files/ui/modals/file-rename-modal'
 import { FileMoveModal } from '@/features/storage-files/ui/modals/file-move-modal'
 import { FileDeleteDialog } from '@/features/storage-files/ui/modals/file-delete-dialog'
-import { FileBulkMoveModal } from '@/features/storage-files/ui/modals/file-bulk-move-modal'
+import { FolderMoveModal } from '../modals/folder-move-modal'
+import { StorageBulkMoveModal } from './storage-bulk-move-modal'
 import type { StorageFolder } from '../../data/schema'
 import type { StorageFile } from '@/features/storage-files/data/schema'
 
@@ -90,6 +91,7 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
   const [uploadOpen,  setUploadOpen]  = useState(false)
   const [renameFile,  setRenameFile]  = useState<StorageFile | null>(null)
   const [moveFile,    setMoveFile]    = useState<StorageFile | null>(null)
+  const [moveFolder,  setMoveFolder]  = useState<StorageFolder | null>(null)
   const [deleteFile,  setDeleteFile]  = useState<StorageFile | null>(null)
   const [bulkMove,    setBulkMove]    = useState(false)
   const [lbIndex,     setLbIndex]     = useState(-1)
@@ -420,6 +422,7 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               item:       folder,
               onNavigate: () => onNavigate(folder.path),
               onRename:   () => onRename(folder),
+              onMove:     () => setMoveFolder(folder),
               onDelete:   () => onDelete(folder),
             }}
             selected={selected.has(folder.path)}
@@ -511,14 +514,21 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
         onClose={() => { setMoveFile(null); clearSelection() }}
         onMoved={() => mutateRefresh()}
       />
+      <FolderMoveModal
+        open={moveFolder !== null}
+        folder={moveFolder}
+        onClose={() => { setMoveFolder(null); clearSelection() }}
+        onMoved={() => mutateRefresh()}
+      />
       <FileDeleteDialog
         open={deleteFile !== null}
         file={deleteFile}
         onClose={() => { setDeleteFile(null); clearSelection() }}
         onDeleted={() => mutateRefresh()}
       />
-      <FileBulkMoveModal
+      <StorageBulkMoveModal
         open={bulkMove}
+        folders={selectedFolders}
         files={selectedFiles}
         onClose={() => { setBulkMove(false); clearSelection() }}
         onDone={() => { clearSelection(); mutateRefresh() }}
@@ -526,34 +536,37 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
 
       {/* ── Floating bulk actions ─────────────────────────────────────── */}
       {anySelected && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="flex items-center gap-3 rounded-2xl border bg-background/95 backdrop-blur-md shadow-lg px-4 py-2.5">
-            <div className="flex flex-col leading-tight mr-1">
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-bottom-2 duration-200 sm:bottom-6">
+          {/* Fondo invertido (bg-foreground/text-background): bg-background/95 queda
+              casi idéntico al fondo de la página en modo oscuro y la barra se vuelve
+              invisible. max-w + overflow-x-auto + textos ocultos en mobile: con
+              "Mover"/"Eliminar" completos + tamaños pointer-coarse, el contenido
+              superaba el ancho de pantalla y los botones quedaban cortados. */}
+          <div className="flex max-w-[calc(100vw-2rem)] items-center gap-2 overflow-x-auto no-scrollbar rounded-2xl border border-foreground/10 bg-foreground px-3 py-2 text-background shadow-lg shadow-black/30 dark:shadow-black/60 sm:gap-3 sm:px-4 sm:py-2.5">
+            <div className="mr-1 flex shrink-0 flex-col whitespace-nowrap leading-tight">
               <span className="text-sm font-semibold">
-                {selectedCount} seleccionado{selectedCount !== 1 ? 's' : ''}
+                {selectedCount}<span className="hidden sm:inline"> seleccionado{selectedCount !== 1 ? 's' : ''}</span>
               </span>
               {selectedFolders.length > 0 && selectedFiles.length > 0 && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="hidden text-[10px] text-background/60 sm:block">
                   {selectedFolders.length} carpeta{selectedFolders.length !== 1 ? 's' : ''} · {selectedFiles.length} archivo{selectedFiles.length !== 1 ? 's' : ''}
                 </span>
               )}
             </div>
 
-            {selectedFiles.length > 0 && (
-              <Button size="sm" variant="outline" className="gap-1.5 h-8" disabled={isActing} onClick={() => setBulkMove(true)}>
-                <MoveRight className="size-3.5" />
-                Mover{selectedFolders.length > 0 ? ` (${selectedFiles.length})` : ''}
-              </Button>
-            )}
+            <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => setBulkMove(true)}>
+              <MoveRight className="size-3.5" />
+              <span className="hidden sm:inline">Mover</span>
+            </Button>
 
-            <Button size="sm" variant="destructive" className="gap-1.5 h-8" disabled={isActing} onClick={() => void handleBulkDelete()}>
+            <Button size="sm" variant="destructive" className="shrink-0 gap-1.5 h-8 px-2 pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => void handleBulkDelete()}>
               {isActing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-              Eliminar
+              <span className="hidden sm:inline">Eliminar</span>
             </Button>
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="ghost" className="size-8 shrink-0" disabled={isActing} onClick={clearSelection}>
+                <Button size="icon" variant="ghost" className="size-8 shrink-0 pointer-coarse:size-10" disabled={isActing} onClick={clearSelection}>
                   <X className="size-3.5" />
                 </Button>
               </TooltipTrigger>

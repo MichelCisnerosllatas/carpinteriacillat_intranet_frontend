@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Building2, CalendarDays } from 'lucide-react'
+import { Pencil, Building2, CalendarDays, Clock, MapPin } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -48,6 +48,29 @@ export function CompanyBranchDetail({ id }: { id: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {(item.schedule || item.latitude !== null || item.longitude !== null) && (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><MapPin className="size-4" />Ubicación</CardTitle></CardHeader>
+          <CardContent className="flex flex-col gap-2 text-sm">
+            {item.schedule && (
+              <div className="flex items-start gap-2">
+                <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                <span>{item.schedule}</span>
+              </div>
+            )}
+            {item.latitude !== null && item.longitude !== null && (
+              <>
+                {item.schedule && <Separator />}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Coordenadas</span>
+                  <span className="font-medium">{item.latitude}, {item.longitude}</span>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>

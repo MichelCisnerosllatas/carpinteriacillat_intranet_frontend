@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -35,27 +36,52 @@ export function ClientsTable() {
   const [idTypedoc, setIdTypedoc]               = useState<number | null>(filters.id_typedoc ?? null)
   const [status, setStatus]                     = useState<string>(filters.status !== undefined ? String(filters.status) : 'all')
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación/recarga manual) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
     pageSize: filters.per_page ?? 10,
   }), [filters.page, filters.per_page])
 
-  const appliedFilters = useRef({ search, idTypedoc, status })
+  const appliedSearch = useRef(search)
 
   useEffect(() => { void load() }, [])
 
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
   useEffect(() => {
-    const prev = appliedFilters.current
-    const changed = prev.search !== search || prev.idTypedoc !== idTypedoc || prev.status !== status
-    appliedFilters.current = { search, idTypedoc, status }
-    if (!changed) return
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
 
     const t = window.setTimeout(() => {
-      void load({ search, id_typedoc: idTypedoc ?? undefined, status: status === 'all' ? undefined : Number(status), page: 1 })
+      setIsUserFetching(true)
+      void load({
+        search,
+        id_typedoc: idTypedoc ?? undefined,
+        status: status === 'all' ? undefined : Number(status),
+        page: 1,
+      }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
-  }, [search, idTypedoc, status])
+  }, [search])
+
+  // Tipo de documento/Estado son acciones discretas (una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: { idTypedoc?: number | null; status?: string }) => {
+    const nextIdTypedoc = overrides.idTypedoc !== undefined ? overrides.idTypedoc : idTypedoc
+    const nextStatus = overrides.status ?? status
+    setIsUserFetching(true)
+    void load({
+      search,
+      id_typedoc: nextIdTypedoc ?? undefined,
+      status: nextStatus === 'all' ? undefined : Number(nextStatus),
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleIdTypedocChange = (value: number | null) => { setIdTypedoc(value); applyFilters({ idTypedoc: value }) }
+  const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
 
   const table = useReactTable({
     data: items,
@@ -66,7 +92,8 @@ export function ClientsTable() {
     enableRowSelection: true,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -82,8 +109,10 @@ export function ClientsTable() {
   const inactiveCount = items.filter((i) => i.stateValue !== 1).length
 
   const resetFilters = () => {
+    appliedSearch.current = ''
     setSearch(''); setIdTypedoc(null); setStatus('all')
-    void load({ search: '', id_typedoc: undefined, status: undefined, page: 1 })
+    setIsUserFetching(true)
+    void load({ search: '', id_typedoc: undefined, status: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   const handleBulkActivate = async () => {
@@ -145,13 +174,7 @@ export function ClientsTable() {
     <div className="relative flex flex-1 flex-col gap-4">
       <ClientStatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
 
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center">
-          <div className="mt-2 flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-          </div>
-        </div>
-      )}
+      <TableLoadingBar active={isUserFetching} />
 
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">
@@ -162,12 +185,12 @@ export function ClientsTable() {
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Tipo de documento</span>
             <div className="w-full sm:w-[180px]">
-              <TypeDocSelect value={idTypedoc} onValueChange={setIdTypedoc} placeholder="Todos" showAll disabled={isFetching} />
+              <TypeDocSelect value={idTypedoc} onValueChange={handleIdTypedocChange} placeholder="Todos" showAll disabled={isFetching} />
             </div>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <Select value={status} disabled={isFetching} onValueChange={setStatus}>
+            <Select value={status} disabled={isFetching} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>

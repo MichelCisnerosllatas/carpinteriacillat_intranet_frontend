@@ -1,7 +1,7 @@
 // src/features/proformas/ui/detail/proforma-summary-tab.tsx
 'use client'
 
-import { Building2, CalendarDays, Clock, FileText, Landmark, MapPin, Package, PenTool, User } from 'lucide-react'
+import { Building2, CalendarDays, Clock, FileText, Landmark, MapPin, Package, PenTool, StickyNote, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { formatProformaCurrency } from '../../data/data'
 import type { Proforma } from '../../data/schema'
@@ -26,15 +26,15 @@ export function ProformaSummaryTab({ item }: ProformaSummaryTabProps) {
 
           <div className="flex flex-col gap-1.5 p-3">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><CalendarDays className="size-3.5" />Emisión</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="size-3.5" />{item.placeOfIssue ?? '—'}</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Clock className="size-3.5" />Plazo: {item.deliveryTime ?? '—'}</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Landmark className="size-3.5" />Moneda: {item.currency}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="size-3.5 shrink-0 text-muted-foreground" />{item.placeOfIssue ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><Clock className="size-3.5 shrink-0 text-muted-foreground" />Plazo: {item.deliveryTime ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><Landmark className="size-3.5 shrink-0 text-muted-foreground" />Moneda: {item.currency}</span>
           </div>
 
           <div className="flex flex-col gap-1.5 p-3">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><FileText className="size-3.5" />Documento</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="size-3.5" />Plantilla: {item.templateName ?? '—'}</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><PenTool className="size-3.5" />Firma: {item.signerName ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><FileText className="size-3.5 shrink-0 text-muted-foreground" />Plantilla: {item.templateName ?? '—'}</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><PenTool className="size-3.5 shrink-0 text-muted-foreground" />Firma: {item.signerName ?? '—'}</span>
           </div>
         </CardContent>
       </Card>
@@ -108,6 +108,27 @@ export function ProformaSummaryTab({ item }: ProformaSummaryTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Notas adicionales — lista abierta que se muestra debajo de "Tiempo de entrega" en el PDF */}
+      {item.notes.length > 0 && (
+        <Card className="gap-2 py-3">
+          <CardHeader className="px-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <StickyNote className="size-4" />
+              Notas adicionales
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4">
+            <ul className="flex flex-col gap-1">
+              {item.notes.map((note) => (
+                <li key={note.id} className="text-sm text-muted-foreground">
+                  ➢ {note.text}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -226,13 +226,15 @@ function UserDeviceGroup({ group }: { group: UserGroup }) {
           </div>
         </AccordionTrigger>
 
-        {/* Botones de acción — fuera del trigger para evitar <button> dentro de <button> */}
-        <div className="flex shrink-0 items-center gap-1 pr-3 opacity-0 transition-opacity group-hover:opacity-100">
+        {/* Botones de acción — fuera del trigger para evitar <button> dentro de <button>.
+            En touch siempre visibles (pointer-coarse) y con más alto para el dedo; en
+            mouse siguen apareciendo solo al hacer hover, como antes. */}
+        <div className="flex shrink-0 items-center gap-1 pr-3 opacity-0 transition-opacity group-hover:opacity-100 pointer-coarse:opacity-100">
           {activeSessions.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 gap-1 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="h-7 gap-1 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive pointer-coarse:h-9"
               onClick={() => void handleRevokeAll()}
               disabled={busyRevoke}
             >
@@ -243,7 +245,7 @@ function UserDeviceGroup({ group }: { group: UserGroup }) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 gap-1 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="h-7 gap-1 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive pointer-coarse:h-9"
             onClick={() => void handleDeleteAll()}
             disabled={busyDelete}
           >

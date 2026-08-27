@@ -180,6 +180,7 @@ export const sidebarData: SidebarData = {
       title: 'Sitio Web',
       items: [
         { title: 'Navegaciones',       url: '/navigations',      icon: Navigation2 },
+        { title: 'Mensajes de Contacto', url: '/contact-messages', icon: MessagesSquare },
         {
           title: 'Secciones',
           icon: Sofa,

@@ -10,7 +10,7 @@ export default function ProformaCreatePage() {
     <>
       <Header fixed title="Proformas" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ProformasBreadcrumb currentPage="Nueva Proforma" />
+        <ProformasBreadcrumb currentPage="Nueva Proforma" showHeader={true} />
         <ProformaForm mode="create" />
       </main>
     </>

@@ -53,6 +53,7 @@ export const proformaTemplateFormSchema = z.object({
   showItemsTable: z.boolean(),
   showSummaryTotal: z.boolean(),
   showDeliveryTime: z.boolean(),
+  showAdditionalNotes: z.boolean(),
 
   showCompanyData: z.boolean(),
   showCompanyTaxId: z.boolean(),
@@ -116,6 +117,7 @@ export const proformaTemplateFormDefaults: ProformaTemplateFormValues = {
   showItemsTable: true,
   showSummaryTotal: true,
   showDeliveryTime: true,
+  showAdditionalNotes: true,
 
   showCompanyData: true,
   showCompanyTaxId: true,
@@ -176,6 +178,7 @@ export const toProformaTemplatePayload = (
     show_items_table: values.showItemsTable,
     show_summary_total: values.showSummaryTotal,
     show_delivery_time: values.showDeliveryTime,
+    show_additional_notes: values.showAdditionalNotes,
 
     show_company_data: values.showCompanyData,
     show_company_tax_id: values.showCompanyTaxId,

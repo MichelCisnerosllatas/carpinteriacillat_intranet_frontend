@@ -91,6 +91,12 @@ export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
     total: Number(d.total),
     order: d.order,
   })),
+  // Opcional en el DTO: si el backend todavía no manda `notes` en el join, se trata como vacía.
+  notes: (item.notes ?? []).map((n) => ({
+    id: n.id,
+    text: n.text,
+    order: n.order,
+  })),
   createdAt: item.created_at,
   updatedAt: item.updated_at ?? '',
 })

@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { useImageListStore } from '../../stores/useImageListStore'
@@ -31,6 +32,8 @@ export function ImagesTable() {
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [search, setSearch]                     = useState(filters.search ?? '')
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación/recarga manual) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
 
   const pagination = useMemo<PaginationState>(() => ({
     pageIndex: Math.max((filters.page ?? 1) - 1, 0),
@@ -46,7 +49,8 @@ export function ImagesTable() {
     appliedSearch.current = search
 
     const t = window.setTimeout(() => {
-      void load({ search, page: 1 })
+      setIsUserFetching(true)
+      void load({ search, page: 1 }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
   }, [search])
@@ -60,7 +64,8 @@ export function ImagesTable() {
     enableRowSelection: true,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
-      void load({ page: next.pageIndex + 1, per_page: next.pageSize })
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -111,6 +116,8 @@ export function ImagesTable() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-4">
+      <TableLoadingBar active={isUserFetching} />
+
       {/* Filtros */}
       <div className="flex items-end justify-between gap-2">
         <div className="flex flex-1 flex-wrap items-end gap-2">
@@ -138,11 +145,6 @@ export function ImagesTable() {
         <p className="text-sm text-muted-foreground">
           {meta ? `${meta.total ?? 0} imagen(es) en total` : 'Cargando...'}
         </p>
-        {isFetching && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <LoaderCircle className="size-3.5 animate-spin" />Actualizando...
-          </div>
-        )}
       </div>
 
       {/* Tabla */}
