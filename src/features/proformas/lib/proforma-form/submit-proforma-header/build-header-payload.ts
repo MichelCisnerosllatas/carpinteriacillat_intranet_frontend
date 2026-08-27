@@ -32,7 +32,11 @@ export function buildHeaderPayload(values: ProformaFormValues): ProformaPostRequ
     delivery_time: values.delivery_time || undefined,
     currency: values.currency || undefined,
     observation: values.observation || undefined,
-    payment_method: values.payment_method || undefined,
+    // OJO: acá SÍ se manda '' explícito (no undefined) cuando el usuario lo dejó vacío. Si se
+    // manda `undefined`, JSON.stringify lo omite del body y el backend interpreta "campo no
+    // enviado", aplicando su fallback automático (el texto `forma_pago` de la plantilla) aunque
+    // el usuario haya vaciado el campo a propósito. Ver `ProformaServices::buildHeaderData()`.
+    payment_method: values.payment_method ?? '',
   }
   // series no debería enviarse si el usuario no la editó — el servidor la genera.
   if (!values.series) delete payload.series

@@ -8,12 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { ProformaTypeSelect } from '@/features/proforma-types'
-import { ProformaTemplateSelect } from '@/features/proforma-templates'
+import { ProformaTemplateSelect, getTemplateDefaultText } from '@/features/proforma-templates'
 import { ClientNamePickerField } from '@/features/clients'
 import { CompanySignatureSelect } from '@/features/company-signatures'
+import { TEMPLATE_TEXT_KEYS } from '@/features/proforma-template-texts'
 import { PROFORMA_CURRENCIES } from '../../../data/data'
 import type { UseFormReturn } from 'react-hook-form'
 import type { ProformaFormValues } from '../../../lib/proforma-form'
+
+// Key fija que el generador de PDF busca para la fila "Forma de pago" (ver
+// `TEMPLATE_TEXT_KEYS` en @/features/proforma-template-texts — replica
+// `PdfTemplateText::firstActiveContentByKey` del backend).
+const FORMA_PAGO_KEY = TEMPLATE_TEXT_KEYS.find((k) => k.key === 'forma_pago')?.key ?? 'forma_pago'
 
 interface HeaderSectionProps {
   form: UseFormReturn<ProformaFormValues>
@@ -99,7 +105,17 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
               </FormLabel>
               <ProformaTemplateSelect
                 value={field.value ?? null}
-                onValueChange={field.onChange}
+                onValueChange={async (value) => {
+                  field.onChange(value)
+                  // Solo autocompleta "Forma de pago" si el usuario todavía no la tocó a mano —
+                  // si ya la editó, cambiar de plantilla no debe pisarle lo que escribió.
+                  if (value && !form.formState.dirtyFields.payment_method) {
+                    const defaultText = await getTemplateDefaultText(value, FORMA_PAGO_KEY)
+                    if (defaultText && !form.formState.dirtyFields.payment_method) {
+                      form.setValue('payment_method', defaultText, { shouldDirty: true })
+                    }
+                  }
+                }}
                 disabled={isManualSaving}
               />
               <FormMessage />
@@ -298,12 +314,27 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           name="payment_method"
           render={({ field }) => (
             <FormItem className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
-              <FormLabel>Forma de pago</FormLabel>
+              <FormLabel className="flex items-center gap-1.5">
+                Forma de pago
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="text-muted-foreground size-3.5" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Se autocompleta con el texto de la plantilla elegida — puedes editarlo o
+                    vaciarlo (si lo dejas vacío, esa sección no aparece en el PDF).
+                  </TooltipContent>
+                </Tooltip>
+              </FormLabel>
               <FormControl>
+                {/* rows=5 + resize-y (no resize-none): el texto por defecto de la plantilla suele
+                 * ser más largo de lo que parece a simple vista — con 3 filas fijas y sin poder
+                 * agrandar, quedaba contenido real oculto/scrolleado dentro del textarea aunque
+                 * ya estuviera correctamente cargado (y luego "aparecía de la nada" en el PDF). */}
                 <Textarea
                   placeholder="Ej: 50% adelanto, 50% contra entrega"
-                  className="resize-none"
-                  rows={3}
+                  className="resize-y"
+                  rows={5}
                   disabled={isManualSaving}
                   {...field}
                 />

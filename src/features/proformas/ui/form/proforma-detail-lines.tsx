@@ -4,7 +4,7 @@
 import { AlertCircle, Check, Loader2, ShoppingCart, Trash2, X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { ProductServiceSelect, ProductServicePickerModal } from '@/features/products-services'
@@ -17,7 +17,6 @@ import {
   removeProductFromCart,
   getSavedItemValue,
   updateDescriptionField,
-  updateUnitField,
   updateQuantityField,
   updateUnitPriceField,
   autofillCartItem,
@@ -25,6 +24,7 @@ import {
 import { formatProformaCurrency } from '../../data/data'
 import { ColumnHeadTip } from './column-head-tip'
 import { QuantityInput } from './quantity-input'
+import { UnitPriceInput } from './unit-price-input'
 
 interface ProformaDetailLinesProps {
   proformaId: number | null
@@ -54,7 +54,10 @@ export function ProformaDetailLines({
 
   const handlePickProduct = async (productService: ProductServiceApiItem) => {
     cart.setIsAddingItem(true)
-    autofillCartItem({ productServiceId: productService.id })
+    // Se pasa el objeto ya elegido/creado directo, sin rebuscarlo en el caché del select — recién
+    // creado desde el modal, ese caché puede no haberse actualizado todavía (ver comentario en
+    // autofillCartItem.ts) y la línea quedaba con la descripción vacía.
+    autofillCartItem({ productServiceId: productService.id, productService })
     await addProductToCart({ proformaId })
     cart.setIsAddingItem(false)
   }
@@ -126,7 +129,10 @@ export function ProformaDetailLines({
                       />
                     </TableHead>
                     <TableHead className="w-[64px]">
-                      <ColumnHeadTip label="Unidad" tip="Texto libre, ej: NIU, KG, HRS." />
+                      <ColumnHeadTip
+                        label="Unidad"
+                        tip="Se toma del producto/servicio elegido — no se edita por línea."
+                      />
                     </TableHead>
                     <TableHead className="w-[140px]">
                       <ColumnHeadTip
@@ -168,7 +174,9 @@ export function ProformaDetailLines({
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
+                          <Textarea
+                            rows={1}
+                            className="min-h-9 resize-y"
                             value={values.description}
                             disabled={isRowBusy}
                             onChange={(e) =>
@@ -177,13 +185,9 @@ export function ProformaDetailLines({
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            value={values.unit}
-                            disabled={isRowBusy}
-                            onChange={(e) =>
-                              updateUnitField({ value: e.target.value, savedRow: row })
-                            }
-                          />
+                          <span className="text-muted-foreground text-sm">
+                            {values.unit || 'UNI'}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <QuantityInput
@@ -193,15 +197,10 @@ export function ProformaDetailLines({
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                          <UnitPriceInput
                             value={values.unitPrice}
                             disabled={isRowBusy}
-                            onChange={(e) =>
-                              updateUnitPriceField({ value: Number(e.target.value), savedRow: row })
-                            }
+                            onChange={(value) => updateUnitPriceField({ value, savedRow: row })}
                           />
                         </TableCell>
                         <TableCell className="text-right text-sm font-medium">
@@ -297,7 +296,9 @@ export function ProformaDetailLines({
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
+                          <Textarea
+                            rows={1}
+                            className="min-h-9 resize-y"
                             value={item.description}
                             disabled={isRowUploading}
                             onChange={(e) =>
@@ -309,13 +310,9 @@ export function ProformaDetailLines({
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            value={item.unit}
-                            disabled={isRowUploading}
-                            onChange={(e) =>
-                              updateUnitField({ value: e.target.value, pendingTempId: item.tempId })
-                            }
-                          />
+                          <span className="text-muted-foreground text-sm">
+                            {item.unit || 'UNI'}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <QuantityInput
@@ -327,17 +324,11 @@ export function ProformaDetailLines({
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
+                          <UnitPriceInput
                             value={item.unitPrice}
                             disabled={isRowUploading}
-                            onChange={(e) =>
-                              updateUnitPriceField({
-                                value: Number(e.target.value),
-                                pendingTempId: item.tempId,
-                              })
+                            onChange={(value) =>
+                              updateUnitPriceField({ value, pendingTempId: item.tempId })
                             }
                           />
                         </TableCell>
@@ -453,7 +444,9 @@ export function ProformaDetailLines({
 
                     <div className="flex flex-col gap-1">
                       <CardFieldLabel>Descripción</CardFieldLabel>
-                      <Input
+                      <Textarea
+                        rows={1}
+                        className="min-h-9 resize-y"
                         value={values.description}
                         disabled={isRowBusy}
                         onChange={(e) =>
@@ -465,13 +458,7 @@ export function ProformaDetailLines({
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
                         <CardFieldLabel>Unidad</CardFieldLabel>
-                        <Input
-                          value={values.unit}
-                          disabled={isRowBusy}
-                          onChange={(e) =>
-                            updateUnitField({ value: e.target.value, savedRow: row })
-                          }
-                        />
+                        <span className="text-sm">{values.unit || 'UNI'}</span>
                       </div>
                       <div className="flex flex-col gap-1">
                         <CardFieldLabel>Cantidad</CardFieldLabel>
@@ -486,15 +473,10 @@ export function ProformaDetailLines({
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
                         <CardFieldLabel>P. Unitario</CardFieldLabel>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
+                        <UnitPriceInput
                           value={values.unitPrice}
                           disabled={isRowBusy}
-                          onChange={(e) =>
-                            updateUnitPriceField({ value: Number(e.target.value), savedRow: row })
-                          }
+                          onChange={(value) => updateUnitPriceField({ value, savedRow: row })}
                         />
                       </div>
                       <div className="flex flex-col items-end justify-end gap-1">
@@ -548,7 +530,9 @@ export function ProformaDetailLines({
 
                     <div className="flex flex-col gap-1">
                       <CardFieldLabel>Descripción</CardFieldLabel>
-                      <Input
+                      <Textarea
+                        rows={1}
+                        className="min-h-9 resize-y"
                         value={item.description}
                         disabled={isRowUploading}
                         onChange={(e) =>
@@ -563,13 +547,7 @@ export function ProformaDetailLines({
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
                         <CardFieldLabel>Unidad</CardFieldLabel>
-                        <Input
-                          value={item.unit}
-                          disabled={isRowUploading}
-                          onChange={(e) =>
-                            updateUnitField({ value: e.target.value, pendingTempId: item.tempId })
-                          }
-                        />
+                        <span className="text-sm">{item.unit || '—'}</span>
                       </div>
                       <div className="flex flex-col gap-1">
                         <CardFieldLabel>Cantidad</CardFieldLabel>
@@ -586,17 +564,11 @@ export function ProformaDetailLines({
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
                         <CardFieldLabel>P. Unitario</CardFieldLabel>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
+                        <UnitPriceInput
                           value={item.unitPrice}
                           disabled={isRowUploading}
-                          onChange={(e) =>
-                            updateUnitPriceField({
-                              value: Number(e.target.value),
-                              pendingTempId: item.tempId,
-                            })
+                          onChange={(value) =>
+                            updateUnitPriceField({ value, pendingTempId: item.tempId })
                           }
                         />
                       </div>

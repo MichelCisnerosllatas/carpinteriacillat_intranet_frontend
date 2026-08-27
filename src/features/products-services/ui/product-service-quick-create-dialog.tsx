@@ -71,6 +71,9 @@ export function ProductServiceQuickCreateDialog({
   const onSubmit = async (values: FormValues) => {
     const created = await create({
       name: values.name,
+      // Se manda igual al nombre a propósito: este modal no pide descripción (solo lo esencial),
+      // así que nunca debe depender de un campo de descripción visible ni fallar por su ausencia.
+      description: values.name,
       unit: values.unit,
       default_price: values.default_price,
       type: values.type,
@@ -162,6 +165,7 @@ export function ProductServiceQuickCreateDialog({
                         min="0"
                         placeholder="0.00"
                         value={field.value ?? ''}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) =>
                           field.onChange(e.target.value === '' ? 0 : parseFloat(e.target.value))
                         }
