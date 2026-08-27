@@ -1,10 +1,21 @@
 'use client'
 
-import { CheckCircle2, Loader2, Trash2, XCircle, X } from 'lucide-react'
+import { CheckCircle2, Loader2, Repeat, Trash2, XCircle, X } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
 import { cn } from '@/shared/lib/utils'
+
+export interface DataTableBulkStatusAction {
+  value: string
+  label: string
+}
 
 interface DataTableBulkActionsProps {
   selectedCount: number
@@ -14,6 +25,11 @@ interface DataTableBulkActionsProps {
   onClear: () => void
   isLoading?: boolean
   className?: string
+  /** Estados válidos a los que se puede pasar TODA la selección actual (ya intersectados entre
+   * las filas elegidas) — pensado para entidades con más de dos estados, donde Activar/Desactivar
+   * no alcanza (ver `ProformasTable`). Si viene vacío no se muestra el botón. */
+  statusActions?: DataTableBulkStatusAction[]
+  onChangeStatus?: (value: string) => Promise<void> | void
 }
 
 export function DataTableBulkActions({
@@ -24,8 +40,12 @@ export function DataTableBulkActions({
   onClear,
   isLoading = false,
   className,
+  statusActions,
+  onChangeStatus,
 }: DataTableBulkActionsProps) {
   if (selectedCount === 0) return null
+
+  const showStatusMenu = Boolean(onChangeStatus && statusActions && statusActions.length > 0)
 
   return (
     <div
@@ -56,6 +76,44 @@ export function DataTableBulkActions({
       )}
 
       <Separator orientation="vertical" className="h-5 shrink-0 bg-background/20" />
+
+      {showStatusMenu && (
+        <>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* El `span` intermedio evita que el `data-state` del tooltip pise el del propio
+                  DropdownMenuTrigger — mismo patrón que en `ProformasRowActions`. */}
+              <span className="inline-flex">
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={isLoading}
+                      className="h-7 gap-1.5 px-2 pointer-coarse:h-9 pointer-coarse:px-3"
+                    >
+                      <Repeat className="size-3.5" />
+                      <span className="hidden sm:inline">Cambiar estado</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    {statusActions!.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => void onChangeStatus!(opt.value)}
+                      >
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="sm:hidden">Cambiar estado</TooltipContent>
+          </Tooltip>
+          <Separator orientation="vertical" className="h-5 shrink-0 bg-background/20" />
+        </>
+      )}
 
       {onActivate && (
         <Tooltip>

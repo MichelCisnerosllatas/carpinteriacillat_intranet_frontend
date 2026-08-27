@@ -16,7 +16,7 @@ export function getProformaFormDefaults(): ProformaFormValues {
     place_of_issue: 'Iquitos',
     client_attention: '',
     delivery_time: '15 días hábiles',
-    currency: 'PEN',
+    currency: 'S/.',
     observation: '',
   }
 }

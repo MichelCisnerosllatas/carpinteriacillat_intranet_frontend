@@ -17,20 +17,85 @@ function TooltipProvider({
   )
 }
 
+// En touch no existe ":hover", así que Radix nunca abre el tooltip por sí solo (su máquina de
+// estados interna ignora a propósito los eventos de puntero "touch"). Este contexto le da a
+// TooltipTrigger acceso al estado de apertura del Root más cercano para poder abrirlo/cerrarlo
+// con un tap — ver TooltipTrigger más abajo.
+const TooltipOpenContext = React.createContext<{
+  open: boolean
+  setOpen: (open: boolean) => void
+} | null>(null)
+
 function Tooltip({
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+  const [openState, setOpenState] = React.useState(defaultOpen ?? false)
+  const isControlled = openProp !== undefined
+  const open = isControlled ? openProp : openState
+
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) setOpenState(next)
+      onOpenChange?.(next)
+    },
+    [isControlled, onOpenChange]
+  )
+
   return (
     <TooltipProvider>
-      <TooltipPrimitive.Root data-slot='tooltip' {...props} />
+      <TooltipOpenContext.Provider value={{ open, setOpen }}>
+        <TooltipPrimitive.Root data-slot='tooltip' open={open} onOpenChange={setOpen} {...props} />
+      </TooltipOpenContext.Provider>
     </TooltipProvider>
   )
 }
 
 function TooltipTrigger({
+  onClick,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot='tooltip-trigger' {...props} />
+  const ctx = React.useContext(TooltipOpenContext)
+  const nodeRef = React.useRef<React.ElementRef<typeof TooltipPrimitive.Trigger>>(null)
+
+  // Con el tooltip abierto por un tap, un tap en cualquier otro lugar de la página lo cierra —
+  // el equivalente táctil de "mover el puntero fuera". Sin esto se quedaría abierto para
+  // siempre, porque en touch no hay pointerleave/blur que lo cierre solo.
+  React.useEffect(() => {
+    if (!ctx?.open) return
+    if (typeof window === 'undefined' || !window.matchMedia('(pointer: coarse)').matches) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (nodeRef.current?.contains(target)) return
+      if (target instanceof Element && target.closest('[data-slot="tooltip-content"]')) return
+      ctx.setOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [ctx, ctx?.open])
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event)
+    // No preventDefault/stopPropagation: la acción propia del elemento (botón, enlace, trigger
+    // de un menú, etc.) sigue funcionando con normalidad, esto solo se suma a lo que ya hace.
+    if (ctx && typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
+      ctx.setOpen(!ctx.open)
+    }
+  }
+
+  return (
+    <TooltipPrimitive.Trigger
+      ref={nodeRef}
+      data-slot='tooltip-trigger'
+      onClick={handleClick}
+      {...props}
+    />
+  )
 }
 
 function TooltipContent({

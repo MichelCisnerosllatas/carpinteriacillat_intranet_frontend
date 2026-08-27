@@ -11,7 +11,7 @@ export default async function ProformaDetailPage({ params }: { params: Promise<{
     <>
       <Header fixed title="Proformas" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ProformasBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ProformasBreadcrumb currentPage="Detalle" showHeader={true} />
         <ProformaDetail id={id} />
       </main>
     </>

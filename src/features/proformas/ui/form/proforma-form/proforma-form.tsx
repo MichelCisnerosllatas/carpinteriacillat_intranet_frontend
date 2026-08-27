@@ -52,7 +52,7 @@ export function ProformaForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
 
         <LinesSection
           proformaId={proformaId}
-          currency={form.watch('currency') || 'PEN'}
+          currency={form.watch('currency') || 'S/.'}
           onCountChange={setLineCount}
           cartError={cartError}
         />

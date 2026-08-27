@@ -45,7 +45,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           </span>
         )}
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <FormField
           control={form.control}
           name="client_id"
@@ -249,7 +249,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
               </FormLabel>
               <FormControl>
                 <Input
-                  placeholder="PEN"
+                  placeholder="S/."
                   className="uppercase"
                   list="proforma-currencies"
                   disabled={isManualSaving}
@@ -270,7 +270,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
           control={form.control}
           name="observation"
           render={({ field }) => (
-            <FormItem className="col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
+            <FormItem className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5">
               <FormLabel>Observación</FormLabel>
               <FormControl>
                 <Textarea

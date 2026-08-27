@@ -21,11 +21,11 @@ import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
-import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { ClientSelect } from '@/features/clients'
 import { useProformaListStore } from '../../stores/useProformaListStore'
 import { useProformaDeleteStore } from '../../stores/useProformaDeleteStore'
-import { PROFORMA_STATUS_OPTIONS } from '../../data/data'
+import { PROFORMA_STATUS_OPTIONS, getProformaStatusOption, getValidStatusTransitions } from '../../data/data'
 import type { ProformaStatus } from '../../data/schema'
 import { proformasColumns } from './proformas-columns'
 
@@ -42,7 +42,7 @@ export function ProformasTable() {
     load,
     reset,
   } = useProformaListStore()
-  const { bulkDeleteItems } = useProformaDeleteStore()
+  const { bulkDeleteItems, bulkChangeStatus } = useProformaDeleteStore()
 
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -142,6 +142,17 @@ export function ProformasTable() {
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
 
+  // Solo se ofrecen los estados a los que TODAS las filas seleccionadas pueden pasar — si una
+  // proforma "Rechazada" (sin transiciones) está en la selección junto con una "Pendiente", no
+  // se muestra ningún estado en común, para no aplicar un cambio inválido a alguna de ellas.
+  const commonStatusOptions: Set<ProformaStatus> =
+    selectedCount === 0
+      ? new Set()
+      : selectedRows
+          .map((r) => new Set(getValidStatusTransitions(r.original.status).map((o) => o.value)))
+          .reduce((acc, set) => new Set([...acc].filter((v) => set.has(v))))
+  const statusActions = [...commonStatusOptions].map((value) => getProformaStatusOption(value))
+
   const resetFilters = () => {
     appliedSearch.current = ''
     setSearch('')
@@ -158,6 +169,29 @@ export function ProformasTable() {
       date_to: '',
       page: 1,
     }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleBulkChangeStatus = async (value: string) => {
+    const newStatus = value as ProformaStatus
+    const opt = getProformaStatusOption(newStatus)
+    await swalConfirmAction({
+      title: `¿Cambiar estado a "${opt.label}" en ${selectedCount} registro(s)?`,
+      text: 'Esta acción se aplicará a todos los registros seleccionados.',
+      confirmText: 'Sí, continuar',
+      cancelText: 'Cancelar',
+      loading: { title: 'Actualizando estado...' },
+      action: async ({ close, showError }) => {
+        const ids = selectedRows.map((r) => r.original.id)
+        const ok = await bulkChangeStatus(ids, newStatus)
+        if (ok) {
+          toastSuccess('Estado actualizado', `${selectedCount} registro(s) ahora en estado ${opt.label.toLowerCase()}.`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError('No se pudo cambiar el estado de todos los registros.')
+        }
+      },
+    })
   }
 
   const handleBulkDelete = async () => {
@@ -348,6 +382,8 @@ export function ProformasTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
+        statusActions={statusActions}
+        onChangeStatus={handleBulkChangeStatus}
         onDelete={handleBulkDelete}
         onClear={() => table.resetRowSelection()}
       />
