@@ -15,6 +15,7 @@ import {
   assertCartNotEmpty,
   submitProformaHeader,
   warnInvalidFields,
+  promptPostSaveAction,
   type ProformaFormValues,
 } from '../../lib/proforma-form'
 import { useAutoSelectFirstOption } from '../useAutoSelectFirstOption'
@@ -97,7 +98,12 @@ export function useProformaForm(mode: 'create' | 'edit', id?: string) {
     try {
       const resultId = await submitProformaHeader(values, { form, proformaId })
       if (resultId == null) return // cancelado o error (ya mostrado en el swal)
-      router.push('/proformas')
+      // Todavía no se navegó a ningún lado — el modal decide el destino (ver
+      // prompt-post-save-action.ts): listado, detalle, o listado tras descargar el PDF.
+      await promptPostSaveAction(resultId, {
+        goToDetail: (id) => router.push(`/proformas/${id}`),
+        goToList: () => router.push('/proformas'),
+      })
     } finally {
       setIsManualSaving(false)
     }
