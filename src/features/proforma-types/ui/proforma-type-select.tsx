@@ -27,6 +27,11 @@ interface ProformaTypeSelectProps {
   placeholder?: string
   disabled?: boolean
   showAll?: boolean
+  /** Refleja el estado de error del <FormField /> que lo envuelve — a diferencia de un <Input />
+   * normal, este combobox no pasa por <FormControl /> (el Slot no tiene ningún elemento DOM al
+   * que clonarle `aria-invalid`, porque el nodo raíz que devuelve es un `<Popover>`), así que el
+   * borde rojo hay que pedirlo explícito. */
+  'aria-invalid'?: boolean
 }
 
 export function ProformaTypeSelect({
@@ -35,6 +40,7 @@ export function ProformaTypeSelect({
   placeholder = 'Seleccionar tipo de proforma...',
   disabled,
   showAll = false,
+  'aria-invalid': ariaInvalid,
 }: ProformaTypeSelectProps) {
   const [open, setOpen] = useState(false)
   const { options, isLoading, isError, load, setForceReload } = useProformaTypeSelectStore()
@@ -81,9 +87,11 @@ export function ProformaTypeSelect({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-invalid={ariaInvalid}
           disabled={disabled || isLoading}
           className="w-full justify-between font-normal"
         >

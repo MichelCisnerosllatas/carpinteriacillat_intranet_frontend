@@ -1,7 +1,7 @@
 // src/features/proformas/ui/detail/proforma-summary-tab.tsx
 'use client'
 
-import { Building2, CalendarDays, Clock, FileText, Landmark, MapPin, Package, PenTool, StickyNote, User } from 'lucide-react'
+import { Banknote, Building2, CalendarDays, Clock, FileText, Landmark, MapPin, Package, PenTool, StickyNote, Tag, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { formatProformaCurrency } from '../../data/data'
 import type { Proforma } from '../../data/schema'
@@ -33,11 +33,26 @@ export function ProformaSummaryTab({ item }: ProformaSummaryTabProps) {
 
           <div className="flex flex-col gap-1.5 p-3">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><FileText className="size-3.5" />Documento</span>
+            <span className="flex items-center gap-1.5 text-sm font-medium"><Tag className="size-3.5 shrink-0 text-muted-foreground" />Tipo: {item.proformaTypeCode ?? '—'}</span>
             <span className="flex items-center gap-1.5 text-sm font-medium"><FileText className="size-3.5 shrink-0 text-muted-foreground" />Plantilla: {item.templateName ?? '—'}</span>
             <span className="flex items-center gap-1.5 text-sm font-medium"><PenTool className="size-3.5 shrink-0 text-muted-foreground" />Firma: {item.signerName ?? '—'}</span>
           </div>
         </CardContent>
       </Card>
+
+      {item.paymentMethod && (
+        <Card className="gap-2 py-3">
+          <CardHeader className="px-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Banknote className="size-4" />
+              Forma de pago
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4">
+            <p className="text-sm text-muted-foreground">{item.paymentMethod}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {item.observation && (
         <Card className="gap-2 py-3">
@@ -50,7 +65,7 @@ export function ProformaSummaryTab({ item }: ProformaSummaryTabProps) {
         </Card>
       )}
 
-      
+
       {/* Productos y servicios — lo primero que interesa al usuario */}
       <Card className="gap-3 py-4">
         <CardHeader className="flex flex-row items-center justify-between px-4 pb-0">

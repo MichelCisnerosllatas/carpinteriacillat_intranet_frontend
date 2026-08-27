@@ -12,6 +12,10 @@ interface ClientNamePickerFieldProps {
   clientName: string
   onChange: (next: { clientId: number | null; clientName: string }) => void
   disabled?: boolean
+  /** Refleja el estado de error del <FormField /> que lo envuelve — como este componente no pasa
+   * por <FormControl /> (su render no usa `field`, así que nada le inyecta `aria-invalid` solo),
+   * el borde rojo hay que pedirlo explícito. */
+  'aria-invalid'?: boolean
 }
 
 /**
@@ -26,6 +30,7 @@ export function ClientNamePickerField({
   clientName,
   onChange,
   disabled,
+  'aria-invalid': ariaInvalid,
 }: ClientNamePickerFieldProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -36,6 +41,7 @@ export function ClientNamePickerField({
           value={clientName}
           placeholder="Nombre del cliente"
           disabled={disabled}
+          aria-invalid={ariaInvalid}
           onChange={(e) => onChange({ clientId: null, clientName: e.target.value })}
         />
         <Button

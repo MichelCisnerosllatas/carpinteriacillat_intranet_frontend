@@ -23,6 +23,11 @@ interface CompanySignatureSelectProps {
   placeholder?: string
   disabled?: boolean
   showAll?: boolean
+  /** Refleja el estado de error del <FormField /> que lo envuelve — a diferencia de un <Input />
+   * normal, este combobox no pasa por <FormControl /> (el Slot no tiene ningún elemento DOM al
+   * que clonarle `aria-invalid`, porque el nodo raíz que devuelve es un `<Popover>`), así que el
+   * borde rojo hay que pedirlo explícito. */
+  'aria-invalid'?: boolean
 }
 
 export function CompanySignatureSelect({
@@ -31,6 +36,7 @@ export function CompanySignatureSelect({
   placeholder = 'Seleccionar firma...',
   disabled,
   showAll = false,
+  'aria-invalid': ariaInvalid,
 }: CompanySignatureSelectProps) {
   const [open, setOpen] = useState(false)
   const { options, isLoading, isError, load, setForceReload } = useCompanySignatureSelectStore()
@@ -82,6 +88,7 @@ export function CompanySignatureSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-invalid={ariaInvalid}
           disabled={disabled || isLoading}
           className="w-full justify-between font-normal"
         >
