@@ -55,7 +55,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
         <FormField
           control={form.control}
           name="client_name"
-          render={() => (
+          render={({ fieldState }) => (
             <FormItem>
               <FormLabel>
                 Cliente <span className="text-destructive">*</span>
@@ -71,6 +71,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
                   form.setValue('client_name', clientName, { shouldDirty: true })
                 }}
                 disabled={isManualSaving}
+                aria-invalid={!!fieldState.error}
               />
               <FormMessage />
             </FormItem>
@@ -80,7 +81,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
         <FormField
           control={form.control}
           name="proforma_type_id"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>
                 Tipo de proforma <span className="text-destructive">*</span>
@@ -89,6 +90,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
                 value={field.value ?? null}
                 onValueChange={field.onChange}
                 disabled={isManualSaving}
+                aria-invalid={!!fieldState.error}
               />
               <FormMessage />
             </FormItem>
@@ -98,13 +100,14 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
         <FormField
           control={form.control}
           name="template_id"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>
                 Plantilla <span className="text-destructive">*</span>
               </FormLabel>
               <ProformaTemplateSelect
                 value={field.value ?? null}
+                aria-invalid={!!fieldState.error}
                 onValueChange={async (value) => {
                   field.onChange(value)
                   // Solo autocompleta "Forma de pago" si el usuario todavía no la tocó a mano —
@@ -126,7 +129,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
         <FormField
           control={form.control}
           name="signature_id"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>
                 Firma <span className="text-destructive">*</span>
@@ -135,6 +138,7 @@ export function HeaderSection({ form, isEdit, proformaId, isManualSaving }: Head
                 value={field.value ?? null}
                 onValueChange={field.onChange}
                 disabled={isManualSaving}
+                aria-invalid={!!fieldState.error}
               />
               <FormMessage />
             </FormItem>
