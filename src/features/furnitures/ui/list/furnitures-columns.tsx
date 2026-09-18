@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -45,7 +46,7 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[80px]' },
+    meta: { className: 'w-[80px]', label: 'Foto' },
   },
 
   {
@@ -54,7 +55,7 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Mueble" />,
     cell: ({ row }) => (
       <div className="flex min-w-[180px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/furnitures/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
         {row.original.description && (
           <span className="text-xs text-muted-foreground">{row.original.description}</span>
         )}
@@ -67,6 +68,7 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Mueble' },
   },
 
   {
@@ -81,7 +83,7 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Especificaciones' },
   },
 
   {
@@ -97,7 +99,7 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -119,12 +121,12 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: FurnituresRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

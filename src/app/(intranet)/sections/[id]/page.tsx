@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Header } from '@/widgets/header/header'
 import { SectionsBreadcrumb } from '@/features/sections/ui/sections-breadcrumb'
 import { SectionDetail } from '@/features/sections/ui/detail/section-detail'
@@ -12,7 +13,11 @@ export default async function SectionDetailPage({ params }: { params: Promise<{ 
       <Header fixed title="Detalle de Sección" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
         <SectionsBreadcrumb currentPage="Detalle" showHeader={true} />
-        <SectionDetail id={id} />
+        {/* SectionDetail sincroniza la pestaña activa con `?tab=` (useSearchParams) — Next.js
+            exige un boundary de Suspense alrededor de cualquier componente que lo use. */}
+        <Suspense fallback={null}>
+          <SectionDetail id={id} />
+        </Suspense>
       </main>
     </>
   )

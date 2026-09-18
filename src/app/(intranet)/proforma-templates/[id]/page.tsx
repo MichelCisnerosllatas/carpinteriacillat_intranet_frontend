@@ -11,7 +11,7 @@ export default async function ProformaTemplateDetailPage({ params }: { params: P
     <>
       <Header fixed title="Detalle de Plantilla de Proforma" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ProformaTemplatesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ProformaTemplatesBreadcrumb currentPage="Detalle" showHeader={true} />
         <ProformaTemplateDetail id={id} />
       </main>
     </>

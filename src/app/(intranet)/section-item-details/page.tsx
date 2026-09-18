@@ -1,0 +1,33 @@
+import type { Metadata } from 'next'
+import { Header } from '@/widgets/header/header'
+import Link from 'next/link'
+import { Button } from '@/shared/ui/button'
+import { ArrowUpDown, Plus } from 'lucide-react'
+import { SectionItemDetailsTable } from '@/features/section-item-details/ui/list/section-item-details-table'
+
+export const metadata: Metadata = { title: 'Detalles de Item de Sección' }
+
+export default function SectionItemDetailsPage() {
+  return (
+    <>
+      <Header fixed title="Detalles de Item de Sección" />
+      <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Detalles de Item de Sección</h2>
+            <p className="text-muted-foreground">Gestión de las líneas de detalle de los items de sección del catálogo</p>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" className="space-x-1">
+              <Link href="/section-item-details/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+            </Button>
+            <Button asChild className="space-x-1">
+              <Link href="/section-item-details/create"><Plus size={18} /><span>Nuevo Detalle</span></Link>
+            </Button>
+          </div>
+        </div>
+        <SectionItemDetailsTable />
+      </main>
+    </>
+  )
+}

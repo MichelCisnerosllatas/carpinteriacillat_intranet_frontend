@@ -11,7 +11,7 @@ export default async function TypeFontDetailPage({ params }: { params: Promise<{
     <>
       <Header fixed title="Detalle de Tipografía" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <TypeFontsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <TypeFontsBreadcrumb currentPage="Detalle" showHeader={true} />
         <TypeFontDetail id={id} />
       </main>
     </>

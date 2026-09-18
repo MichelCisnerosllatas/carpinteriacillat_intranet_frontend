@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -37,7 +38,7 @@ export const saleDocumentTypesColumns: ColumnDef<SaleDocumentType>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Tipo de Comprobante" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/sale-document-types/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
         {row.original.code && (
           <span className="text-xs text-muted-foreground">{row.original.code}</span>
         )}
@@ -45,6 +46,7 @@ export const saleDocumentTypesColumns: ColumnDef<SaleDocumentType>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Tipo de Comprobante' },
   },
 
   {
@@ -58,7 +60,7 @@ export const saleDocumentTypesColumns: ColumnDef<SaleDocumentType>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Serie' },
   },
 
   {
@@ -74,7 +76,7 @@ export const saleDocumentTypesColumns: ColumnDef<SaleDocumentType>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -96,12 +98,12 @@ export const saleDocumentTypesColumns: ColumnDef<SaleDocumentType>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: SaleDocumentTypesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Image as ImageIcon, CalendarDays, Rows3 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
@@ -9,22 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
+import { getSectionImageFixLabel } from '../../data/data'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
 import NProgress from 'nprogress'
 
 export function SectionImageDetail({ id }: { id: string }) {
   const router = useRouter()
-  const { currentItem, items, setCurrentItem } = useSectionImageListStore()
+  const { currentItem, items, loadById, setCurrentItem } = useSectionImageListStore()
 
+  // Siempre trae el registro fresco del backend — no depende de que la tabla ya esté cargada en memoria.
   useEffect(() => {
-    if (!currentItem || String(currentItem.id) !== id) {
-      const found = items.find((i) => String(i.id) === id)
-      if (found) setCurrentItem(found)
-      else router.replace('/section-images')
-    }
-  }, [id, currentItem, items])
+    void loadById(Number(id))
+    return () => setCurrentItem(null)
+  }, [id])
 
-  const item = currentItem && String(currentItem.id) === id ? currentItem : null
+  const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getStateOption(item.stateValue)
@@ -36,7 +35,7 @@ export function SectionImageDetail({ id }: { id: string }) {
           <div className="flex items-start gap-4">
             <div className="flex size-16 overflow-hidden rounded-lg border bg-muted">
               {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.imageName} className="size-full object-cover" />
+                <img src={item.imageUrl} alt={item.imageName} className="size-full" style={{ objectFit: (item.objectFit as CSSProperties['objectFit']) ?? 'cover' }} />
               ) : (
                 <div className="flex size-full items-center justify-center">
                   <ImageIcon className="size-5 text-muted-foreground" />
@@ -67,6 +66,11 @@ export function SectionImageDetail({ id }: { id: string }) {
             <span className="text-muted-foreground">Imagen</span>
             <span className="font-medium">{item.imageName}</span>
           </div>
+          <Separator />
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Ajuste (object-fit)</span>
+            <span className="font-medium">{getSectionImageFixLabel(item.objectFit)}</span>
+          </div>
           {item.imageUrl && (
             <>
               <Separator />
@@ -84,9 +88,9 @@ export function SectionImageDetail({ id }: { id: string }) {
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Creado el</span><span className="font-medium">{item.createdAt}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Creado el</span><span className="font-medium">{item.createdAtFormatted ?? item.createdAt}</span></div>
           <Separator />
-          <div className="flex justify-between"><span className="text-muted-foreground">Actualizado</span><span className="font-medium">{item.updatedAt || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Actualizado</span><span className="font-medium">{item.updatedAtFormatted ?? item.updatedAt ?? '—'}</span></div>
         </CardContent>
       </Card>
     </div>

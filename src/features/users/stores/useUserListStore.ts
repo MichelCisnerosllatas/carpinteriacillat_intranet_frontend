@@ -113,12 +113,8 @@ export const useUserListStore = create<State & Action>((set, get) => ({
       ...params,
     }
 
-    set({
-      filters: nextFilters,
-      isFetching: true,
-      isError: false,
-      message: null,
-    })
+    set({ filters: nextFilters,
+      isFetching: true })
 
     try {
       const response = await userService.get(nextFilters)

@@ -36,6 +36,7 @@ const mapFromApi = (item: TypeSectionApiItem): TypeSection => {
   const stateOpt = getStateOption(item.typesection_state)
   return {
     id: item.id_typesection,
+    key: item.typesection_key ?? null,
     name: item.typesection_name,
     description: item.typesection_description,
     status: item.typesection_state === 1 ? 'active' : 'inactive',
@@ -59,7 +60,7 @@ export const useTypeSectionListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await typesectionsService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

@@ -30,7 +30,7 @@ export function CompanySettingView() {
         // message2="Comprueba tu conexión o vuelve a intentarlo."
         primaryLabel="Reintentar"
         secondaryLabel="Volver al inicio"
-        // isPrimaryLoading={isFetching}
+        isPrimaryLoading={isLoading}
         onPrimaryAction={() => {
           fetch()
         }}

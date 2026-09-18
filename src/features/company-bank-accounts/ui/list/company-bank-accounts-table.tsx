@@ -2,7 +2,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
@@ -24,6 +23,8 @@ import { useCompanyBankAccountListStore } from '../../stores/useCompanyBankAccou
 import { useCompanyBankAccountDeleteStore } from '../../stores/useCompanyBankAccountDeleteStore'
 import { companyBankAccountsColumns } from './company-bank-accounts-columns'
 import { CompanyBankAccountsStatsBar } from './company-bank-accounts-stats-bar'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function CompanyBankAccountsTable() {
   const {
@@ -158,20 +159,22 @@ export function CompanyBankAccountsTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando cuentas bancarias...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar cuentas bancarias</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching} 
+        title='Error al cargar cuentas bancarias' 
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => { 
+          reset(); 
+          void load() 
+        }}
+      />
     )
   }
 

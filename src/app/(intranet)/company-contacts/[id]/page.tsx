@@ -11,7 +11,7 @@ export default async function CompanyContactDetailPage({ params }: { params: Pro
     <>
       <Header fixed title="Detalle de Contacto" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <CompanyContactsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <CompanyContactsBreadcrumb currentPage="Detalle" showHeader={true} />
         <CompanyContactDetail id={id} />
       </main>
     </>

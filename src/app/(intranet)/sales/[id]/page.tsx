@@ -11,7 +11,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
     <>
       <Header fixed title="Detalle de Venta" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <SalesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <SalesBreadcrumb currentPage="Detalle" showHeader={true} />
         <SaleDetail id={id} />
       </main>
     </>

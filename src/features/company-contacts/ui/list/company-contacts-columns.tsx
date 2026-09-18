@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Phone, Smartphone, Printer, MessageCircle, Star, Globe } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -53,7 +54,9 @@ export const companyContactsColumns: ColumnDef<CompanyContact>[] = [
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium leading-none text-foreground">
-              {row.original.name || row.original.phone}
+              <Link href={`/company-contacts/${row.original.id}`} className="text-primary hover:underline">
+                {row.original.name || row.original.phone}
+              </Link>
               {row.original.isPrimary && <Star className="ml-1 inline size-3 fill-amber-400 text-amber-400" />}
             </span>
             {row.original.name && <span className="text-xs text-muted-foreground">{row.original.phone}</span>}
@@ -63,6 +66,7 @@ export const companyContactsColumns: ColumnDef<CompanyContact>[] = [
     },
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Contacto' },
   },
 
   {
@@ -71,7 +75,7 @@ export const companyContactsColumns: ColumnDef<CompanyContact>[] = [
     cell: ({ row }) => <span className="text-sm">{getContactTypeOption(row.original.type).label}</span>,
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Tipo' },
   },
 
   {
@@ -80,6 +84,7 @@ export const companyContactsColumns: ColumnDef<CompanyContact>[] = [
     cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.email || '—'}</span>,
     enableSorting: false,
     enableHiding: true,
+    meta: { label: 'Correo' },
   },
 
   {
@@ -92,7 +97,7 @@ export const companyContactsColumns: ColumnDef<CompanyContact>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Sitio web' },
   },
 
   {
@@ -108,12 +113,12 @@ export const companyContactsColumns: ColumnDef<CompanyContact>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Estado' },
   },
 
   {
     id: 'actions',
     cell: CompanyContactsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

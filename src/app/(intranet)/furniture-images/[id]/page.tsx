@@ -15,7 +15,7 @@ export default async function FurnitureImageDetailPage({
     <>
       <Header fixed title="Detalle de Imagen" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <FurnitureImagesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <FurnitureImagesBreadcrumb currentPage="Detalle" showHeader={true} />
         <FurnitureImageDetail id={id} />
       </main>
     </>

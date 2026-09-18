@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
+import { ModuleDownloadIndicator } from '@/widgets/header/module-download-indicator'
 import { ImagesGrid } from '@/features/images/ui/list/images-grid'
 import { ImagesHeaderActions } from '@/features/images/ui/list/images-header-actions'
 
@@ -8,7 +9,9 @@ export const metadata: Metadata = { title: 'Imágenes' }
 export default function ImagesPage() {
   return (
     <>
-      <Header fixed title="Gestión de Imágenes" />
+      <Header fixed title="Gestión de Imágenes">
+        <ModuleDownloadIndicator route="/images" />
+      </Header>
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>

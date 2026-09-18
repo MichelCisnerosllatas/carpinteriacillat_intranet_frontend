@@ -1,8 +1,6 @@
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/shared/ui/breadcrumb'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { BackButton } from '@/shared/ui/back-button'
 
 interface CompanySocialNetworksBreadcrumbProps {
   currentPage: string
@@ -23,16 +21,7 @@ export function CompanySocialNetworksBreadcrumb({ currentPage, showHeader = true
       </Breadcrumb>
       {showHeader && (
         <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-                <Link href="/company-social-networks">
-                  <ChevronLeft className="size-4" />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Volver a redes sociales</TooltipContent>
-          </Tooltip>
+          <BackButton fallbackHref="/company-social-networks" label="Volver a redes sociales" />
           <h2 className="text-xl font-semibold tracking-tight">{currentPage}</h2>
         </div>
       )}

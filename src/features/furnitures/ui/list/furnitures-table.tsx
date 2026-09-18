@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { LoaderCircle, Sofa } from 'lucide-react'
+import { Sofa } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
@@ -19,6 +19,8 @@ import type { Furniture } from '../../data/schema'
 import { FurnitureStatsBar } from './furniture-stats-bar'
 import { FurnitureGridPagination } from './furniture-grid-pagination'
 import { FurnitureCard } from './furniture-card'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function FurnituresTable() {
   const router = useRouter()
@@ -185,19 +187,21 @@ export function FurnituresTable() {
   // ── Loading / error states ──
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando muebles...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar muebles</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar los muebles'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset();
+          void load()
+        }}
+      />
     )
   }
 

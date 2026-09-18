@@ -1,6 +1,4 @@
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,7 +7,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shared/ui/breadcrumb'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { BackButton } from '@/shared/ui/back-button'
 
 interface ProformaTemplatesBreadcrumbProps {
   currentPage: string
@@ -43,16 +41,7 @@ export function ProformaTemplatesBreadcrumb({
       </Breadcrumb>
       {showHeader && (
         <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-                <Link href="/proforma-templates">
-                  <ChevronLeft className="size-4" />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Volver a plantillas</TooltipContent>
-          </Tooltip>
+          <BackButton fallbackHref="/proforma-templates" label="Volver a plantillas" />
           <h2 className="text-xl font-semibold tracking-tight">{currentPage}</h2>
         </div>
       )}

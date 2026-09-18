@@ -11,7 +11,7 @@ export default async function CategoryDetailPage({ params }: { params: Promise<{
     <>
       <Header fixed title="Detalle de Categoría" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <CategoriesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <CategoriesBreadcrumb currentPage="Detalle" showHeader={true} />
         <CategoryDetail id={id} />
       </main>
     </>

@@ -21,6 +21,7 @@ export function SaleSettingView() {
   if (isError && !data) {
     return (
       <ErrorState
+        isPrimaryLoading={isLoading}
         title="No se pudo cargar la configuración"
         message={
           message ??

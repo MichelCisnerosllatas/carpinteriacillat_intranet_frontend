@@ -45,7 +45,7 @@ export const useProformaTemplateTextListStore = create<State & Action>((set, get
 
   loadByTemplateText: async (templateId) => {
     if (!get().forceReload && get().hasLoaded && get().templateId === templateId) return true
-    set({ isFetching: true, isError: false, message: null, templateId })
+    set({ isFetching: true, templateId })
     try {
       const response = await proformaTemplateTextsService.getList({
         template_id: templateId,

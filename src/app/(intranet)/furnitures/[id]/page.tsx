@@ -11,7 +11,7 @@ export default async function FurnitureDetailPage({ params }: { params: Promise<
     <>
       <Header fixed title="Detalle de Mueble" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <FurnituresBreadcrumb currentPage="Detalle" showHeader={false} />
+        <FurnituresBreadcrumb currentPage="Detalle" showHeader={true} />
         <FurnitureDetail id={id} />
       </main>
     </>

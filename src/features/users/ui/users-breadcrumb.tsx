@@ -1,7 +1,5 @@
 // src/features/users/ui/users-breadcrumb.tsx
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,7 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shared/ui/breadcrumb'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { BackButton } from '@/shared/ui/back-button'
 
 interface UsersBreadcrumbProps {
   currentPage: string
@@ -54,17 +52,7 @@ export function UsersBreadcrumb({
       {showHeader && (
         <div className="flex items-center gap-3">
           {backHref && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-                  <Link href={backHref}>
-                    <ChevronLeft className="size-4" />
-                    <span className="sr-only">{backLabel}</span>
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Volver a usuarios</TooltipContent>
-            </Tooltip>
+            <BackButton fallbackHref={backHref} label={backLabel ?? 'Volver a usuarios'} />
           )}
 
           <h2 className="text-xl font-semibold tracking-tight">

@@ -38,12 +38,32 @@ const mapFromApi = (item: SectionJoinApiItem): Section => {
   return {
     id: item.id_section,
     name: item.section_name,
+    key: item.section_key,
     title: item.section_title,
+    subtitle: item.section_subtitle,
     description: item.section_description,
     content: item.section_content,
+    variant: item.section_variant,
     idTypesection: item.type_section?.id_typesection ?? 0,
+    typesectionKey: item.type_section?.typesection_key ?? null,
     typesectionName: item.type_section?.typesection_name ?? '',
     typesectionDescription: item.type_section?.typesection_description ?? null,
+    // `web_settings` ausente (backend viejo, o una sección creada a mano sin fila de settings
+    // todavía) = tratar como "todo permitido/visible", para no ocultar tabs/acciones por error
+    // solo porque no hay config técnica cargada para esta sección puntual.
+    tabInfo: item.web_settings?.tab_info ?? true,
+    tabImages: item.web_settings?.tab_images ?? true,
+    tabButtons: item.web_settings?.tab_buttons ?? true,
+    tabItems: item.web_settings?.tab_items ?? true,
+    imagesAdd: item.web_settings?.images_add ?? true,
+    imagesReorder: item.web_settings?.images_reorder ?? true,
+    imagesDelete: item.web_settings?.images_delete ?? true,
+    buttonsAdd: item.web_settings?.buttons_add ?? true,
+    buttonsReorder: item.web_settings?.buttons_reorder ?? true,
+    buttonsDelete: item.web_settings?.buttons_delete ?? true,
+    itemsAdd: item.web_settings?.items_add ?? true,
+    itemsReorder: item.web_settings?.items_reorder ?? true,
+    itemsDelete: item.web_settings?.items_delete ?? true,
     typesectionStateValue: item.type_section?.typesection_state ?? null,
     typesectionStateLabel: typesectionStateOpt?.label ?? null,
     typesectionStateBadge: typesectionStateOpt?.badge ?? null,
@@ -76,7 +96,7 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
   setCurrentItem: (item) => set({ currentItem: item }),
 
   loadById: async (id) => {
-    set({ isFetching: true, isError: false, message: null })
+    set({ isFetching: true })
     try {
       const response = await sectionsService.getById(id)
       if (!response.success) throw new Error(response.message)
@@ -93,7 +113,7 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await sectionsService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

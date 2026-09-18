@@ -1,7 +1,6 @@
 import apiClient from '@/shared/api/apiClient'
 import { IMAGES_ENDPOINTS } from './images.endpoint'
 import type { ImageListRequestDto, ImageListResponseDto, ImageGetByIdResponseDto } from '../model/imageget.dto'
-import type { StorageListRequestDto, StorageListResponseDto, StorageDeleteResponseDto } from '../model/imagestorage.dto'
 import type { ImageUploadResponseDto } from '../model/imageupload.dto'
 import { ImagePostRequestDto, ImagePostResponseDto } from '../model/imagepost.dto'
 
@@ -70,21 +69,5 @@ export const imagesService = {
   delete: async (id: number): Promise<boolean> => {
     const { data } = await apiClient.delete(IMAGES_ENDPOINTS.v1.delete(id))
     return data.success
-  },
-
-  storageAll: async (param: StorageListRequestDto = {}): Promise<StorageListResponseDto> => {
-    const params = Object.fromEntries(
-      Object.entries(param).filter(([, v]) => v !== undefined && v !== null && v !== '')
-    )
-    const { data } = await apiClient.get<StorageListResponseDto>(IMAGES_ENDPOINTS.v1.storageAll, { params })
-    return data
-  },
-
-  storageDelete: async (path: string): Promise<StorageDeleteResponseDto> => {
-    const { data } = await apiClient.delete<StorageDeleteResponseDto>(
-      IMAGES_ENDPOINTS.v1.storageDelete,
-      { data: { path } }
-    )
-    return data
   },
 }

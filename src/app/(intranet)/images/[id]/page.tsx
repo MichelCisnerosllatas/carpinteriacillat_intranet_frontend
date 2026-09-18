@@ -11,7 +11,7 @@ export default async function ImageDetailPage({ params }: { params: Promise<{ id
     <>
       <Header fixed title="Detalle de Imagen" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ImagesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ImagesBreadcrumb currentPage="Detalle" showHeader={true} />
         <ImageDetail id={id} />
       </main>
     </>

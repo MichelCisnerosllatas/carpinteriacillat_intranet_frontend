@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
@@ -22,6 +21,8 @@ import { useContactMessageListStore } from '../../stores/useContactMessageListSt
 import { useContactMessageDeleteStore } from '../../stores/useContactMessageDeleteStore'
 import { contactMessagesColumns } from './contact-messages-columns'
 import { ContactMessageStatsBar } from './contact-message-stats-bar'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function ContactMessagesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
@@ -150,20 +151,22 @@ export function ContactMessagesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando mensajes...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar mensajes</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching} 
+        title='Error al cargar mensajes' 
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => { 
+          reset(); 
+          void load() 
+        }}
+      />
     )
   }
 

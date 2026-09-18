@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -37,7 +38,9 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Sección" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/sections/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">
+          {row.original.name}
+        </Link>
         {row.original.title && (
           <span className="text-xs text-muted-foreground">{row.original.title}</span>
         )}
@@ -48,6 +51,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Sección' },
   },
 
   {
@@ -59,7 +63,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[70px]' },
+    meta: { className: 'w-[70px]', label: 'Orden' },
   },
 
   {
@@ -73,7 +77,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[150px]' },
+    meta: { className: 'w-[150px]', label: 'Tipo de Sección' },
   },
 
   {
@@ -87,7 +91,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[140px]' },
+    meta: { className: 'w-[140px]', label: 'Navegación' },
   },
 
   {
@@ -103,7 +107,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -125,13 +129,13 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: SectionsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]
 

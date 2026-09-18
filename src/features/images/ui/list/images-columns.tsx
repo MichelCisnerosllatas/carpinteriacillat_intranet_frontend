@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/shared/ui/badge'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
@@ -39,13 +40,14 @@ export const imagesColumns: ColumnDef<ImageItem>[] = [
       const displayName = row.original.name ?? row.original.patch.split('/').pop() ?? row.original.patch
       return (
         <div className="flex min-w-[220px] flex-col gap-0.5 py-1.5">
-          <span className="text-sm font-medium leading-none text-foreground">{displayName}</span>
+          <Link href={`/images/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{displayName}</Link>
           <span className="text-xs text-muted-foreground break-all">{row.original.patch}</span>
         </div>
       )
     },
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Imagen' },
   },
 
   {
@@ -68,7 +70,7 @@ export const imagesColumns: ColumnDef<ImageItem>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[140px]' },
+    meta: { className: 'w-[140px]', label: 'Detalles' },
   },
 
   {
@@ -82,12 +84,12 @@ export const imagesColumns: ColumnDef<ImageItem>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[140px]' },
+    meta: { className: 'w-[140px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: ImagesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

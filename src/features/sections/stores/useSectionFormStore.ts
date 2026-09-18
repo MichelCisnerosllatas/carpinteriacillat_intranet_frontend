@@ -12,7 +12,10 @@ type State = {
 
 type Action = {
   create: (params: SectionPostRequestDto) => Promise<boolean>
-  update: (id: number, data: SectionPutRequestDto) => Promise<boolean>
+  // Parcial a propósito: `update()` siempre llama a `sectionsService.patch()` (nunca `put()`),
+  // así que un caller puede mandar solo un subconjunto de campos — ej. `SectionSettingsForm`
+  // manda solo los 12 de `web_settings`, sin tocar título/descripción/etc.
+  update: (id: number, data: Partial<SectionPutRequestDto>) => Promise<boolean>
   reset: () => void
 }
 

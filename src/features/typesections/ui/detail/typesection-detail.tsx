@@ -50,6 +50,21 @@ export function TypeSectionDetail({ id }: { id: string }) {
         </CardContent>
       </Card>
 
+      {item.key && (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><LayoutGrid className="size-4" />Clave interna</CardTitle></CardHeader>
+          <CardContent className="flex flex-col gap-2 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">typesection_key</span>
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{item.key}</code>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Qué tabs mostrar (Imágenes/Botones/Items) y si se puede agregar/reordenar/eliminar cada uno ya no se configura acá — es config de cada Sección puntual, se edita desde el detalle de esa Sección.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">

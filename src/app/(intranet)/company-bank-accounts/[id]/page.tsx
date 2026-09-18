@@ -11,7 +11,7 @@ export default async function CompanyBankAccountDetailPage({ params }: { params:
     <>
       <Header fixed title="Detalle de Cuenta Bancaria" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <CompanyBankAccountsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <CompanyBankAccountsBreadcrumb currentPage="Detalle" showHeader={true} />
         <CompanyBankAccountDetail id={id} />
       </main>
     </>

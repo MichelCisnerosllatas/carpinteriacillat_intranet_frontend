@@ -76,7 +76,7 @@ export const useRoleListStore = create<State & Action>((set, get) => ({
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
 
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
 
     try {
       const response = await rolesService.getList(nextFilters)

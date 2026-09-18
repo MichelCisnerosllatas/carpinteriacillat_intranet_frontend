@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
@@ -22,6 +21,8 @@ import { useProformaTypeListStore } from '../../stores/useProformaTypeListStore'
 import { useProformaTypeDeleteStore } from '../../stores/useProformaTypeDeleteStore'
 import { proformaTypesColumns } from './proforma-types-columns'
 import { ProformaTypeStatsBar } from './proforma-type-stats-bar'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function ProformaTypesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
@@ -139,20 +140,22 @@ export function ProformaTypesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando tipos de proforma...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar tipos de proforma</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar tipos de proforma'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset();
+          void load()
+        }}
+      />
     )
   }
 

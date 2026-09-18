@@ -49,7 +49,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[120px]' },
+    meta: { className: 'min-w-[120px]', label: 'Código' },
   },
 
   {
@@ -59,7 +59,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     cell: ({ row }) => <span className="text-sm">{row.original.clientBusinessName ?? '—'}</span>,
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[180px]' },
+    meta: { className: 'min-w-[180px]', label: 'Cliente' },
   },
 
   {
@@ -70,7 +70,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px]' },
+    meta: { className: 'w-[130px]', label: 'Fecha de emisión' },
   },
 
   {
@@ -86,7 +86,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Estado' },
   },
 
   {
@@ -102,7 +102,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Cobro' },
   },
 
   {
@@ -115,12 +115,12 @@ export const salesColumns: ColumnDef<Sale>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px] text-right' },
+    meta: { className: 'w-[130px] text-right', label: 'Total' },
   },
 
   {
     id: 'actions',
     cell: SalesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

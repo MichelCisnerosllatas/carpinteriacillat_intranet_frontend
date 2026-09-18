@@ -23,9 +23,9 @@ import { useTypeSectionListStore } from '../../stores/useTypeSectionListStore'
 import { useTypeSectionFormStore } from '../../stores/useTypeSectionFormStore'
 
 const schema = z.object({
-  typesection_name:        z.string().min(1, 'El nombre es requerido.').max(255),
-  typesection_description: z.string().optional(),
-  typesection_state:       z.number(),
+  typesection_name:              z.string().min(1, 'El nombre es requerido.').max(255),
+  typesection_description:       z.string().optional(),
+  typesection_state:             z.number(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -39,15 +39,18 @@ export function TypeSectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { typesection_name: '', typesection_description: '', typesection_state: 1 },
+    defaultValues: {
+      typesection_name: '', typesection_description: '',
+      typesection_state: 1,
+    },
   })
 
   useEffect(() => {
     if (isEdit && resolved) {
       form.reset({
-        typesection_name:        resolved.name,
-        typesection_description: resolved.description ?? '',
-        typesection_state:       resolved.stateValue,
+        typesection_name:              resolved.name,
+        typesection_description:       resolved.description ?? '',
+        typesection_state:             resolved.stateValue,
       })
     }
   }, [isEdit, resolved?.id])
@@ -62,8 +65,18 @@ export function TypeSectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
     if (!confirmed) return
 
     const success = isEdit
-      ? await update(resolved!.id, { typesection_name: values.typesection_name, typesection_description: values.typesection_description ?? '', typesection_state: values.typesection_state, typesection_updated_at: formatDatetime() })
-      : await create({ typesection_name: values.typesection_name, typesection_description: values.typesection_description, typesection_state: values.typesection_state, typesection_created_at: formatDatetime() })
+      ? await update(resolved!.id, {
+          typesection_name: values.typesection_name,
+          typesection_description: values.typesection_description ?? '',
+          typesection_state: values.typesection_state,
+          typesection_updated_at: formatDatetime(),
+        })
+      : await create({
+          typesection_name: values.typesection_name,
+          typesection_description: values.typesection_description,
+          typesection_state: values.typesection_state,
+          typesection_created_at: formatDatetime(),
+        })
 
     if (success) {
       await swalSuccess(isEdit ? 'Actualizado' : 'Creado', values.typesection_name)

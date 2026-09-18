@@ -1,8 +1,6 @@
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/shared/ui/breadcrumb'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { BackButton } from '@/shared/ui/back-button'
 
 interface ContactMessagesBreadcrumbProps {
   currentPage: string
@@ -23,16 +21,7 @@ export function ContactMessagesBreadcrumb({ currentPage, showHeader = true }: Co
       </Breadcrumb>
       {showHeader && (
         <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-                <Link href="/contact-messages">
-                  <ChevronLeft className="size-4" />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Volver a mensajes</TooltipContent>
-          </Tooltip>
+          <BackButton fallbackHref="/contact-messages" label="Volver a mensajes" />
           <h2 className="text-xl font-semibold tracking-tight">{currentPage}</h2>
         </div>
       )}

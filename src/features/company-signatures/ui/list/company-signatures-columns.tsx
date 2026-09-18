@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { PenTool } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -48,7 +49,7 @@ export const companySignaturesColumns: ColumnDef<CompanySignature>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[56px]' },
+    meta: { className: 'w-[56px]', label: 'Firma' },
   },
 
   {
@@ -57,7 +58,7 @@ export const companySignaturesColumns: ColumnDef<CompanySignature>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Firmante" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.signerName}</span>
+        <Link href={`/company-signatures/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.signerName}</Link>
         {row.original.position && (
           <span className="text-xs text-muted-foreground">{row.original.position}</span>
         )}
@@ -65,6 +66,7 @@ export const companySignaturesColumns: ColumnDef<CompanySignature>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Firmante' },
   },
 
   {
@@ -75,7 +77,7 @@ export const companySignaturesColumns: ColumnDef<CompanySignature>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[140px]' },
+    meta: { className: 'w-[140px]', label: 'Teléfono' },
   },
 
   {
@@ -91,7 +93,7 @@ export const companySignaturesColumns: ColumnDef<CompanySignature>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -113,12 +115,12 @@ export const companySignaturesColumns: ColumnDef<CompanySignature>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: CompanySignaturesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

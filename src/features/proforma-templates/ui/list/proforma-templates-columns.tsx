@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -39,9 +40,9 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Plantilla" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-foreground text-sm leading-none font-medium">
+        <Link href={`/proforma-templates/${row.original.id}`} className="text-primary text-sm leading-none font-medium hover:underline">
           {row.original.name}
-        </span>
+        </Link>
         {row.original.proformaTypeName && (
           <span className="text-muted-foreground text-xs">{row.original.proformaTypeName}</span>
         )}
@@ -49,6 +50,7 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Plantilla' },
   },
 
   {
@@ -75,7 +77,7 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Colores' },
   },
 
   {
@@ -86,7 +88,7 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Textos' },
   },
 
   {
@@ -102,7 +104,7 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -130,12 +132,12 @@ export const proformaTemplatesColumns: ColumnDef<ProformaTemplate>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: ProformaTemplatesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

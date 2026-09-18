@@ -11,7 +11,7 @@ export default async function ProductServiceDetailPage({ params }: { params: Pro
     <>
       <Header fixed title="Detalle de Producto/Servicio" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ProductsServicesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ProductsServicesBreadcrumb currentPage="Detalle" showHeader={true} />
         <ProductServiceDetail id={id} />
       </main>
     </>

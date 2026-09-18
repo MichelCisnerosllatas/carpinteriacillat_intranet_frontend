@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import {
   type PaginationState,
   type SortingState,
@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { userDevicesColumns } from './user-devices-columns'
 import { UserDevicesError } from '../user-devices-error'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 const PLATFORM_OPTIONS = [
   { value: 'all',     label: 'Todas las plataformas' },
@@ -159,10 +160,7 @@ export function UserDevicesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
-        <LoaderCircle className="mb-3 size-9 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando dispositivos...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 

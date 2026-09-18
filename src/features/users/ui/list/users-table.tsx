@@ -2,7 +2,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
@@ -22,6 +21,7 @@ import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import { useUserDeleteStore } from '../../stores/useUserDeleteStore'
 import { UsersError } from '../users-error'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 import { usersColumns } from './users-columns'
 
 export function UsersTable() {
@@ -188,10 +188,7 @@ export function UsersTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
-        <LoaderCircle className="mb-3 size-9 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando usuarios...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 

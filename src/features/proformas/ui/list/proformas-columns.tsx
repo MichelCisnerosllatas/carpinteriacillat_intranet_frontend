@@ -49,7 +49,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[120px]' },
+    meta: { className: 'min-w-[120px]', label: 'Código' },
   },
 
   {
@@ -63,7 +63,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[180px]' },
+    meta: { className: 'min-w-[180px]', label: 'Cliente' },
   },
 
   {
@@ -74,7 +74,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px]' },
+    meta: { className: 'w-[130px]', label: 'Fecha de emisión' },
   },
 
   {
@@ -90,7 +90,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -103,12 +103,12 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px] text-right' },
+    meta: { className: 'w-[130px] text-right', label: 'Total' },
   },
 
   {
     id: 'actions',
     cell: ProformasRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

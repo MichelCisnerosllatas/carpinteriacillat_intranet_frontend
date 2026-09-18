@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -39,7 +40,7 @@ export const rolesColumns: ColumnDef<Role>[] = [
       const role = row.original
       return (
         <div className="flex min-w-[280px] max-w-[480px] flex-col gap-1 py-2 text-xs leading-5">
-          <span className="font-semibold text-foreground">{role.name}</span>
+          <Link href={`/roles/${role.id}`} className="font-semibold text-primary hover:underline">{role.name}</Link>
           {role.description && (
             <span className="text-muted-foreground">{role.description}</span>
           )}
@@ -48,7 +49,7 @@ export const rolesColumns: ColumnDef<Role>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[280px]' },
+    meta: { className: 'min-w-[280px]', label: 'Rol' },
   },
 
   {
@@ -65,6 +66,7 @@ export const rolesColumns: ColumnDef<Role>[] = [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Estado' },
   },
 
   {
@@ -87,11 +89,12 @@ export const rolesColumns: ColumnDef<Role>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[170px] min-w-[170px]' },
+    meta: { className: 'w-[170px] min-w-[170px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: RolesRowActions,
+    meta: { label: 'Acciones' },
   },
 ]

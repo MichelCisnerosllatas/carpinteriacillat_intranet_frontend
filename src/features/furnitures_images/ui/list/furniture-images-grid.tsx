@@ -20,6 +20,7 @@ import { useFurnitureImageFormStore } from '../../stores/useFurnitureImageFormSt
 import type { FurnitureImage } from '../../data/schema'
 import { FurnitureImageCard } from './furniture-image-card'
 import { FurnitureImagesPagination } from './furniture-images-pagination'
+import { ErrorState } from '@/widgets/error/error-state'
 
 export function FurnitureImagesGrid() {
   const router = useRouter()
@@ -165,11 +166,16 @@ export function FurnitureImagesGrid() {
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching} 
+        title='Error al cargar Imagenes de muebles' 
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => { 
+          reset(); 
+          void load() 
+        }}
+      />
     )
   }
 

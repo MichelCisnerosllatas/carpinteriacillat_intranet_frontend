@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -61,7 +62,7 @@ export const usersColumns: ColumnDef<User>[] = [
     },
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[60px] min-w-[60px]' },
+    meta: { className: 'w-[60px] min-w-[60px]', label: 'Foto' },
   },
 
   {
@@ -74,8 +75,8 @@ export const usersColumns: ColumnDef<User>[] = [
 
       return (
         <div className="flex min-w-[360px] max-w-[520px] flex-col gap-1 py-2 text-xs leading-5">
-          <LongText className="max-w-[480px] font-semibold text-foreground">
-            {fullName}
+          <LongText className="max-w-[480px] font-semibold">
+            <Link href={`/users/${user.id}`} className="text-primary hover:underline">{fullName}</Link>
           </LongText>
 
           <div className="text-muted-foreground">
@@ -98,6 +99,7 @@ export const usersColumns: ColumnDef<User>[] = [
     enableHiding: true,
     meta: {
       className: 'min-w-[360px]',
+      label: 'Datos',
     },
   },
 
@@ -117,6 +119,7 @@ export const usersColumns: ColumnDef<User>[] = [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Estado' },
   },
 
   {
@@ -135,6 +138,7 @@ export const usersColumns: ColumnDef<User>[] = [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Rol' },
   },
 
   {
@@ -159,11 +163,12 @@ export const usersColumns: ColumnDef<User>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[170px] min-w-[170px]' },
+    meta: { className: 'w-[170px] min-w-[170px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: UsersRowActions,
+    meta: { label: 'Acciones' },
   },
 ]

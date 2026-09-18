@@ -1,6 +1,4 @@
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,7 +7,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shared/ui/breadcrumb'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { BackButton } from '@/shared/ui/back-button'
 
 interface RolesBreadcrumbProps {
   currentPage: string
@@ -53,17 +51,7 @@ export function RolesBreadcrumb({
       {showHeader && (
         <div className="flex items-center gap-3">
           {backHref && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-                  <Link href={backHref}>
-                    <ChevronLeft className="size-4" />
-                    <span className="sr-only">{backLabel}</span>
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Volver a roles</TooltipContent>
-            </Tooltip>
+            <BackButton fallbackHref={backHref} label={backLabel ?? 'Volver a roles'} />
           )}
 
           <h2 className="text-xl font-semibold tracking-tight">{currentPage}</h2>

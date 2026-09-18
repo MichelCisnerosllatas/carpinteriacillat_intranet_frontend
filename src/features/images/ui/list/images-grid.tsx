@@ -8,7 +8,7 @@ import Download from 'yet-another-react-lightbox/plugins/download'
 import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import {
-  LoaderCircle, ImageIcon, CheckSquare, Square, Search, X, Folder, Menu,
+  ImageIcon, CheckSquare, Square, Search, X, Folder, Menu,
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
@@ -16,9 +16,11 @@ import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
-import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { cn } from '@/shared/lib/utils'
+import { downloadUrlAsFile } from '@/shared/lib/download-url'
+import { runBulkDownload } from '@/shared/lib/bulk-download'
 import { useImageListStore } from '../../stores/useImageListStore'
 import { useImageDeleteStore } from '../../stores/useImageDeleteStore'
 import { useImagesViewStore } from '../../stores/useImagesViewStore'
@@ -26,6 +28,8 @@ import { getImageFolder } from '../../lib/image-url'
 import type { ImageItem } from '../../data/schema'
 import { ImageCard } from './image-card'
 import { ImagesFolderSidebar, useImageFolderTree } from './images-folder-sidebar'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function ImagesGrid() {
   const {
@@ -127,6 +131,30 @@ export function ImagesGrid() {
     }
   }
 
+  const handleBulkDownload = async () => {
+    const toDownload = visibleItems.filter((item) => selected.has(item.id))
+    const count = toDownload.length
+    const confirmed = await swalConfirm({
+      title: `¿Descargar ${count} imagen${count !== 1 ? 'es' : ''}?`,
+      text: 'Se descargan una por una. Puedes seguir usando la app mientras tanto — el progreso queda en la campanita de notificaciones.',
+      confirmText: 'Descargar',
+    })
+    if (!confirmed) return
+
+    // Corre en segundo plano (ver la notificación de descarga en la campanita del header):
+    // el usuario no tiene que esperar en esta pantalla ni quedarse en este módulo mientras
+    // descarga. Uno por uno, no en paralelo ni en un solo request: el backend corre en un
+    // servidor de producción básico, un zip masivo o N requests simultáneos lo saturarían.
+    setSelected(new Set())
+    runBulkDownload({
+      label: 'Imágenes',
+      route: '/images',
+      items: toDownload.map((item) => ({
+        run: () => downloadUrlAsFile(item.url, item.name ?? item.patch.split('/').pop() ?? item.patch),
+      })),
+    })
+  }
+
   const currentPage = filters.page ?? 1
   const lastPage    = meta?.last_page ?? 1
 
@@ -156,20 +184,22 @@ export function ImagesGrid() {
   // ── Loading / Error states ──
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando imágenes...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar imágenes</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar imágenes'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset();
+          void load()
+        }}
+      />
     )
   }
 
@@ -455,6 +485,7 @@ export function ImagesGrid() {
       <DataTableBulkActions
         selectedCount={selected.size}
         isLoading={bulkLoading}
+        onDownload={handleBulkDownload}
         onDelete={handleBulkDelete}
         onClear={() => setSelected(new Set())}
       />

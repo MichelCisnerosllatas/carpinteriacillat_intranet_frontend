@@ -72,7 +72,7 @@ export const useImageListStore = create<State & Action>((set, get) => ({
   load: async (params = {}) => {
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await imagesService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

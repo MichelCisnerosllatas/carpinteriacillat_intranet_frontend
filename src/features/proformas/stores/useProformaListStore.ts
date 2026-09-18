@@ -121,7 +121,7 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await proformasService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
@@ -154,7 +154,7 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
   },
 
   loadOne: async (id) => {
-    set({ isFetching: true, isError: false, message: null })
+    set({ isFetching: true })
     try {
       const response = await proformasService.getById(id)
       if (!response.success) throw new Error(response.message)

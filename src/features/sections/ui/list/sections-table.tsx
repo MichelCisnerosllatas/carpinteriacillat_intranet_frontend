@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, LoaderCircle, Navigation2 } from 'lucide-react'
+import { ChevronDown, Navigation2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -14,6 +14,8 @@ import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionsGroupTable } from './sections-group-table'
 import { SectionStatsBar } from './section-stats-bar'
 import type { Section } from '../../data/schema'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 /** Trae todo de una vez (no pagina) — el listado se agrupa por navegación, así que no
  * tiene sentido paginar server-side: se vería una navegación distinta en cada página. */
@@ -23,6 +25,7 @@ type NavigationGroup = {
   key: string
   navigationName: string
   navigationUrl: string | null
+  navigationOrder: number | null
   sections: Section[]
 }
 
@@ -35,12 +38,22 @@ function groupByNavigation(items: Section[]): NavigationGroup[] {
         key,
         navigationName: item.navigationName ?? 'Sin navegación',
         navigationUrl: item.navigationUrl,
+        navigationOrder: item.navigationOrder,
         sections: [],
       })
     }
     map.get(key)!.sections.push(item)
   }
-  return Array.from(map.values()).sort((a, b) => a.navigationName.localeCompare(b.navigationName))
+  // Los grupos se ordenan por `navigation_order` (el orden real de la navegación, el mismo que
+  // se usa en el menú del sitio), no alfabéticamente — antes "Galería" podía aparecer primero
+  // solo por orden de letras aunque su navegación no fuera la de orden 1. Sin navegación (o sin
+  // `navigation_order` definido) queda siempre al final.
+  return Array.from(map.values()).sort((a, b) => {
+    if (a.navigationOrder == null && b.navigationOrder == null) return a.navigationName.localeCompare(b.navigationName)
+    if (a.navigationOrder == null) return 1
+    if (b.navigationOrder == null) return -1
+    return a.navigationOrder - b.navigationOrder
+  })
 }
 
 export function SectionsTable() {
@@ -120,20 +133,25 @@ export function SectionsTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando secciones...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar secciones</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load({ per_page: GROUPED_PER_PAGE, page: 1 }) }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching} 
+        title='Error al cargar secciones' 
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => { 
+          reset(); 
+          void load({ 
+            per_page: GROUPED_PER_PAGE, 
+            page: 1 
+          });
+        }}
+      />
     )
   }
 

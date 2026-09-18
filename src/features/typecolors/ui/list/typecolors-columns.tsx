@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -42,7 +43,7 @@ export const typecolorsColumns: ColumnDef<TypeColor>[] = [
         <div className="flex min-w-[220px] items-center gap-3 py-1.5">
           <ColorSwatch hex={hex} />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium leading-none text-foreground">{name}</span>
+            <Link href={`/typecolors/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{name}</Link>
             <div className="flex flex-wrap items-center gap-2">
               {code && (
                 <span className="font-mono text-xs text-muted-foreground">{code}</span>
@@ -60,6 +61,7 @@ export const typecolorsColumns: ColumnDef<TypeColor>[] = [
     },
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Color' },
   },
 
   {
@@ -75,7 +77,7 @@ export const typecolorsColumns: ColumnDef<TypeColor>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -97,12 +99,12 @@ export const typecolorsColumns: ColumnDef<TypeColor>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: TypeColorsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

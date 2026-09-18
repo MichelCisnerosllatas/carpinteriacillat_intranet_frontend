@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState,
   type SortingState,
@@ -28,6 +27,8 @@ import { useProformaTemplateListStore } from '../../stores/useProformaTemplateLi
 import { useProformaTemplateDeleteStore } from '../../stores/useProformaTemplateDeleteStore'
 import { proformaTemplatesColumns } from './proforma-templates-columns'
 import { ProformaTemplateStatsBar } from './proforma-template-stats-bar'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { ErrorState } from '@/widgets/error/error-state'
 
 export function ProformaTemplatesTable() {
   const {
@@ -185,29 +186,22 @@ export function ProformaTemplatesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="text-muted-foreground mb-3 size-8 animate-spin" />
-        <p className="text-muted-foreground text-sm">Cargando plantillas de proforma...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar plantillas de proforma</p>
-        {message && <p className="text-muted-foreground text-xs">{message}</p>}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            reset()
-            void load()
-          }}
-        >
-          Reintentar
-        </Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar plantillas de proforma'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset()
+          void load()
+        }}
+      />
     )
   }
 

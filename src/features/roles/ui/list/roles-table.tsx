@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
@@ -21,6 +20,7 @@ import { useRoleDeleteStore } from '@/features/roles/stores/useRoleDeleteStore'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { RolesError } from '../roles-error'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 import { rolesColumns } from './roles-columns'
 
 export function RolesTable() {
@@ -156,10 +156,7 @@ export function RolesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
-        <LoaderCircle className="mb-3 size-9 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando roles...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 

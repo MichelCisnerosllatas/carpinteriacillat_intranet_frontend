@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState,
   type SortingState,
@@ -28,6 +27,8 @@ import { useSaleDeleteStore } from '../../stores/useSaleDeleteStore'
 import { SALE_STATUS_OPTIONS, SALE_PAYMENT_STATUS_OPTIONS } from '../../data/data'
 import type { SaleStatus, SalePaymentStatus } from '../../data/schema'
 import { salesColumns } from './sales-columns'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function SalesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
@@ -177,29 +178,22 @@ export function SalesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="text-muted-foreground mb-3 size-8 animate-spin" />
-        <p className="text-muted-foreground text-sm">Cargando ventas...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar ventas</p>
-        {message && <p className="text-muted-foreground text-xs">{message}</p>}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            reset()
-            void load()
-          }}
-        >
-          Reintentar
-        </Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar ventas'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset()
+          void load()
+        }}
+      />
     )
   }
 

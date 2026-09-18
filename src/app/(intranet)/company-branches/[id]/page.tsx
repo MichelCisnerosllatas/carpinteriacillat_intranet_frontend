@@ -11,7 +11,7 @@ export default async function CompanyBranchDetailPage({ params }: { params: Prom
     <>
       <Header fixed title="Detalle de Sucursal" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <CompanyBranchesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <CompanyBranchesBreadcrumb currentPage="Detalle" showHeader={true} />
         <CompanyBranchDetail id={id} />
       </main>
     </>

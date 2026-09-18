@@ -7,7 +7,7 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails'
 import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import {
-  ChevronDown, ChevronLeft, ChevronRight,
+  ChevronDown, ChevronLeft, ChevronRight, Download,
   Folder, FolderOpen, HardDrive, ImagePlus,
   Loader2, LoaderCircle, Menu, RefreshCw, Search, ServerCrash,
   SquareCheck, SquareMinus, Trash2, Upload, X,
@@ -21,6 +21,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/ui/dialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
+import { swalConfirm } from '@/shared/lib/swal'
+import { downloadUrlAsFile } from '@/shared/lib/download-url'
+import { runBulkDownload } from '@/shared/lib/bulk-download'
 import { useStorageGalleryStore } from '../../stores/useStorageGalleryStore'
 import { useStorageActionStore } from '../../stores/useStorageActionStore'
 import { StorageCard } from './storage-card'
@@ -78,6 +81,26 @@ export function StorageGallery() {
     clearSelection()
     setBulkDialogOpen(false)
     await Promise.all([load({ page: 1 }), loadDbRecords(), loadFolders()])
+  }
+
+  const handleBulkDownload = async () => {
+    const toDownload = selectedItems
+    const count = toDownload.length
+    const confirmed = await swalConfirm({
+      title: `¿Descargar ${count} archivo${count !== 1 ? 's' : ''}?`,
+      text: 'Se descargan uno por uno. Puedes seguir usando la app mientras tanto — el progreso queda en la campanita de notificaciones.',
+      confirmText: 'Descargar',
+    })
+    if (!confirmed) return
+
+    clearSelection()
+    runBulkDownload({
+      label: 'Servidor · Imágenes',
+      route: '/images/storage',
+      items: toDownload.map((file) => ({
+        run: () => downloadUrlAsFile(file.url, file.filename),
+      })),
+    })
   }
 
   if (!hasLoaded) {
@@ -241,6 +264,15 @@ export function StorageGallery() {
               {selectedCount > 0 && (
                 <>
                   <Separator orientation="vertical" className="h-4 shrink-0 bg-background/20" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="shrink-0 gap-1.5 h-8 px-2"
+                    onClick={() => void handleBulkDownload()}
+                  >
+                    <Download className="size-3.5" />
+                    <span className="hidden text-xs sm:inline">Descargar</span>
+                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
