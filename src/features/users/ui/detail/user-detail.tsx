@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Separator } from '@/shared/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { getInitials } from '@/shared/lib/get-initials'
 import { callTypes, roles } from '@/features/users/data/data'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import NProgress from 'nprogress'
@@ -55,9 +57,10 @@ export function UserDetail({ id }: UserDetailProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-2xl font-semibold uppercase shrink-0">
-              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-            </div>
+            <Avatar className="size-16 shrink-0 text-2xl">
+              <AvatarImage src={user.photoUrl ?? undefined} alt={user.username} />
+              <AvatarFallback className="text-2xl font-semibold">{getInitials(user.username)}</AvatarFallback>
+            </Avatar>
             <div className="flex flex-1 flex-col gap-1">
               <h3 className="text-xl font-semibold">{user.firstName} {user.lastName}</h3>
               <p className="text-sm text-muted-foreground">{user.email}</p>

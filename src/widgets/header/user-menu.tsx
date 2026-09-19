@@ -23,15 +23,11 @@ import {
 } from '@/shared/ui/dropdown-menu'
 import type { NavUser } from '@/shared/config/nav-types'
 import { AppearanceDrawer } from './appearance-drawer'
+import { getInitials } from '@/shared/lib/get-initials'
 
 export function UserMenu({ user }: { user: NavUser }) {
   const [appearanceOpen, setAppearanceOpen] = useState(false)
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  const initials = getInitials(user.name)
 
   return (
     <>

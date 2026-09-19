@@ -47,6 +47,7 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { getInitials } from '@/shared/lib/get-initials'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { UserDevicesError } from '../user-devices-error'
 import type { UserDevice, DevicePlatform, DeviceType } from '../../data/schema'
@@ -77,12 +78,7 @@ function DeviceIcon({ type }: { type: DeviceType }) {
 }
 
 function UserAvatar({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((n) => n[0] ?? '')
-    .join('')
-    .toUpperCase()
+  const initials = getInitials(name)
   return (
     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
       {initials || '?'}

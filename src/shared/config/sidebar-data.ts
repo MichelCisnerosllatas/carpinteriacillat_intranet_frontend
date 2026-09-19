@@ -262,6 +262,7 @@ export const sidebarData: SidebarData = {
             { title: 'Usuarios',     url: '/users',         icon: UserCog },
             { title: 'Roles',        url: '/roles',         icon: ShieldCheck },
             { title: 'Dispositivos', url: '/user-devices',  icon: Smartphone },
+            { title: 'Accesos Google', url: '/google-access-requests', icon: ShieldCheck },
           ],
         },
         {

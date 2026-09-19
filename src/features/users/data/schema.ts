@@ -23,6 +23,10 @@ export const userSchema = z.object({
   lastName: z.string(),
   username: z.string(),
   email: z.string(),
+  /** Correo guardado en `persons` — normalmente igual a `email` (la de login), salvo casos raros. */
+  personEmail: z.string().nullable(),
+  /** 'password' (creado desde el módulo de usuarios) o 'google' (aprobado desde Accesos Google) — decide si el form de edición muestra el input de contraseña. */
+  authProvider: z.string(),
 
   // Documento
   typeDocName: z.string(),

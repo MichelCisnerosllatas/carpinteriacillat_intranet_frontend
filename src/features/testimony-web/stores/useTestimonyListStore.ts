@@ -52,6 +52,7 @@ const mapFromApi = (item: TestimonyApiItem): Testimony => {
     status: item.testimony_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.testimony_state,
+    isVisibleOnWeb: item.is_visible_on_web,
     createdAt: item.testimony_created_at,
     updatedAt: item.testimony_updated_at ?? '',
     createdAtFormatted: item.testimony_created_at_formatted ?? null,

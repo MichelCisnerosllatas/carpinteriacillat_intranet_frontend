@@ -14,6 +14,7 @@ import { Input } from '@/shared/ui/input'
 import { PasswordInput } from '@/shared/ui/password-input'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { GoogleLoginButton } from '@/widgets/buttonproveedor/GoogleLoginButton'
 
 const schema = z.object({
   email: z.email({ error: (i) => (i.input === '' ? 'Ingresa tu correo electrónico.' : undefined) }),
@@ -123,6 +124,14 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
           {loadingLogin ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
           {loadingLogin ? 'Ingresando...' : 'Ingresar al sistema'}
         </Button>
+
+        <div className="relative my-1 flex items-center">
+          <div className="flex-1 border-t" />
+          <span className="mx-3 text-xs text-muted-foreground">o continúa con</span>
+          <div className="flex-1 border-t" />
+        </div>
+
+        <GoogleLoginButton redirectTo={redirectTo} />
       </form>
     </Form>
   )

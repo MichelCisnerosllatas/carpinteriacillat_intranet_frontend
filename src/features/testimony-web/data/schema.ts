@@ -23,6 +23,8 @@ export const testimonySchema = z.object({
   status: testimonyStatusSchema,
   statusLabel: z.string(),
   stateValue: z.number(),
+  /** Solo viene informado en el listado — si esta fila cae dentro del `testimony_limit` configurado y realmente se ve en el carrusel del sitio web ahora mismo. */
+  isVisibleOnWeb: z.boolean().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   createdAtFormatted: z.string().nullable(),

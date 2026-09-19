@@ -72,7 +72,7 @@ export default function SignInPage() {
             </div>
 
             <Card className="border-border/70 shadow-xl shadow-black/5">
-              <CardHeader className="space-y-3 pb-4">
+              {/* <CardHeader className="space-y-3 pb-4">
                 <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Building2 className="size-5" />
                 </div>
@@ -82,7 +82,7 @@ export default function SignInPage() {
                     Ingresa tu usuario y contraseña para continuar al panel administrativo.
                   </CardDescription>
                 </div>
-              </CardHeader>
+              </CardHeader> */}
               <CardContent>
                 <SignInForm />
               </CardContent>

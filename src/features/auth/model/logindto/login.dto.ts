@@ -21,3 +21,28 @@ export type LoginDataDTO = {
   token_type: string,
   expires_in: number
 };
+
+
+// AUTH PROVEEDOR-------------------------//
+export type LoginWithGoogleRequestDTO = {
+  id_token: string;
+  name: string | null;
+  email: string;
+  photo_url: string | null;
+};
+
+export type LoginWithGoogleResponseDTO = {
+  success: boolean;
+  message: string;
+  data: LoginDataDTO | GoogleAuthRejectionDataDTO | null;
+};
+
+
+/** Lo que Google/Firebase devolvió, para cuando el login falla (correo no registrado o cuenta
+ * inactiva) — permite mostrar al visitante esos datos junto al rechazo, en vez de un error
+ * genérico sin contexto (ver GoogleAccessPendingAlert). */
+export type GoogleAuthRejectionDataDTO = {
+  name: string | null;
+  email: string;
+  photo_url: string | null;
+};

@@ -20,6 +20,7 @@ import { NavUser } from './nav-user'
 
 import { filterNavByRole } from '@/shared/config/nav-types'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
+import { getImageUrl } from '@/features/images/lib/image-url'
 
 type AppSidebarProps = {
   defaultVariant: SidebarVariant
@@ -39,7 +40,7 @@ export function AppSidebar({ defaultVariant, defaultCollapsible }: AppSidebarPro
   const currentUser = {
     name: `${loginDataDTO?.person?.person_name ?? 'Usuario'} ${loginDataDTO?.person?.person_lastname ?? ''}`.trim(),
     email: loginDataDTO?.user?.email ?? 'Sin correo',
-    avatar: '',
+    avatar: loginDataDTO?.person?.photo_url ? getImageUrl(loginDataDTO.person.photo_url) : '',
   }
 
   const currentRole = loginDataDTO?.user?.id_rol ? String(loginDataDTO.user.id_rol) : undefined;

@@ -8,6 +8,7 @@ import { NotificationDropdown } from './notification-dropdown'
 import { UserMenuCompact } from './user-menu-compact'
 import { sidebarData } from '@/shared/config/sidebar-data'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
+import { getImageUrl } from '@/features/images/lib/image-url'
 
 type HeaderProps = React.HTMLAttributes<HTMLElement> & {
   fixed?: boolean
@@ -21,7 +22,7 @@ export function Header({ className, fixed = true, title, children, ...props }: H
   const currentUser = {
     name: `${loginDataDTO?.person?.person_name ?? 'Usuario'} ${loginDataDTO?.person?.person_lastname ?? ''}`.trim(),
     email: loginDataDTO?.user?.email ?? 'Sin correo',
-    avatar: '',
+    avatar: loginDataDTO?.person?.photo_url ? getImageUrl(loginDataDTO.person.photo_url) : '',
   }
 
   useEffect(() => {

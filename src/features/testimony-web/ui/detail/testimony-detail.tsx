@@ -14,20 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
+import { getInitials } from '@/shared/lib/get-initials'
 import { formatTestimonyRating } from '../../data/data'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
-
-/** Iniciales del nombre para el avatar de respaldo cuando el testimonio no tiene foto — mismo
- * criterio que `UserMenu` (primeras letras de cada palabra, máx. 2). */
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || '—'
-}
 
 export function TestimonyDetail({ id }: { id: string }) {
   const router = useRouter()

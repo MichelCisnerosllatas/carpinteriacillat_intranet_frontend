@@ -30,6 +30,7 @@ import {
 import type { NavUser as NavUserType } from '@/shared/config/nav-types'
 import { AppearanceDrawer } from '@/widgets/header/appearance-drawer'
 import { useLogoutHandler } from '@/features/auth/hooks/useLogoutHandler'
+import { getInitials } from '@/shared/lib/get-initials'
 
 
 export function NavUser({ user }: { user: NavUserType }) {
@@ -38,12 +39,7 @@ export function NavUser({ user }: { user: NavUserType }) {
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const { handleLogout } = useLogoutHandler()
 
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  const initials = getInitials(user.name)
 
   return (
     <>

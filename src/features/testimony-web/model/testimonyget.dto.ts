@@ -22,6 +22,8 @@ export type TestimonyApiItem = {
   testimony_is_verified: boolean
   testimony_order: number | null
   testimony_state: number
+  /** Solo viene en listados (`/testimony`, `/testimony_join`) — null en detalle/create/update. */
+  is_visible_on_web: boolean | null
   testimony_created_at: string
   testimony_created_at_formatted: string | null
   testimony_updated_at: string | null

@@ -24,6 +24,7 @@ import type { NavUser } from '@/shared/config/nav-types'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { AppearanceDrawer } from './appearance-drawer'
 import { useLogoutHandler } from '@/features/auth/hooks/useLogoutHandler'
+import { getInitials } from '@/shared/lib/get-initials'
 
 /**
  * Compact version of the user menu for the Header.
@@ -35,12 +36,7 @@ export function UserMenuCompact({ user }: { user: NavUser }) {
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const { handleLogout } = useLogoutHandler()
 
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  const initials = getInitials(user.name)
 
   return (
     <>

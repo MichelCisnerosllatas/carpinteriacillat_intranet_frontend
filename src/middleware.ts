@@ -16,6 +16,7 @@ const PROTECTED_PREFIXES = [
   '/permissions',
   '/profile',
   '/user-devices',
+  '/google-access-requests',
   '/furnitures',
   '/furniture-images',
   '/categories',
@@ -51,8 +52,12 @@ const PROTECTED_PREFIXES = [
   '/ui-components',
 ]
 
+// '/dashboard' NO debe estar acá: es la página de aterrizaje compartida por cualquier rol
+// autenticado, y también el destino de fallback cuando un rol no tiene acceso a una ruta
+// restringida (ver más abajo). Si se restringe a un rol, cualquier cuenta con otro rol entra en
+// loop infinito de redirects: /ruta-restringida -> (rol no permitido) -> /dashboard -> (rol
+// tampoco permitido ahí) -> /dashboard -> ...
 const ROUTE_ROLES: Record<string, string[]> = {
-  '/dashboard': ['1'],
   '/users': ['1'],
   '/roles': ['1'],
   '/permissions': ['1'],

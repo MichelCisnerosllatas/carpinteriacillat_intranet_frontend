@@ -105,6 +105,30 @@ export const getTestimonyColumns = ({ hideDelete }: TestimonyColumnsOptions = {}
   },
 
   {
+    id: 'visibleOnWeb',
+    accessorFn: (row) => row.isVisibleOnWeb,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="En el sitio web" />,
+    cell: ({ row }) => {
+      const visible = row.original.isVisibleOnWeb
+      if (visible === null) return <span className="text-xs text-muted-foreground">—</span>
+      return (
+        <Badge
+          variant="outline"
+          className={cn(
+            'text-xs',
+            visible ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-muted-foreground/20 text-muted-foreground'
+          )}
+        >
+          {visible ? 'Visible' : 'Oculto'}
+        </Badge>
+      )
+    },
+    enableSorting: false,
+    enableHiding: true,
+    meta: { className: 'w-[120px]', label: 'En el sitio web' },
+  },
+
+  {
     id: 'dates',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Fechas" />,
     cell: ({ row }) => (

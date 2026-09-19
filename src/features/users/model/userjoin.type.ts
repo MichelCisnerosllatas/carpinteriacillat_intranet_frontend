@@ -3,6 +3,8 @@ import { TypeDocType } from '@/shared/type/type_doc.type'
 export type UserJoinType = {
   id: number;
   email: string;
+  /** 'password' (creado desde el módulo de usuarios) o 'google' (aprobado desde Accesos Google). */
+  registration_provider: string;
   email_verified_at: string | null;
   user_state: number;
   user_created_at: string;
@@ -16,6 +18,8 @@ export type UserJoinType = {
 type UserPersonType = {
   id_person: number;
   person_name: string;
+  person_email: string | null;
+  photo_url: string | null;
   person_lastname: string;
   id_typedoc: number | null;
   type_doc: TypeDocType | null;

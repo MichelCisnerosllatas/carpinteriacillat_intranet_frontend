@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { userService } from '@/features/users/services/user.service'
+import { getImageUrl } from '@/features/images/lib/image-url'
 import type { UserGetRequestDto } from '@/features/users/model/userget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -27,6 +28,10 @@ type State = {
 type Action = {
   setForceReload: (value: boolean) => void
   load: (params?: UserListFilters) => Promise<boolean>
+  /** Trae un solo usuario por id y lo deja en `currentUser` — sin tocar `filters`/`users`/paginación
+   * de la lista. Se usa cuando el formulario de edición se abre directo (o se refresca) sin que
+   * el store ya tenga esos datos cargados. */
+  fetchById: (id: number) => Promise<User | null>
   setCurrentUser: (user: User | null) => void
   reset: () => void
 }
@@ -71,11 +76,13 @@ const mapUserFromApi = (user: UserJoinType): User => {
     lastName,
     username: `${firstName} ${lastName}`.trim() || user.email,
     email: user.email,
+    personEmail: user.person?.person_email ?? null,
+    authProvider: user.registration_provider ?? 'password',
 
     typeDocName: user.person?.type_doc?.typedoc_name ?? 'Sin documento',
     documentNumber: user.person?.person_numdoc ?? '-',
 
-    photoUrl: null,
+    photoUrl: user.person?.photo_url ? getImageUrl(user.person.photo_url) : null,
 
     status,
     statusLabel: status === 'active' ? 'Activo' : 'Inactivo',
@@ -104,6 +111,20 @@ export const useUserListStore = create<State & Action>((set, get) => ({
 
   setForceReload: (value) => set({ forceReload: value }),
   setCurrentUser: (user) => set({ currentUser: user }),
+
+  fetchById: async (id) => {
+    try {
+      const response = await userService.get({ id, per_page: 1 })
+      const found = response.success ? response.data[0] : undefined
+      if (!found) return null
+
+      const mapped = mapUserFromApi(found)
+      set({ currentUser: mapped })
+      return mapped
+    } catch {
+      return null
+    }
+  },
 
   load: async (params = {}) => {
     if (get().isFetching) return false

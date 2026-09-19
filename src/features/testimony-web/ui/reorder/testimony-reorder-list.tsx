@@ -32,6 +32,7 @@ import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { testimonyService } from '../../services/testimony.service'
 import { useTestimonyReorderStore } from '../../stores/useTestimonyReorderStore'
 import { useTestimonySectionStore } from '../../stores/useTestimonySectionStore'
+import { useTestimonyWebSettingStore } from '../../stores/useTestimonyWebSettingStore'
 
 type ReorderItem = {
   id: number
@@ -40,11 +41,12 @@ type ReorderItem = {
 }
 
 function SortableRow({
-  item, onMoveUp, onMoveDown,
+  item, onMoveUp, onMoveDown, isVisibleOnWeb,
 }: {
   item: ReorderItem
   onMoveUp?:   () => void
   onMoveDown?: () => void
+  isVisibleOnWeb: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
   const stateOpt = getStateOption(item.stateValue)
@@ -55,7 +57,8 @@ function SortableRow({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         'flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5 shadow-sm',
-        isDragging && 'z-50 opacity-75 shadow-md'
+        isDragging && 'z-50 opacity-75 shadow-md',
+        !isVisibleOnWeb && 'opacity-60'
       )}
     >
       {/* Handle — en touch, arrastrar con dnd-kit no es confiable (el gesto se confunde con
@@ -70,6 +73,15 @@ function SortableRow({
       </div>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.name}</span>
       <Badge variant="outline" className={cn('text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
+      <Badge
+        variant="outline"
+        className={cn(
+          'text-xs',
+          isVisibleOnWeb ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-muted-foreground/20 text-muted-foreground'
+        )}
+      >
+        {isVisibleOnWeb ? 'En el sitio' : 'No visible'}
+      </Badge>
 
       {/* Subir/bajar — alternativa fija al arrastre, siempre funciona (mouse, touch o
           teclado) sin depender de acertar ni sostener el handle */}
@@ -104,6 +116,8 @@ export function TestimonyReorderList() {
   const router = useRouter()
   const { isSubmitting, confirm } = useTestimonyReorderStore()
   const { idSection, isError: isSectionError, error: sectionError, get: getSection } = useTestimonySectionStore()
+  const { setting, get: getSetting } = useTestimonyWebSettingStore()
+  const testimonyLimit = setting?.testimony_limit ?? null
 
   const [items, setItems]                 = useState<ReorderItem[]>([])
   const [originalItems, setOriginalItems] = useState<ReorderItem[]>([])
@@ -120,6 +134,7 @@ export function TestimonyReorderList() {
   )
 
   useEffect(() => { void getSection() }, [])
+  useEffect(() => { void getSetting() }, [])
 
   useEffect(() => {
     if (idSection === null) return
@@ -142,6 +157,18 @@ export function TestimonyReorderList() {
   }, [idSection])
 
   const hasChanges = items.some((item, idx) => item.id !== originalItems[idx]?.id)
+
+  // El sitio público solo toma los primeros `testimony_limit` testimonios ACTIVOS según este
+  // mismo orden (ver WebSiteSectionResource::testimonies en el backend) — los inactivos no
+  // consumen cupo, así que pueden quedar "de por medio" sin correr a los activos que sí caben.
+  // Sin límite configurado, todos los activos se muestran.
+  const isVisibleOnWeb = (idx: number) => {
+    if (items[idx].stateValue !== 1) return false
+    if (testimonyLimit == null) return true
+    let activeCount = 0
+    for (let i = 0; i <= idx; i++) if (items[i].stateValue === 1) activeCount++
+    return activeCount <= testimonyLimit
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -212,6 +239,11 @@ export function TestimonyReorderList() {
             <Quote className="size-4" />
             Arrastra para cambiar el orden de los testimonios. Nada se guarda hasta que confirmes.
           </div>
+          <div className="text-xs text-muted-foreground">
+            {testimonyLimit == null
+              ? 'El sitio web muestra todos los testimonios activos (sin límite configurado).'
+              : <>El sitio web solo muestra los primeros <strong>{testimonyLimit}</strong> testimonios activos según este orden — el resto queda marcado como &quot;No visible&quot;. Puedes cambiar el límite desde <em>Configuración</em>.</>}
+          </div>
         </CardContent>
       </Card>
 
@@ -227,6 +259,7 @@ export function TestimonyReorderList() {
                 <SortableRow
                   key={item.id}
                   item={item}
+                  isVisibleOnWeb={isVisibleOnWeb(idx)}
                   onMoveUp={idx > 0 ? () => moveItem(item.id, -1) : undefined}
                   onMoveDown={idx < items.length - 1 ? () => moveItem(item.id, 1) : undefined}
                 />
