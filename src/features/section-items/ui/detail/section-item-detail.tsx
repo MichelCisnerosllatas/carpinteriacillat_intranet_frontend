@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import {
-  LayoutGrid, Pencil, Settings2,
+  LayoutGrid, Pencil, Settings,
   Phone, MessageCircle, Mail, MapPin, Rows3,
   type LucideIcon,
 } from 'lucide-react'
@@ -13,7 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
 import { SECTION_ITEM_TYPES } from '../../data/data'
 import { useSectionItemListStore } from '../../stores/useSectionItemListStore'
@@ -51,7 +51,7 @@ export function SectionItemDetail({ id }: { id: string }) {
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
   const typeLabel = SECTION_ITEM_TYPES.find((t) => t.value === item.type)?.label ?? item.type
   const detailsCount = item.details?.length ?? 0
   const TypeIcon = (item.type && TYPE_ICON[item.type]) || LayoutGrid
@@ -94,7 +94,7 @@ export function SectionItemDetail({ id }: { id: string }) {
               size="sm"
               onClick={() => { NProgress.start(); router.push(`/section-items/settings/${item.id}`) }}
             >
-              <Settings2 className="mr-1.5 size-4" />Configuración
+              <Settings className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Configuración</span>
             </Button>
             <Button
               variant="outline"

@@ -15,11 +15,11 @@ import {
   type CompanySettingFormValues,
 } from './company-setting-form.schema'
 
-import type { CompanyLogoFieldHandle } from './company-logo-field.types'
+import type { LogoFieldHandle } from '@/shared/lib/logo-field.types'
 
 export function useCompanySettingForm() {
   const { data, isLoading, message, update} = useCompanySettingStore()
-  const logoFieldRef = useRef<CompanyLogoFieldHandle>(null)
+  const logoFieldRef = useRef<LogoFieldHandle>(null)
 
   const form = useForm<CompanySettingFormValues>({
     resolver: zodResolver(companySettingFormSchema),

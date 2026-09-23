@@ -12,7 +12,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
-import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { SectionSelect } from '@/features/sections/ui/section-select'
@@ -276,7 +276,7 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
             <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>
-              {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              {VISIBILITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

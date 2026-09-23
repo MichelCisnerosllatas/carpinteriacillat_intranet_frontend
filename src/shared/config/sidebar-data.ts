@@ -30,6 +30,7 @@ import {
   Navigation2,
   Package,
   Palette,
+  PanelBottom,
   PenTool,
   Phone,
   Quote,
@@ -183,6 +184,7 @@ export const sidebarData: SidebarData = {
       title: 'Sitio Web',
       items: [
         { title: 'Navegaciones',       url: '/navigations',      icon: Navigation2 },
+        { title: 'Footer del Sitio',   url: '/footer',           icon: PanelBottom },
         { title: 'Mensajes de Contacto', url: '/contact-messages', icon: MessagesSquare },
         {
           title: 'Secciones',
@@ -195,19 +197,7 @@ export const sidebarData: SidebarData = {
             { title: 'Testimonios',        url: '/testimony',   icon: Quote },
             { title: 'Tipos de Sección',    url: '/typesections', icon: LayoutGrid },
           ],
-        }, 
-        {
-          title: 'Muebles',
-          icon: Sofa,
-          items: [
-            { title: 'Muebles',            url: '/furnitures',       icon: Sofa },
-            // { title: 'Imágenes de mueble', url: '/furniture-images', icon: GalleryHorizontalEnd },
-            { title: 'Categorías',         url: '/categories',       icon: Tag },
-            { title: 'Imágenes',           url: '/images',           icon: ImageIcon },                       
-            
-          ],
         },
-        
       ],
     },
     {
@@ -219,6 +209,9 @@ export const sidebarData: SidebarData = {
           items: [
             { title: 'Clientes',              url: '/clients',           icon: Users2 },
             { title: 'Productos y Servicios', url: '/products-services', icon: Package },
+            { title: 'Muebles',               url: '/furnitures',        icon: Sofa },
+            { title: 'Categorías',            url: '/categories',        icon: Tag },
+            { title: 'Imágenes',              url: '/images',            icon: ImageIcon },
           ],
         },
         {

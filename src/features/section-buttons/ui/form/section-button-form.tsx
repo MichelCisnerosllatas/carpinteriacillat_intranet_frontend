@@ -12,10 +12,10 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
-import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { AlertError } from '@/widgets/alerts_components'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { SectionSelect } from '@/features/sections/ui/section-select'
@@ -219,16 +219,11 @@ export function SectionButtonForm({ mode, id }: { mode: 'create' | 'edit'; id?: 
             </div>
 
             <FormField control={form.control} name="sectionbutton_state" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Estado</FormLabel>
-                <Select key={`state-${field.value}`} value={String(field.value)} onValueChange={(v) => field.onChange(Number(v))}>
-                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {ENTITY_STATES.map((s) => (
-                      <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <FormItem className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <FormLabel className="font-normal">Mostrar en el sitio web</FormLabel>
+                <FormControl>
+                  <VisibilityToggle checked={field.value === 1} onCheckedChange={(v) => field.onChange(v ? 1 : 0)} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />

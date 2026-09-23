@@ -6,6 +6,9 @@ export type SectionPutRequestDto = {
   section_content?: string
   section_variant?: string
   /** Config técnica de esta sección (`section_web_setting`, 1 a 1) — ver `section-settings-form.tsx`. */
+  show_title?: boolean
+  show_subtitle?: boolean
+  show_description?: boolean
   tab_info?: boolean
   tab_images?: boolean
   tab_buttons?: boolean

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import { ArrowUpDown, MessageSquareQuote, Plus, Settings2 } from 'lucide-react'
+import { ArrowUpDown, MessageSquareQuote, Plus, Settings } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { TestimonyTable } from '@/features/testimony-web/ui/list/testimony-table'
 
@@ -29,7 +29,7 @@ export function SectionDetailTestimoniesTab({ sectionId }: SectionDetailTestimon
         <h3 className="flex items-center gap-2 text-sm font-medium"><MessageSquareQuote className="size-4" />Testimonios de la sección</h3>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => goTo('/testimony/settings')}>
-            <Settings2 className="mr-1.5 size-4" />Configuración
+            <Settings className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Configuración</span>
           </Button>
           <Button size="sm" variant="outline" onClick={() => goTo('/testimony/reorder')}>
             <ArrowUpDown className="mr-1.5 size-4" />Reordenar

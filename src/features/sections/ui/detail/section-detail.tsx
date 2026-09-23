@@ -3,13 +3,13 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import { Pencil, LayoutGrid, Settings2 } from 'lucide-react'
+import { Pencil, LayoutGrid, Settings } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionDetailInfoTab } from './tabs/info/section-detail-info-tab'
@@ -41,7 +41,7 @@ export function SectionDetail({ id }: { id: string }) {
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
 
   // Qué tabs mostrar — config de ESTA sección puntual (`web_settings`, tabla
   // `section_web_setting`, ver SectionSeeder). A diferencia de antes, "Info general" también es
@@ -93,7 +93,7 @@ export function SectionDetail({ id }: { id: string }) {
               size="sm"
               onClick={() => { NProgress.start(); router.push(`/sections/settings/${item.id}`) }}
             >
-              <Settings2 className="mr-1.5 size-4" />Configuración
+              <Settings className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Configuración</span>
             </Button>
             <Button
               variant="outline"

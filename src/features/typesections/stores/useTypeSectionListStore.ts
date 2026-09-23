@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { typesectionsService } from '../services/typesections.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { TypeSectionListRequestDto, TypeSectionApiItem } from '../model/typesectionget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -33,7 +33,7 @@ const defaultFilters: TypeSectionListRequestDto = {
 }
 
 const mapFromApi = (item: TypeSectionApiItem): TypeSection => {
-  const stateOpt = getStateOption(item.typesection_state)
+  const stateOpt = getVisibilityStateOption(item.typesection_state)
   return {
     id: item.id_typesection,
     key: item.typesection_key ?? null,

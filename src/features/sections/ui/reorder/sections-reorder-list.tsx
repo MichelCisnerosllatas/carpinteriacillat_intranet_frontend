@@ -26,7 +26,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { swalConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { sectionsService } from '../../services/sections.service'
@@ -53,7 +53,7 @@ function SortableRow({
   onMoveDown?: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
 
   return (
     <div

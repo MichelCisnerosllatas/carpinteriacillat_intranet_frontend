@@ -24,6 +24,10 @@ export const sectionSchema = z.object({
    * `SectionDetailButtonsTab`/`SectionDetailItemsTab`). Dos secciones del mismo tipo pueden
    * tener valores distintos acá — no es config compartida por tipo.
    */
+  /** Visibilidad de title/subtitle/description en el sitio público — independiente de si tienen texto. */
+  showTitle: z.boolean(),
+  showSubtitle: z.boolean(),
+  showDescription: z.boolean(),
   tabInfo: z.boolean(),
   tabImages: z.boolean(),
   tabButtons: z.boolean(),

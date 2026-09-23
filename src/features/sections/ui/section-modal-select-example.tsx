@@ -17,7 +17,7 @@
 import { useEffect, useState } from 'react'
 import { ModalSelect } from '@/shared/ui/modal-select'
 import { Button } from '@/shared/ui/button'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useSectionModalSelectStore } from '../stores/useSectionModalSelectStore'
 import type { SectionApiItem } from '../model/sectionget.dto'
 
@@ -54,7 +54,7 @@ export function SectionModalSelectExample({ value, onValueChange }: SectionModal
           { header: 'Nombre', cell: (section) => section.section_name },
           {
             header: 'Estado',
-            cell: (section) => getStateOption(section.section_state)?.label ?? section.section_state,
+            cell: (section) => getVisibilityStateOption(section.section_state)?.label ?? section.section_state,
           },
         ]}
         searchPlaceholder="Buscar sección..."

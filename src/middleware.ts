@@ -23,6 +23,7 @@ const PROTECTED_PREFIXES = [
   '/images',
   '/navigations',
   '/sections',
+  '/footer',
   '/section-images',
   '/section-buttons',
   '/section-items',

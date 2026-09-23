@@ -17,7 +17,7 @@
 import { useEffect, useState } from 'react'
 import { ModalSelect } from '@/shared/ui/modal-select'
 import { Button } from '@/shared/ui/button'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTypeSectionModalSelectStore } from '../stores/useTypeSectionModalSelectStore'
 import type { TypeSectionApiItem } from '../model/typesectionget.dto'
 
@@ -54,7 +54,7 @@ export function TypeSectionModalSelectExample({ value, onValueChange }: TypeSect
           { header: 'Nombre', cell: (typesection) => typesection.typesection_name },
           {
             header: 'Estado',
-            cell: (typesection) => getStateOption(typesection.typesection_state)?.label ?? typesection.typesection_state,
+            cell: (typesection) => getVisibilityStateOption(typesection.typesection_state)?.label ?? typesection.typesection_state,
           },
         ]}
         searchPlaceholder="Buscar sección..."

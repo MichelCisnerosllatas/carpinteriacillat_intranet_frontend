@@ -8,7 +8,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { cn } from '@/shared/lib/utils'
-import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionsGroupTable } from './sections-group-table'
@@ -172,7 +172,7 @@ export function SectionsTable() {
             <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>
-              {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              {VISIBILITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

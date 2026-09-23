@@ -102,7 +102,7 @@ export function CompanyManagementLinksCard() {
         <ManagementLink
           href="/company-social-networks"
           title="Sitio web y redes sociales"
-          description="Configura enlaces web y perfiles sociales."
+          description="Se muestran como íconos clickeables en el footer del sitio web público — solo las que actives ahí con &quot;Mostrar en el sitio web&quot;."
           icon={<Share2 className="size-5" />}
         />
       </CardContent>

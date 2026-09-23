@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { sectionImagesService } from '../services/sectionimages.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { buildImageUrl } from '@/shared/lib/images'
 import type { SectionImageListRequestDto, SectionImageJoinApiItem } from '../model/sectionimageget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
@@ -33,7 +33,7 @@ type Action = {
 const defaultFilters: SectionImageListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
 const mapFromApi = (item: SectionImageJoinApiItem): SectionImage => {
-  const stateOpt = getStateOption(item.sectionimage_state)
+  const stateOpt = getVisibilityStateOption(item.sectionimage_state)
   return {
     id: item.id_section_image,
     // El endpoint `_join` (el único que usa este módulo, para lista y detalle) NO trae

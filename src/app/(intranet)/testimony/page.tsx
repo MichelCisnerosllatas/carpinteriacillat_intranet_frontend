@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
-import { ArrowUpDown, Settings2, Plus } from 'lucide-react'
+import { ArrowUpDown, Settings, Plus } from 'lucide-react'
 import { TestimonyTable } from '@/features/testimony-web/ui/list/testimony-table'
 
 export const metadata: Metadata = { title: 'Testimonios' }
@@ -19,7 +19,7 @@ export default function TestimonyWebPage() {
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline" className="space-x-1">
-              <Link href="/testimony/settings"><Settings2 size={18} /><span>Configuración</span></Link>
+              <Link href="/testimony/settings"><Settings size={18} /><span className="hidden sm:inline">Configuración</span></Link>
             </Button>
             <Button asChild variant="outline" className="space-x-1">
               <Link href="/testimony/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>

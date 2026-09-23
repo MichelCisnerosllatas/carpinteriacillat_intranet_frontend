@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { testimonyService } from '../services/testimony.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { buildImageUrl } from '@/shared/lib/images'
 import type { TestimonyListRequestDto, TestimonyApiItem } from '../model/testimonyget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
@@ -33,7 +33,7 @@ type Action = {
 const defaultFilters: TestimonyListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section: undefined }
 
 const mapFromApi = (item: TestimonyApiItem): Testimony => {
-  const stateOpt = getStateOption(item.testimony_state)
+  const stateOpt = getVisibilityStateOption(item.testimony_state)
   return {
     id: item.id_testimony_web,
     idSection: item.section?.id_section ?? item.id_section,

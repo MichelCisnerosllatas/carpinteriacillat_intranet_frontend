@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { sectionsService } from '../services/sections.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionListRequestDto, SectionJoinApiItem } from '../model/sectionget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -31,10 +31,11 @@ type Action = {
 
 const defaultFilters: SectionListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
-const mapFromApi = (item: SectionJoinApiItem): Section => {
-  const stateOpt = getStateOption(item.section_state)
-  const typesectionStateOpt = item.type_section ? getStateOption(item.type_section.typesection_state) : null
-  const navigationStateOpt = item.navigation ? getStateOption(item.navigation.navigation_state) : null
+/** Exportado para que `useSectionContentVisibilityStore` (tab "Visibilidad" de Configuración) reutilice el mismo mapeo sin duplicarlo. */
+export const mapSectionFromApi = (item: SectionJoinApiItem): Section => {
+  const stateOpt = getVisibilityStateOption(item.section_state)
+  const typesectionStateOpt = item.type_section ? getVisibilityStateOption(item.type_section.typesection_state) : null
+  const navigationStateOpt = item.navigation ? getVisibilityStateOption(item.navigation.navigation_state) : null
   return {
     id: item.id_section,
     name: item.section_name,
@@ -51,6 +52,9 @@ const mapFromApi = (item: SectionJoinApiItem): Section => {
     // `web_settings` ausente (backend viejo, o una sección creada a mano sin fila de settings
     // todavía) = tratar como "todo permitido/visible", para no ocultar tabs/acciones por error
     // solo porque no hay config técnica cargada para esta sección puntual.
+    showTitle: item.web_settings?.show_title ?? true,
+    showSubtitle: item.web_settings?.show_subtitle ?? true,
+    showDescription: item.web_settings?.show_description ?? true,
     tabInfo: item.web_settings?.tab_info ?? true,
     tabImages: item.web_settings?.tab_images ?? true,
     tabButtons: item.web_settings?.tab_buttons ?? true,
@@ -100,7 +104,7 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
     try {
       const response = await sectionsService.getById(id)
       if (!response.success) throw new Error(response.message)
-      const mapped = mapFromApi(response.data)
+      const mapped = mapSectionFromApi(response.data)
       set({ isFetching: false, currentItem: mapped, hasLoaded: true })
       return true
     } catch (error: any) {
@@ -120,7 +124,7 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
       set({
         hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
         message: response.message,
-        items: response.data.map(mapFromApi),
+        items: response.data.map(mapSectionFromApi),
         links: response.links, meta: response.meta,
         filters: { ...nextFilters, page: response.meta?.current_page ?? nextFilters.page, per_page: response.meta?.per_page ?? nextFilters.per_page },
       })

@@ -36,6 +36,9 @@ export type SectionJoinApiItem = Omit<SectionApiItem, 'id_type_section' | 'id_na
    * lo trata igual que "todo permitido/visible" (ver `useSectionListStore.mapFromApi`).
    */
   web_settings: {
+    show_title: boolean
+    show_subtitle: boolean
+    show_description: boolean
     tab_info: boolean
     tab_images: boolean
     tab_buttons: boolean

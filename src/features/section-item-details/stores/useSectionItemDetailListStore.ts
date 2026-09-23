@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { sectionItemDetailsService } from '../services/sectionitemdetails.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionItemDetailListRequestDto, SectionItemDetailApiItem } from '../model/sectionitemdetailget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -32,7 +32,7 @@ type Action = {
 const defaultFilters: SectionItemDetailListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section_item: undefined }
 
 const mapFromApi = (item: SectionItemDetailApiItem): SectionItemDetail => {
-  const stateOpt = getStateOption(item.sectionitemdetail_state)
+  const stateOpt = getVisibilityStateOption(item.sectionitemdetail_state)
   return {
     id: item.id_section_item_detail,
     idSectionItem: item.id_section_item,

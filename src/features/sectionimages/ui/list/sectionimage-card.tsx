@@ -10,7 +10,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { getSectionImageFixLabel } from '../../data/data'
 import type { SectionImage } from '../../data/schema'
 
@@ -41,7 +41,7 @@ export function SectionImageCard({
   onToggleState,
   onDelete,
 }: SectionImageCardProps) {
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
   const isActive = item.stateValue === 1
 
   return (

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { sectionButtonsService } from '../services/sectionbuttons.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionButtonListRequestDto, SectionButtonApiItem } from '../model/sectionbuttonget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -32,7 +32,7 @@ type Action = {
 const defaultFilters: SectionButtonListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section: undefined }
 
 const mapFromApi = (item: SectionButtonApiItem): SectionButton => {
-  const stateOpt = getStateOption(item.sectionbutton_state)
+  const stateOpt = getVisibilityStateOption(item.sectionbutton_state)
   return {
     id: item.id_section_button,
     idSection: item.id_section,

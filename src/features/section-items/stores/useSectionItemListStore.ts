@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { sectionItemsService } from '../services/sectionitems.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionItemListRequestDto, SectionItemApiItem, SectionItemDetailApiItem } from '../model/sectionitemget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -42,7 +42,7 @@ const mapDetailFromApi = (d: SectionItemDetailApiItem): SectionItemDetailSummary
 })
 
 const mapFromApi = (item: SectionItemApiItem): SectionItem => {
-  const stateOpt = getStateOption(item.sectionitem_state)
+  const stateOpt = getVisibilityStateOption(item.sectionitem_state)
   return {
     id: item.id_section_item,
     idSection: item.id_section,

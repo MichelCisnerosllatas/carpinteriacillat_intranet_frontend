@@ -8,7 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useSectionItemDetailListStore } from '../../stores/useSectionItemDetailListStore'
 import NProgress from 'nprogress'
 
@@ -25,7 +25,7 @@ export function SectionItemDetailDetail({ id }: { id: string }) {
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
 
   return (
     <div className="flex max-w-lg flex-col gap-4">

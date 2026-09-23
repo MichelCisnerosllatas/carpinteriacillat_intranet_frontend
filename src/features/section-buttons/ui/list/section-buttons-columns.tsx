@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { FaIcon } from '@/shared/ui/icon-picker/fa-icon'
 import type { SectionButton } from '../../data/schema'
 import { SectionButtonsRowActions } from './section-buttons-row-actions'
@@ -126,7 +126,7 @@ export const getSectionButtonsColumns = ({ hideDelete }: SectionButtonsColumnsOp
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
-      const opt = getStateOption(row.original.stateValue)
+      const opt = getVisibilityStateOption(row.original.stateValue)
       return (
         <Badge variant="outline" className={cn('text-xs', opt.badge)}>
           {opt.label}

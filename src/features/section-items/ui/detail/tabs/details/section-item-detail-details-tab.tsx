@@ -8,7 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionItem } from '../../../../data/schema'
 
 interface SectionItemDetailDetailsTabProps {
@@ -63,7 +63,7 @@ export function SectionItemDetailDetailsTab({ item, canAdd = true, canReorder = 
         ) : (
           <div className="flex flex-col gap-2">
             {details.map((d) => {
-              const dStateOpt = getStateOption(d.status === 'active' ? 1 : 0)
+              const dStateOpt = getVisibilityStateOption(d.status === 'active' ? 1 : 0)
               return (
                 <div key={d.id} className="flex items-start justify-between gap-3 rounded-lg border bg-card px-3 py-2.5">
                   <div className="flex min-w-0 flex-col gap-0.5">

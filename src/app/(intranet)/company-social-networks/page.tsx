@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
-import { Share2 } from 'lucide-react'
+import { Info, Share2 } from 'lucide-react'
 import { CompanySocialNetworksTable } from '@/features/company-social-networks/ui/list/company-social-networks-table'
 
 export const metadata: Metadata = { title: 'Redes Sociales' }
@@ -21,6 +21,16 @@ export default function CompanySocialNetworksPage() {
             <Link href="/company-social-networks/create"><Share2 size={18} /><span>Nueva Red Social</span></Link>
           </Button>
         </div>
+
+        <div className="flex items-start gap-2 rounded-lg border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
+          <Info className="mt-0.5 size-4 shrink-0" />
+          <p>
+            Las redes con <strong>&quot;Mostrar en el sitio web&quot;</strong> activo aparecen como íconos clickeables
+            en el footer del sitio web público, en el orden que definas acá. Desactivarla o borrarla las quita del
+            footer sin afectar nada más.
+          </p>
+        </div>
+
         <CompanySocialNetworksTable />
       </main>
     </>
