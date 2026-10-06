@@ -11,6 +11,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionDetailInfoTab } from './tabs/info/section-detail-info-tab'
 import { SectionDetailImagesTab } from './tabs/images/section-detail-images-tab'
@@ -39,6 +41,25 @@ export function SectionDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  // Solo lectura: no hay un form.watch() que dispare esto — se manda una vez, cuando cambia QUÉ
+  // sección se está viendo (ver use-preview-on-view.ts). Antes del "if (!item) return" a
+  // propósito: los hooks se llaman siempre, en el mismo orden, en cada render.
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section',
+    id: item!.id,
+    id_navigation: item!.idNavigation ?? undefined,
+    fields: {
+      id_type_section: item!.idTypesection,
+      section_title: item!.title,
+      section_subtitle: item!.subtitle,
+      section_description: item!.description,
+      section_content: item!.content,
+      section_variant: item!.variant,
+      section_state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getVisibilityStateOption(item.stateValue)

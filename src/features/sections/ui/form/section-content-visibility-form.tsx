@@ -14,6 +14,8 @@ import { Switch } from '@/shared/ui/switch'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { AlertError } from '@/widgets/alerts_components'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionContentVisibilityStore } from '../../stores/useSectionContentVisibilityStore'
 
 const schema = z.object({
@@ -81,6 +83,23 @@ export function SectionContentVisibilityForm({ id }: { id: string }) {
   useEffect(() => () => reset(), [])
 
   const watched = form.watch()
+
+  // "fields" solo manda title/subtitle/description GATEADOS por el interruptor — el sitio
+  // público (SiteSectionDto) no tiene un concepto de "show_title" separado, el backend ya
+  // resuelve esa visibilidad como parte del propio valor (ver web*SectionResource.php): si el
+  // interruptor está apagado, el campo viaja en null, ni más ni menos que si se hubiera borrado
+  // el texto.
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section',
+    id: Number(id),
+    id_navigation: section?.idNavigation ?? undefined,
+    fields: {
+      section_title: values.show_title ? (section?.title ?? null) : null,
+      section_subtitle: values.show_subtitle ? (section?.subtitle ?? null) : null,
+      section_description: values.show_description ? (section?.description ?? null) : null,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, !!section)
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({

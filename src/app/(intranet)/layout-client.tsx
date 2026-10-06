@@ -5,6 +5,8 @@ import { cn } from '@/shared/lib/utils'
 import { SidebarInset, SidebarProvider } from '@/shared/ui/sidebar'
 import { AppSidebar } from '@/widgets/sidebar/app-sidebar'
 import { CommandMenu } from '@/widgets/command-menu/command-menu'
+import { LandingPreview } from '@/widgets/landing-preview'
+import { LandingPreviewSpacer } from '@/widgets/landing-preview/landing-preview-spacer'
 import { AuthSessionProvider } from '@/features/auth/ui/auth-session-provider'
 
 type DashboardLayoutClientProps = {
@@ -36,7 +38,14 @@ export function DashboardLayoutClient({
         >
           {children}
         </SidebarInset>
+        
+        {/* Hermano real en el flex-row (no padding) — ver landing-preview-spacer.tsx para el
+            porqué: así SidebarInset (header de cada página + contenido, como una sola caja
+            con sus propias esquinas redondeadas) se achica de verdad cuando el panel está
+            abierto, sin dejar un hueco vacío entre el header y el panel. */}
+        <LandingPreviewSpacer />
         <CommandMenu />
+        <LandingPreview />
       </SidebarProvider>
     </AuthSessionProvider>
   )

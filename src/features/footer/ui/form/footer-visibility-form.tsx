@@ -18,10 +18,14 @@ import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { toastError } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { AlertError } from '@/widgets/alerts_components'
+import { ErrorState } from '@/widgets/error/error-state'
 import { storageFilesService } from '@/features/storage-files/services/storage-files.service'
 import { useFooterSettingStore } from '../../stores/useFooterSettingStore'
 import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import type { LogoFieldHandle } from '@/shared/lib/logo-field.types'
+import { getImageUrl } from '@/features/images/lib/image-url'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 
 const schema = z.object({
   logo: z.string().nullable(),
@@ -73,7 +77,7 @@ function ColumnRow({
  * tiene sentido decidir qué columna se vería.
  */
 export function FooterVisibilityForm() {
-  const { setting, isLoading, isSubmitting, error, fieldErrors, get, update, reset } = useFooterSettingStore()
+  const { setting, hasLoaded, isLoading, isError, isSubmitting, error, fieldErrors, get, update } = useFooterSettingStore()
   const logoFieldRef = useRef<LogoFieldHandle>(null)
 
   const form = useForm<FormValues>({
@@ -84,7 +88,11 @@ export function FooterVisibilityForm() {
     },
   })
 
-  useEffect(() => { void get() }, [])
+  // `if (!hasLoaded)`, no incondicional: Radix desmonta el contenido del tab inactivo, así que
+  // este componente se vuelve a montar cada vez que se vuelve al tab "Visibilidad" — sin este
+  // guard, cada cambio de tab pedía la configuración de nuevo (mismo criterio que
+  // `CompanySettingView`/`SaleSettingView`).
+  useEffect(() => { if (!hasLoaded) void get() }, [])
 
   useEffect(() => {
     if (setting) {
@@ -102,10 +110,31 @@ export function FooterVisibilityForm() {
     }
   }, [setting])
 
-  useEffect(() => () => reset(), [])
-
   const watched = form.watch()
   const columnsDisabled = !watched.footer_state
+
+  // "logo" acá es la ruta cruda de storage (ej. "sistema/logo.png") — el sitio público espera
+  // "logo_url" ya resuelto a URL absoluta (misma prioridad que WebSiteResource::toArray() en el
+  // backend: logo propio del footer, o el de la empresa si no se subió uno — pero ESO ya lo
+  // resuelve el backend en site.footer_settings, acá solo hace falta resolver la URL si el
+  // admin ELIGIÓ un logo nuevo; si lo dejó vacío, mandar null deja que el sitio conserve el que
+  // ya tenía cargado (ver preview.resolve.ts, merge superficial).
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'footer',
+    id: null,
+    fields: {
+      ...(values.logo ? { logo_url: getImageUrl(values.logo) } : {}),
+      logo_height: values.logo_height,
+      logo_width: values.logo_width,
+      logo_object_fit: values.logo_object_fit,
+      footer_state: values.footer_state,
+      show_brand: values.show_brand,
+      show_quick_links: values.show_quick_links,
+      show_services: values.show_services,
+      show_access: values.show_access,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, !!setting)
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({
@@ -144,6 +173,18 @@ export function FooterVisibilityForm() {
   }
 
   if (isLoading && !setting) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
+
+  if (isError && !setting) {
+    return (
+      <ErrorState
+        title="No se pudo cargar la configuración"
+        message={error ?? 'Ocurrió un problema al cargar la configuración del footer.'}
+        primaryLabel="Reintentar"
+        isPrimaryLoading={isLoading}
+        onPrimaryAction={() => { void get() }}
+      />
+    )
+  }
 
   return (
     <Form {...form}>

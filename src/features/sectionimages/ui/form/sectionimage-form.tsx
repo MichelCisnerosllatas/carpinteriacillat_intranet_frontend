@@ -22,6 +22,8 @@ import { ImageSelect } from '@/features/images/ui/image-select'
 import { ImageQuickUploadDialog } from '@/features/images/ui/image-quick-upload-dialog'
 import { getImageUrl, getImageDisplayName } from '@/features/images/lib/image-url'
 import type { ImageApiItem } from '@/features/images/model/imageget.dto'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
 import { useSectionImageFormStore } from '../../stores/useSectionImageFormStore'
 import { SECTION_IMAGE_FIX_OPTIONS, SECTION_IMAGE_FIX_DEFAULT } from '../../data/data'
@@ -83,6 +85,29 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
   const [selectedImage, setSelectedImage] = useState<ImageApiItem | null>(null)
   const [showImageUpload, setShowImageUpload] = useState(false)
   const currentFix = form.watch('sectionimage_fix')
+
+  // "name"/"url"/"alt" no los tiene el formulario directo (el sitio público los resuelve desde
+  // la imagen relacionada) — pero como ImageSelect ya trae el objeto completo de la imagen
+  // elegida (para la miniatura del selector), alcanza con reusar esa resolución en vez de que
+  // el sitio web tenga que ir a buscarla.
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section_image',
+    id: isEdit ? resolved!.id : null,
+    id_section: values.id_section,
+    fields: {
+      id_image: values.id_image,
+      // Si todavía no se resolvió la imagen (ej. justo al montar, antes de que ImageSelect
+      // dispare onSelectedChange), no se manda nada de esto — así el sitio web conserva lo que
+      // ya tenía cargado en vez de pisarlo con "undefined" (ver preview.resolve.ts: hace un
+      // merge superficial, así que una clave presente con valor undefined SÍ pisaría el dato).
+      ...(selectedImage
+        ? { name: getImageDisplayName(selectedImage), url: getImageUrl(selectedImage.image_patch), alt: selectedImage.image_alt }
+        : {}),
+      fix: values.sectionimage_fix,
+      state: values.sectionimage_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : true)
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({

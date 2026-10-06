@@ -22,6 +22,10 @@ import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { StarRatingInput } from '@/shared/ui/star-rating-input'
 import { ImageSelect } from '@/features/images/ui/image-select'
 import { ImageQuickUploadDialog } from '@/features/images/ui/image-quick-upload-dialog'
+import { getImageUrl } from '@/features/images/lib/image-url'
+import type { ImageApiItem } from '@/features/images/model/imageget.dto'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 import { useTestimonyFormStore } from '../../stores/useTestimonyFormStore'
 import { useTestimonySectionStore } from '../../stores/useTestimonySectionStore'
@@ -97,6 +101,29 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
   useEffect(() => () => { reset(); setCurrentItem(null) }, [])
 
   const [showImageUpload, setShowImageUpload] = useState(false)
+  // Solo para la vista previa en vivo: el sitio público espera "photo_url" ya resuelto, no un
+  // "id_image" crudo (no tiene forma de resolverlo por su cuenta) — ImageSelect ya trae el
+  // objeto completo de la foto elegida, se reusa esa resolución.
+  const [selectedPhoto, setSelectedPhoto] = useState<ImageApiItem | null>(null)
+
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'testimony',
+    id: isEdit ? resolved!.id : null,
+    id_section: isEdit ? resolved!.idSection : (sectionIdSection ?? undefined),
+    fields: {
+      name: values.testimony_name,
+      role: values.testimony_role || null,
+      city: values.testimony_city || null,
+      email: values.testimony_email || null,
+      rating: values.testimony_rating,
+      message: values.testimony_message,
+      ...(selectedPhoto ? { photo_url: getImageUrl(selectedPhoto.image_patch) } : values.id_image == null ? { photo_url: null } : {}),
+      is_delivered: values.testimony_is_delivered,
+      is_verified: values.testimony_is_verified,
+      state: values.testimony_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : sectionIdSection !== null)
 
   const onSubmit = async (values: FormValues) => {
     const idSection = isEdit ? resolved!.idSection : sectionIdSection
@@ -225,6 +252,7 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
                   <ImageSelect
                     value={field.value ?? null}
                     onValueChange={(v) => field.onChange(v)}
+                    onSelectedChange={setSelectedPhoto}
                     placeholder="Seleccionar foto (opcional)"
                     showAll
                   />

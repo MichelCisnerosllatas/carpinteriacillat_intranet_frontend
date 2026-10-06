@@ -20,23 +20,26 @@ const apiClient = axios.create({
   },
 });
 
-const shouldSkipAuthToken = (url?: string) => {
+// Endpoints públicos de autenticación: un 401 aquí significa credenciales rechazadas
+// (ej. correo de Google no registrado), NO una sesión expirada — no deben disparar el
+// refresh ni `SessionExpired` (que redirige y recarga el navegador).
+const PUBLIC_AUTH_ENDPOINTS = [
+  AUTH_ENDPOINTS.v1.login,
+  AUTH_ENDPOINTS.v1.loginWithGoogle,
+  AUTH_ENDPOINTS.v1.refresh,
+  AUTH_ENDPOINTS.v1.forgotPassword,
+  AUTH_ENDPOINTS.v1.reset_password,
+];
+
+const isPublicAuthEndpoint = (url?: string) => {
   if (!url) return false;
 
-  return (
-    url.includes(AUTH_ENDPOINTS.v1.login) ||
-    url.includes(AUTH_ENDPOINTS.v1.refresh)
-  );
+  return PUBLIC_AUTH_ENDPOINTS.some((endpoint) => url.includes(endpoint));
 };
 
-const shouldSkipRefresh = (url?: string) => {
-  if (!url) return false;
+const shouldSkipAuthToken = isPublicAuthEndpoint;
 
-  return (
-    url.includes(AUTH_ENDPOINTS.v1.login) ||
-    url.includes(AUTH_ENDPOINTS.v1.refresh)
-  );
-};
+const shouldSkipRefresh = isPublicAuthEndpoint;
 
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {

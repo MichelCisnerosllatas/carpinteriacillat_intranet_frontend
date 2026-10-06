@@ -10,6 +10,8 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { getSectionImageFixLabel } from '../../data/data'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
 import NProgress from 'nprogress'
 
@@ -24,6 +26,20 @@ export function SectionImageDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section_image',
+    id: item!.id,
+    id_section: item!.idSection,
+    fields: {
+      id_image: item!.idImage,
+      name: item!.imageName,
+      url: item!.imageUrl,
+      fix: item!.objectFit,
+      state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getVisibilityStateOption(item.stateValue)

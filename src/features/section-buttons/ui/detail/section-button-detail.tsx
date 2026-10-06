@@ -10,6 +10,8 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { FaIcon } from '@/shared/ui/icon-picker/fa-icon'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionButtonListStore } from '../../stores/useSectionButtonListStore'
 import NProgress from 'nprogress'
 
@@ -24,6 +26,20 @@ export function SectionButtonDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section_button',
+    id: item!.id,
+    id_section: item!.idSection,
+    fields: {
+      label: item!.label,
+      url: item!.url,
+      icon: item!.icon,
+      variant: item!.variant,
+      state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getVisibilityStateOption(item.stateValue)

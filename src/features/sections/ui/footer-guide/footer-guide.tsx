@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import {
   ArrowRight, Building2, ExternalLink, Info, LayoutList, Link2, Navigation2, Share2,
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
-import { sectionsService } from '../../services/sections.service'
+import { useSectionSelectStore } from '../../stores/useSectionSelectStore'
 
 const SERVICES_SECTION_KEY = 'home-services'
 
@@ -60,20 +60,16 @@ function GuideCard({
  * directos, no un formulario. Evita duplicar inputs que ya viven en otro lado.
  */
 export function FooterGuide() {
-  const [servicesHref, setServicesHref] = useState<string | null>(null)
-  const [servicesLoaded, setServicesLoaded] = useState(false)
+  // Store compartido (mismo que usa SectionSelect): cachea la lista tras la primera carga, así
+  // que volver a este tab (Radix desmonta el contenido inactivo, así que este componente se
+  // vuelve a montar cada vez) no dispara una nueva petición ni el parpadeo de "Buscando...".
+  const { options, isLoading, load } = useSectionSelectStore()
 
-  useEffect(() => {
-    let cancelled = false
-    sectionsService.getForSelect()
-      .then((res) => {
-        if (cancelled || !res.success) return
-        const section = res.data.find((s) => s.section_key === SERVICES_SECTION_KEY)
-        if (section) setServicesHref(`/sections/${section.id_section}`)
-      })
-      .finally(() => { if (!cancelled) setServicesLoaded(true) })
-    return () => { cancelled = true }
-  }, [])
+  useEffect(() => { void load() }, [])
+
+  const servicesSection = options.find((s) => s.section_key === SERVICES_SECTION_KEY)
+  const servicesHref = servicesSection ? `/sections/${servicesSection.id_section}` : null
+  const servicesLoaded = !isLoading
 
   return (
     <div className="flex flex-col gap-5">

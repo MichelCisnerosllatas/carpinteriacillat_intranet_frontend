@@ -15,6 +15,8 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { getInitials } from '@/shared/lib/get-initials'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { formatTestimonyRating } from '../../data/data'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 
@@ -29,6 +31,25 @@ export function TestimonyDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'testimony',
+    id: item!.id,
+    id_section: item!.idSection,
+    fields: {
+      name: item!.name,
+      role: item!.role,
+      city: item!.city,
+      email: item!.email,
+      rating: item!.rating,
+      message: item!.message,
+      ...(item!.imageUrl ? { photo_url: item!.imageUrl } : {}),
+      is_delivered: item!.isDelivered,
+      is_verified: item!.isVerified,
+      state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getVisibilityStateOption(item.stateValue)

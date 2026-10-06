@@ -19,6 +19,8 @@ import { formatDatetime } from '@/shared/lib/utils'
 import { AlertError } from '@/widgets/alerts_components'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { SectionItemSelect } from '@/features/section-items/ui/section-item-select'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionItemDetailListStore } from '../../stores/useSectionItemDetailListStore'
 import { useSectionItemDetailFormStore } from '../../stores/useSectionItemDetailFormStore'
 
@@ -75,6 +77,18 @@ export function SectionItemDetailForm({ mode, id }: { mode: 'create' | 'edit'; i
   }, [isEdit, resolved?.id])
 
   useEffect(() => () => { reset(); setCurrentItem(null) }, [])
+
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section_item_detail',
+    id: isEdit ? resolved!.id : null,
+    id_section_item: values.id_section_item,
+    fields: {
+      title: values.sectionitemdetail_title || null,
+      description: values.sectionitemdetail_description || null,
+      state: values.sectionitemdetail_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : contextualIdSectionItem !== null)
 
   const onSubmit = async (values: FormValues) => {
     const label = values.sectionitemdetail_title || 'este detalle'

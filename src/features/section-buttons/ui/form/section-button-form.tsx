@@ -22,6 +22,8 @@ import { SectionSelect } from '@/features/sections/ui/section-select'
 import { IconPicker } from '@/shared/ui/icon-picker/icon-picker'
 import { FaIcon } from '@/shared/ui/icon-picker/fa-icon'
 import { cn } from '@/shared/lib/utils'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionButtonListStore } from '../../stores/useSectionButtonListStore'
 import { useSectionButtonFormStore } from '../../stores/useSectionButtonFormStore'
 import { SECTION_BUTTON_VARIANTS, SECTION_BUTTON_VARIANT_DEFAULT } from '../../data/data'
@@ -91,6 +93,20 @@ export function SectionButtonForm({ mode, id }: { mode: 'create' | 'edit'; id?: 
   }, [isEdit, resolved?.id])
 
   useEffect(() => () => { reset(); setCurrentItem(null) }, [])
+
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section_button',
+    id: isEdit ? resolved!.id : null,
+    id_section: values.id_section,
+    fields: {
+      label: values.sectionbutton_label,
+      url: values.sectionbutton_url || null,
+      icon: values.sectionbutton_icon || null,
+      variant: values.sectionbutton_variant || null,
+      state: values.sectionbutton_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : true)
 
   const watchedLabel   = form.watch('sectionbutton_label')
   const watchedIcon    = form.watch('sectionbutton_icon')

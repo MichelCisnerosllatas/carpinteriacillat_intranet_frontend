@@ -21,6 +21,8 @@ import { TypeSectionSelect } from '@/features/typesections/ui/typesection-select
 import { TypeSectionQuickCreateDialog } from '@/features/typesections/ui/typesection-quick-create-dialog'
 import { NavigationSelect } from '@/features/navigations/ui/navigation-select'
 import { NavigationQuickCreateDialog } from '@/features/navigations/ui/navigation-quick-create-dialog'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionFormStore } from '../../stores/useSectionFormStore'
 
@@ -85,6 +87,25 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
   }, [isEdit, resolved?.id])
 
   useEffect(() => () => { reset(); setCurrentItem(null) }, [])
+
+  // Vista previa en vivo del sitio público (ver widgets/landing-preview) — "fields" ya va en
+  // el idioma público (SiteSectionDto): section_name se queda afuera a propósito, es de uso
+  // interno del intranet y nunca sale hacia /v1/public/site (ver PublicSiteBadge arriba).
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section',
+    id: isEdit ? resolved!.id : null,
+    id_navigation: values.id_navigation,
+    fields: {
+      id_type_section: values.id_type_section,
+      section_title: values.section_title || null,
+      section_subtitle: values.section_subtitle || null,
+      section_description: values.section_description || null,
+      section_content: values.section_content || null,
+      section_variant: values.section_variant || null,
+      section_state: values.section_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : true)
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({

@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionItemDetailListStore } from '../../stores/useSectionItemDetailListStore'
 import NProgress from 'nprogress'
 
@@ -23,6 +25,18 @@ export function SectionItemDetailDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section_item_detail',
+    id: item!.id,
+    id_section_item: item!.idSectionItem,
+    fields: {
+      title: item!.title,
+      description: item!.description,
+      state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getVisibilityStateOption(item.stateValue)

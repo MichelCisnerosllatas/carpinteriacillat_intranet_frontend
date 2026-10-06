@@ -25,6 +25,8 @@ import { SectionSelect } from '@/features/sections/ui/section-select'
 import { IconPicker } from '@/shared/ui/icon-picker/icon-picker'
 import { FaIcon } from '@/shared/ui/icon-picker/fa-icon'
 import { SECTION_ITEM_TYPES, SECTION_ITEM_TYPE_FIELDS, SECTION_ITEM_VARIANT_OPTIONS, SECTION_ITEM_IDENTITY_TYPES, sectionItemVariantLabel, WHATSAPP_POSITION_PREVIEW_CLASS, type SectionItemField } from '../../data/data'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionItemListStore } from '../../stores/useSectionItemListStore'
 import { useSectionItemFormStore } from '../../stores/useSectionItemFormStore'
 
@@ -133,6 +135,30 @@ export function SectionItemForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
   const watchedVariant = form.watch('sectionitem_variant')
   const watchedLatitude = form.watch('sectionitem_latitude')
   const watchedLongitude = form.watch('sectionitem_longitude')
+
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section_item',
+    id: isEdit ? resolved!.id : null,
+    id_section: values.id_section,
+    fields: {
+      item_type: values.sectionitem_type && values.sectionitem_type !== NO_TYPE ? values.sectionitem_type : null,
+      key: values.sectionitem_key || null,
+      title: values.sectionitem_title || null,
+      subtitle: values.sectionitem_subtitle || null,
+      description: values.sectionitem_description || null,
+      label: values.sectionitem_label || null,
+      value: values.sectionitem_value || null,
+      suffix: values.sectionitem_suffix || null,
+      icon: values.sectionitem_icon || null,
+      link: values.sectionitem_link || null,
+      variant: values.sectionitem_variant || null,
+      rating: values.sectionitem_rating !== undefined && !Number.isNaN(values.sectionitem_rating) ? values.sectionitem_rating : null,
+      latitude: values.sectionitem_latitude !== undefined && !Number.isNaN(values.sectionitem_latitude) ? values.sectionitem_latitude : null,
+      longitude: values.sectionitem_longitude !== undefined && !Number.isNaN(values.sectionitem_longitude) ? values.sectionitem_longitude : null,
+      state: values.sectionitem_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : true)
 
   const onSubmit = async (values: FormValues) => {
     const label = values.sectionitem_title || values.sectionitem_label || 'este item'

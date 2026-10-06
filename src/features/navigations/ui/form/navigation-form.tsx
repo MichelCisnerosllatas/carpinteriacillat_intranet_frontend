@@ -16,6 +16,8 @@ import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
 import { AlertError } from '@/widgets/alerts_components'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useNavigationListStore } from '../../stores/useNavigationListStore'
 import { useNavigationFormStore } from '../../stores/useNavigationFormStore'
 
@@ -52,6 +54,18 @@ export function NavigationForm({ mode, id }: { mode: 'create' | 'edit'; id?: str
   }, [isEdit, resolved?.id])
 
   useEffect(() => () => reset(), [])
+
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'navigation',
+    id: isEdit ? resolved!.id : null,
+    fields: {
+      navigation_name: values.navigation_name,
+      navigation_url: values.navigation_url || '',
+      navigation_order: values.navigation_order ?? 9999,
+      navigation_state: values.navigation_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : true)
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({

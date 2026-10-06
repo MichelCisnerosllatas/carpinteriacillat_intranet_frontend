@@ -3,6 +3,7 @@ import { footerSettingService } from '../services/footersetting.service'
 import type { FooterSettingApiItem, FooterSettingUpdateRequestDto } from '../model/footersetting.dto'
 
 type State = {
+  hasLoaded: boolean
   isLoading: boolean
   isSubmitting: boolean
   isError: boolean
@@ -21,16 +22,21 @@ type Action = {
  * Store propio del tab "Visibilidad" de `/footer` — independiente de cualquier otro store
  * (mismo criterio que `useTestimonyWebSettingStore`/`useSectionContentVisibilityStore`): cada
  * pantalla de configuración maneja su propio isSubmitting/error, sin pisarse entre sí.
+ *
+ * `hasLoaded` (mismo patrón que `useCompanySettingStore`/`useSaleSettingStore`): el consumidor
+ * solo llama a `get()` cuando todavía es `false`. Sin esto, cambiar de tab en `/footer` (Radix
+ * desmonta el contenido del tab inactivo) volvía a pedir la configuración — y a parpadear el
+ * "Cargando..." — cada vez que se volvía al tab "Visibilidad", aunque ya se hubiera cargado.
  */
 export const useFooterSettingStore = create<State & Action>((set) => ({
-  isLoading: false, isSubmitting: false, isError: false, error: null, fieldErrors: null, setting: null,
+  hasLoaded: false, isLoading: false, isSubmitting: false, isError: false, error: null, fieldErrors: null, setting: null,
 
   get: async () => {
     set({ isLoading: true, isError: false, error: null })
     try {
       const res = await footerSettingService.get()
       if (!res.success) throw new Error(res.message)
-      set({ isLoading: false, setting: res.data })
+      set({ isLoading: false, hasLoaded: true, setting: res.data })
       return true
     } catch (error: any) {
       set({
@@ -62,5 +68,5 @@ export const useFooterSettingStore = create<State & Action>((set) => ({
     }
   },
 
-  reset: () => set({ isLoading: false, isSubmitting: false, isError: false, error: null, fieldErrors: null, setting: null }),
+  reset: () => set({ hasLoaded: false, isLoading: false, isSubmitting: false, isError: false, error: null, fieldErrors: null, setting: null }),
 }))

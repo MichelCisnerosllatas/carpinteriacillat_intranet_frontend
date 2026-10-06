@@ -15,6 +15,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { SECTION_ITEM_TYPES } from '../../data/data'
 import { useSectionItemListStore } from '../../stores/useSectionItemListStore'
 import { SectionItemDetailInfoTab } from './tabs/info/section-item-detail-info-tab'
@@ -49,6 +51,30 @@ export function SectionItemDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section_item',
+    id: item!.id,
+    id_section: item!.idSection,
+    fields: {
+      item_type: item!.type,
+      key: item!.key,
+      title: item!.title,
+      subtitle: item!.subtitle,
+      description: item!.description,
+      label: item!.label,
+      value: item!.value,
+      suffix: item!.suffix,
+      icon: item!.icon,
+      link: item!.link,
+      rating: item!.rating,
+      variant: item!.variant,
+      latitude: item!.latitude,
+      longitude: item!.longitude,
+      state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
   const stateOpt = getVisibilityStateOption(item.stateValue)
