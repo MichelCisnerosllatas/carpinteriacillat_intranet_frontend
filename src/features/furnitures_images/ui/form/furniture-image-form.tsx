@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
@@ -20,6 +20,7 @@ import { useFurnitureImageListStore } from '../../stores/useFurnitureImageListSt
 import { useFurnitureImageFormStore } from '../../stores/useFurnitureImageFormStore'
 import { furnitureImagesService } from '../../services/furnitures-images.service'
 import type { FurnitureImage } from '../../data/schema'
+import { FURNITURE_IMAGE_VARIANT_OPTIONS, variantFromSelect, variantToSelect } from '../../data/data'
 import type { FurnitureImageJoinApiItem } from '../../model/furnitures-image-api-item.dto'
 import { buildImageUrl } from '@/shared/lib/images'
 import { getStateOption } from '@/shared/config/entity-states'
@@ -29,6 +30,9 @@ const schema = z.object({
   id_image:             z.number({ error: 'Seleccione la imagen.' }),
   furnitureimage_order: z.number().nullable().optional(),
   furnitureimage_state: z.number(),
+  // Datos web de la foto (galería del sitio)
+  furnitureimageweb_caption: z.string().max(150, 'Máximo 150 caracteres.'),
+  furnitureimageweb_variant: z.string(), // valor del Select: 'normal' | 'before' | 'after'
 })
 
 type FormValues = z.infer<typeof schema>
@@ -46,6 +50,8 @@ function mapFromJoin(raw: FurnitureImageJoinApiItem): FurnitureImage {
     imageTitle: raw.image?.image_title ?? null,
     imageAlt: raw.image?.image_alt ?? null,
     order: raw.furnitureimage_order,
+    caption: raw.web?.furnitureimageweb_caption ?? null,
+    variant: raw.web?.furnitureimageweb_variant ?? null,
     stateValue: raw.furnitureimage_state,
     statusLabel: stateOpt.label,
     createdAt: raw.furnitureimage_created_at,
@@ -71,6 +77,8 @@ export function FurnitureImageForm({ mode, id }: { mode: 'create' | 'edit'; id?:
       id_image:             resolved?.imageId ?? undefined,
       furnitureimage_order: resolved?.order ?? null,
       furnitureimage_state: resolved?.stateValue ?? 1,
+      furnitureimageweb_caption: resolved?.caption ?? '',
+      furnitureimageweb_variant: variantToSelect(resolved?.variant),
     },
   })
 
@@ -89,6 +97,8 @@ export function FurnitureImageForm({ mode, id }: { mode: 'create' | 'edit'; id?:
             id_image:             mapped.imageId,
             furnitureimage_order: mapped.order,
             furnitureimage_state: mapped.stateValue,
+            furnitureimageweb_caption: mapped.caption ?? '',
+            furnitureimageweb_variant: variantToSelect(mapped.variant),
           })
         }
       })
@@ -103,6 +113,8 @@ export function FurnitureImageForm({ mode, id }: { mode: 'create' | 'edit'; id?:
       id_image:             resolved.imageId,
       furnitureimage_order: resolved.order,
       furnitureimage_state: resolved.stateValue,
+      furnitureimageweb_caption: resolved.caption ?? '',
+      furnitureimageweb_variant: variantToSelect(resolved.variant),
     })
   }, [resolved?.id])
 
@@ -112,12 +124,18 @@ export function FurnitureImageForm({ mode, id }: { mode: 'create' | 'edit'; id?:
   }, [fieldErrors])
 
   const onSubmit = async (values: FormValues) => {
+    // Campos web: pie de foto vacío y variante "Normal" se mandan como null
+    const webFields = {
+      furnitureimageweb_caption: values.furnitureimageweb_caption.trim() || null,
+      furnitureimageweb_variant: variantFromSelect(values.furnitureimageweb_variant),
+    }
     if (isEdit && id) {
       const ok = await update(Number(id), {
         id_furniture:         values.id_furniture,
         id_image:             values.id_image,
         furnitureimage_order: values.furnitureimage_order ?? undefined,
         furnitureimage_state: values.furnitureimage_state,
+        ...webFields,
       })
       if (ok) {
         toastSuccess('Actualizado', 'La asociación fue actualizada.')
@@ -131,6 +149,7 @@ export function FurnitureImageForm({ mode, id }: { mode: 'create' | 'edit'; id?:
         id_image:             values.id_image,
         furnitureimage_order: values.furnitureimage_order ?? undefined,
         furnitureimage_state: values.furnitureimage_state,
+        ...webFields,
       })
       if (newId) {
         toastSuccess('Creado', 'La asociación fue creada.')
@@ -229,6 +248,41 @@ export function FurnitureImageForm({ mode, id }: { mode: 'create' | 'edit'; id?:
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="furnitureimageweb_caption"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pie de foto</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Isla de desayuno" maxLength={150} disabled={isSubmitting} {...field} />
+                    </FormControl>
+                    <FormDescription>Opcional. Se muestra debajo de la foto en la galería web.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="furnitureimageweb_variant"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de foto</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {FURNITURE_IMAGE_VARIANT_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>"Antes" y "Después" se usan para comparar restauraciones.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

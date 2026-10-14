@@ -1,8 +1,8 @@
 'use client'
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import Link from 'next/link'
-import { ImageIcon, MoreVertical, Eye, Pencil, CheckCircle2, XCircle, Trash2, CheckSquare, Square } from 'lucide-react'
+import { ImageIcon, MoreVertical, Eye, Pencil, CheckCircle2, XCircle, Trash2, CheckSquare, Square, Layers } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -13,9 +13,17 @@ import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { getSectionImageFixLabel } from '../../data/data'
 import type { SectionImage } from '../../data/schema'
+import type { ImageRole } from '../../lib/image-roles'
+import { SectionImageRoleBadge } from './sectionimage-role-badge'
 
-interface SectionImageCardProps {
+export interface SectionImageCardProps {
   item: SectionImage
+  /** Rol de la foto en la web (solo se pinta Principal ★ / Oculta). */
+  role?: ImageRole | null
+  /** Texto del item asignado, ej. "01 · Muebles a medida". Si no viene, se usa el título del item. */
+  itemHeading?: string | null
+  /** Asa para arrastrar la foto (la pone `SortableSectionImageCard`). Si no viene, no se muestra. */
+  dragHandle?: ReactNode
   /** Oculta el badge de sección — se usa embebido en el tab "Imágenes" del detalle de una sección específica, donde ya es obvio a cuál pertenece. */
   hideSectionBadge?: boolean
   /** `web_settings.images_delete` — oculta la opción "Eliminar" del menú. Default `true` (comportamiento de siempre). */
@@ -31,6 +39,9 @@ interface SectionImageCardProps {
 
 export function SectionImageCard({
   item,
+  role,
+  itemHeading,
+  dragHandle,
   hideSectionBadge = false,
   canDelete = true,
   isSelected,
@@ -64,6 +75,7 @@ export function SectionImageCard({
             <img
               src={item.imageUrl}
               alt={item.imageName}
+              draggable={false}
               className="h-full w-full transition-transform duration-200 group-hover:scale-105"
               style={{ objectFit: (item.objectFit as CSSProperties['objectFit']) ?? 'cover' }}
             />
@@ -95,6 +107,11 @@ export function SectionImageCard({
           <Badge variant="secondary" className="bg-black/60 text-[10px] font-normal text-white backdrop-blur-sm">
             {getSectionImageFixLabel(item.objectFit)}
           </Badge>
+        </div>
+
+        {/* Rol de la foto en la web (Principal ★ / Oculta) */}
+        <div className="pointer-events-none absolute bottom-1.5 right-1.5 z-10">
+          <SectionImageRoleBadge role={role} className="shadow-sm" />
         </div>
 
         {/* Menú de acciones */}
@@ -153,7 +170,18 @@ export function SectionImageCard({
           )}
           <Badge variant="outline" className={cn('px-1 py-0 text-[10px]', stateOpt.badge)}>{stateOpt.label}</Badge>
         </div>
-        <span className="text-[10px] text-muted-foreground">{item.createdAtFormatted ?? item.createdAt}</span>
+        {/* Item al que pertenece la foto */}
+        {item.idSectionItem != null && (
+          <span className="flex items-center gap-1 truncate text-[10px] text-muted-foreground">
+            <Layers className="size-3 shrink-0" />
+            <span className="truncate">{itemHeading || item.sectionItemTitle || `Item #${item.idSectionItem}`}</span>
+          </span>
+        )}
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[10px] text-muted-foreground">{item.createdAtFormatted ?? item.createdAt}</span>
+          {/* Asa para arrastrar y ordenar la foto dentro de su grupo */}
+          {dragHandle}
+        </div>
       </div>
     </div>
   )

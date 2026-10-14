@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   KeyboardSensor,
   useSensor,
@@ -108,12 +108,13 @@ function SortableRow({
  */
 function ReorderGroupCard({ group, onChange }: { group: ReorderGroup; onChange: (items: ReorderItem[]) => void }) {
   const [open, setOpen] = useState(true)
-  // PointerSensor cubre mouse; TouchSensor aparte con activación por demora (en vez de
-  // distancia) para que intentar hacer scroll no dispare un arrastre por error en touch;
-  // KeyboardSensor para reordenar con flechas sin necesidad de arrastrar.
+  // Sensores del arrastre:
+  // - MouseSensor (no PointerSensor): el PointerSensor también toma el dedo y bloquea el scroll en celular.
+  // - TouchSensor: hay que mantener presionado el asa ~¼ s; si el dedo se desliza antes, es scroll normal.
+  // - KeyboardSensor: reordenar con teclado (Espacio + flechas).
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 

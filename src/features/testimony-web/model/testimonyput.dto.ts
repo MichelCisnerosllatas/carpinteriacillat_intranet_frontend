@@ -1,6 +1,8 @@
 export type TestimonyPutRequestDto = {
   id_section: number
   id_image?: number | null
+  /** Trabajo de la galería web (mueble) al que pertenece la reseña — null = ninguno. */
+  id_furniture?: number | null
   testimony_name: string
   testimony_role?: string
   testimony_city?: string

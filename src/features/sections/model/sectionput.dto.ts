@@ -22,6 +22,11 @@ export type SectionPutRequestDto = {
   items_add?: boolean
   items_reorder?: boolean
   items_delete?: boolean
+  /**
+   * Elementos de las tarjetas { "<clave>": true|false } — solo claves del catálogo del tipo de
+   * sección (el backend responde 422 si llega otra). Se mezcla con lo ya guardado.
+   */
+  card_settings?: Record<string, boolean>
   section_state: number
   id_type_section: number
   id_navigation: number

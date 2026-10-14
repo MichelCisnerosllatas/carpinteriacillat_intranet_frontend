@@ -13,11 +13,10 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
-import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { getInitials } from '@/shared/lib/get-initials'
 import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
-import { formatTestimonyRating } from '../../data/data'
+import { formatTestimonyRating, getTestimonyStateOption } from '../../data/data'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 
 export function TestimonyDetail({ id }: { id: string }) {
@@ -52,7 +51,8 @@ export function TestimonyDetail({ id }: { id: string }) {
 
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getVisibilityStateOption(item.stateValue)
+  // Incluye "Pendiente" (reseña de la web por aprobar)
+  const stateOpt = getTestimonyStateOption(item.stateValue)
 
   return (
     <div className="flex flex-col gap-6">
@@ -137,6 +137,11 @@ export function TestimonyDetail({ id }: { id: string }) {
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">Sección</span>
               <span className="font-medium">{item.sectionName ?? `Sección #${item.idSection}`}</span>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Trabajo</span>
+              <span className="font-medium">{item.furnitureName ?? '—'}</span>
             </div>
             <Separator />
             <div className="flex items-center justify-between">

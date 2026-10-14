@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import {
   Sidebar,
   SidebarContent,
@@ -31,10 +32,23 @@ export function AppSidebar({ defaultVariant, defaultCollapsible }: AppSidebarPro
   const [mounted, setMounted] = useState(false)
   const { collapsible, variant } = useLayoutStore()
   const {loginDataDTO} = useAuthStore();
+  const pathname = usePathname()
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Al cambiar de pantalla, lleva el enlace activo a la vista. Se espera a que termine la
+  // animación de apertura del grupo; 'nearest' no mueve nada si el enlace ya está visible.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      contentRef.current
+        ?.querySelector<HTMLElement>('[data-active="true"]')
+        ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }, 250)
+    return () => window.clearTimeout(t)
+  }, [pathname])
 
   // const loginDataDTO = useAuthStore((state) => state.loginDataDTO)
   const currentUser = {
@@ -54,7 +68,7 @@ export function AppSidebar({ defaultVariant, defaultCollapsible }: AppSidebarPro
       <SidebarHeader>
         <TeamSwitcher teams={sidebarData.teams} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent ref={contentRef}>
         {filteredGroups.map((group) => (
           <NavGroup key={group.title} {...group} />
         ))}

@@ -18,6 +18,8 @@ type VisibilityData = {
   show_title?: boolean
   show_subtitle?: boolean
   show_description?: boolean
+  /** Elementos de las tarjetas { clave: visible } (solo si la sección tiene catálogo). */
+  card_settings?: Record<string, boolean>
 }
 
 type Action = {
@@ -31,8 +33,8 @@ type Action = {
  * `useSectionListStore`/`useSectionFormStore` (que ya maneja el tab "Estructura", los tabs/
  * permisos de Imágenes/Botones/Items) para que ambos tabs carguen y guarden de forma
  * independiente, sin pisarse `isSubmitting`/`error` entre sí. Pega al MISMO endpoint PATCH
- * (`sectionsService.patch`, tabla `section_web_setting`) — nomás que solo manda los 3 campos de
- * este tab.
+ * (`sectionsService.patch`, tabla `section_web_setting`) — nomás que solo manda los campos de
+ * este tab (show_title/show_subtitle/show_description y, si la sección tiene catálogo, card_settings).
  */
 export const useSectionContentVisibilityStore = create<State & Action>((set) => ({
   isLoading: false, isSubmitting: false, isError: false, error: null, fieldErrors: null, section: null,

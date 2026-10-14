@@ -41,6 +41,10 @@ export const sectionSchema = z.object({
   itemsAdd: z.boolean(),
   itemsReorder: z.boolean(),
   itemsDelete: z.boolean(),
+  /** Elementos de las tarjetas { clave: visible } (resuelto por el backend). {} si el tipo no tiene catálogo. */
+  cardSettings: z.record(z.string(), z.boolean()),
+  /** Catálogo de elementos de las tarjetas (viene del backend, config/section_card_settings.php). [] si no tiene. */
+  cardSettingsSchema: z.array(z.object({ key: z.string(), label: z.string(), default: z.boolean() })),
   typesectionStateValue: z.number().nullable(),
   typesectionStateLabel: z.string().nullable(),
   typesectionStateBadge: z.string().nullable(),

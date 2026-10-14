@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
@@ -21,6 +21,7 @@ import {
   useSidebar,
 } from '@/shared/ui/sidebar'
 import { Badge } from '@/shared/ui/badge'
+import { cn } from '@/shared/lib/utils'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,12 +45,26 @@ const ALL_NAV_LINKS: NavLink[] = sidebarData.navGroups.flatMap((group) =>
   flattenNavLinks(group.items)
 )
 
+// Rutas que no tienen enlace propio en el sidebar pero pertenecen a otro módulo:
+// se resaltan como su módulo padre (prefijo de ruta → url del enlace).
+const ROUTE_ALIASES: Record<string, string> = {
+  '/furniture-images': '/furnitures',
+  '/section-item-details': '/section-items',
+}
+
+function resolveAlias(path: string): string {
+  for (const [prefix, target] of Object.entries(ROUTE_ALIASES)) {
+    if (path === prefix || path.startsWith(`${prefix}/`)) return target
+  }
+  return path
+}
+
 // Coincide con la ruta exacta o con cualquier subruta del módulo
 // (ej. /roles/create, /roles/1, /roles/edit/1 siguen resaltando "Roles").
 // Entre varias coincidencias se elige la más específica (url más larga)
 // para no resaltar dos módulos a la vez (ej. /images vs /images/storage).
 function getActiveUrl(pathname: string): string | undefined {
-  const path = pathname.split('?')[0]
+  const path = resolveAlias(pathname.split('?')[0])
   const matches = ALL_NAV_LINKS.filter(
     (link) => path === link.url || path.startsWith(`${link.url}/`)
   )
@@ -99,8 +114,18 @@ function SidebarMenuLink({ item, pathname }: { item: NavLink; pathname: string }
 
 function SidebarMenuCollapsible({ item, pathname }: { item: NavCollapsible; pathname: string }) {
   const { setOpenMobile } = useSidebar()
+  const isActive = checkIsActive(pathname, item)
+  const [open, setOpen] = useState(isActive)
+
+  // El sidebar vive en el layout y no se vuelve a montar al navegar: si se llega a un
+  // submódulo desde otra pantalla (no desde el sidebar), se abre su grupo. Nunca se
+  // cierra solo, así se respetan los grupos que el usuario abrió a mano.
+  useEffect(() => {
+    if (isActive) setOpen(true)
+  }, [isActive, pathname])
+
   return (
-    <Collapsible asChild defaultOpen={checkIsActive(pathname, item)} className="group/collapsible">
+    <Collapsible asChild open={open} onOpenChange={setOpen} className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={item.title}>
@@ -147,7 +172,13 @@ function SidebarMenuCollapsedDropdown({ item, pathname }: { item: NavCollapsible
           <DropdownMenuSeparator />
           {item.items.map((sub) => (
             <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
-              <Link href={sub.url} className={checkIsActive(pathname, sub as NavLink) ? 'bg-secondary' : ''}>
+              <Link
+                href={sub.url}
+                className={cn(
+                  'focus:bg-sidebar-primary/20 focus:text-sidebar-foreground active:bg-sidebar-primary/45',
+                  checkIsActive(pathname, sub as NavLink) && 'bg-sidebar-primary/45 font-medium focus:bg-sidebar-primary/55'
+                )}
+              >
                 {sub.icon && <sub.icon />}
                 <span className="max-w-52 text-wrap">{sub.title}</span>
                 {sub.badge && <span className="ms-auto text-xs">{sub.badge}</span>}

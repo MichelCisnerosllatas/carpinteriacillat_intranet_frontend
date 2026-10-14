@@ -8,6 +8,10 @@ import { SectionItemsTable } from '@/features/section-items/ui/list/section-item
 
 interface SectionDetailItemsTabProps {
   sectionId: number
+  /** Título de la pestaña (por defecto "Items de la sección"; ej. carrusel: "Categorías del carrusel"). */
+  title?: string
+  /** Texto del botón de alta (por defecto "Nuevo item"). */
+  addLabel?: string
   /** `type_section.web_settings.items_add` — oculta "Nuevo item" cuando el conjunto de items es
    * fijo (ej. "contact", cuyos 4 items de datos son parte fija del layout web). */
   canAdd?: boolean
@@ -20,14 +24,16 @@ interface SectionDetailItemsTabProps {
 }
 
 /** Tab "Items" del detalle de Section — lista embebida (filtrada a esta sección) + alta/reordenar. */
-export function SectionDetailItemsTab({ sectionId, canAdd = true, canReorder = true, canDelete = true }: SectionDetailItemsTabProps) {
+export function SectionDetailItemsTab({
+  sectionId, title = 'Items de la sección', addLabel = 'Nuevo item', canAdd = true, canReorder = true, canDelete = true,
+}: SectionDetailItemsTabProps) {
   const router = useRouter()
   const goTo = (path: string) => { NProgress.start(); router.push(path) }
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-sm font-medium"><LayoutList className="size-4" />Items de la sección</h3>
+        <h3 className="flex items-center gap-2 text-sm font-medium"><LayoutList className="size-4" />{title}</h3>
         <div className="flex items-center gap-2">
           {canReorder && (
             <Button size="sm" variant="outline" onClick={() => goTo(`/section-items/reorder?id_section=${sectionId}`)}>
@@ -36,7 +42,7 @@ export function SectionDetailItemsTab({ sectionId, canAdd = true, canReorder = t
           )}
           {canAdd && (
             <Button size="sm" onClick={() => goTo(`/section-items/create?id_section=${sectionId}`)}>
-              <Plus className="mr-1.5 size-4" />Nuevo item
+              <Plus className="mr-1.5 size-4" />{addLabel}
             </Button>
           )}
         </div>

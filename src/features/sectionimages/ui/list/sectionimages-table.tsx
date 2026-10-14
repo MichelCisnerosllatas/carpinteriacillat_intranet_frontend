@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import Lightbox from 'yet-another-react-lightbox'
-import Zoom from 'yet-another-react-lightbox/plugins/zoom'
-import 'yet-another-react-lightbox/styles.css'
-import { ImageIcon } from 'lucide-react'
+import { arrayMove } from '@dnd-kit/sortable'
+import { GripVertical, ImageIcon } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -18,8 +16,16 @@ import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { SectionSelect } from '@/features/sections/ui/section-select'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
 import { useSectionImageDeleteStore } from '../../stores/useSectionImageDeleteStore'
-import { SectionImageCard } from './sectionimage-card'
+import { useSectionImageReorderStore } from '../../stores/useSectionImageReorderStore'
+import { SectionImageCard, type SectionImageCardProps } from './sectionimage-card'
+import { SortableSectionImageCard } from './sortable-section-image-card'
+import { SectionImagesGroupedGrid } from './sectionimages-grouped-grid'
+import { SectionImageLightbox } from './section-image-lightbox'
+import { getLightboxIndex, toLightboxSlides } from '../../lib/lightbox-slides'
 import type { SectionImage } from '../../data/schema'
+import { getImageRoles, sortByOrder } from '../../lib/image-roles'
+import { groupSectionImages, type ImageItemGroup } from '../../lib/group-section-images'
+import { useSectionItemsMap } from '../../lib/use-section-items-map'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
@@ -28,15 +34,26 @@ interface SectionImagesTableProps {
   idSection?: number
   /** `web_settings.images_delete` — oculta "Eliminar" por tarjeta y la acción masiva. Default `true` (comportamiento de siempre, y el único caso en la página standalone, que no tiene ese contexto). */
   canDelete?: boolean
+  /** `web_settings.images_add` — muestra "Agregar foto a este item" en cada grupo (solo embebido). */
+  canAdd?: boolean
+  /** `web_settings.images_reorder` — permite arrastrar las fotos para ordenarlas dentro de su grupo (solo embebido). */
+  canReorder?: boolean
 }
 
-export function SectionImagesTable({ idSection, canDelete = true }: SectionImagesTableProps = {}) {
+// Embebido en una sección se traen todas sus fotos (para agrupar y calcular roles bien);
+// en la lista general, una página más grande que antes para que los grupos no queden tan cortados.
+const PER_PAGE_EMBEDDED = 100
+const PER_PAGE_STANDALONE = 24
+
+export function SectionImagesTable({ idSection, canDelete = true, canAdd = false, canReorder = false }: SectionImagesTableProps = {}) {
   const router = useRouter()
   const {
     items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message,
     load, reset, setCurrentItem,
   } = useSectionImageListStore()
   const { toggleState, deleteItem, bulkToggleState, bulkDeleteItems } = useSectionImageDeleteStore()
+  const { isSubmitting: isReordering, confirm: confirmReorder } = useSectionImageReorderStore()
+  const perPage = idSection != null ? PER_PAGE_EMBEDDED : PER_PAGE_STANDALONE
 
   const [selected, setSelected]         = useState<Set<number>>(new Set())
   const [lightboxIdx, setLightboxIdx]   = useState(-1)
@@ -50,6 +67,8 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
   const [isBulkLoading, setIsBulkLoading] = useState(false)
   /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
   const [isUserFetching, setIsUserFetching] = useState(false)
+  /** Orden "optimista" (ids de la sección) mientras se guarda un arrastre; null = usar el orden del servidor. */
+  const [localOrder, setLocalOrder] = useState<number[] | null>(null)
 
   const appliedSearch = useRef(search)
 
@@ -57,7 +76,7 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
   // de la lista es un singleton compartido: si antes se visitó el tab "Imágenes" de una sección
   // (que deja `id_section` fijado ahí), sin este reset explícito la página global heredaría
   // ese filtro sin que el usuario haya elegido nada.
-  useEffect(() => { void load({ id_section: idSection ?? undefined }) }, [idSection])
+  useEffect(() => { void load({ id_section: idSection ?? undefined, per_page: perPage, page: 1 }) }, [idSection])
 
   useEffect(() => { setSelected(new Set()) }, [items])
 
@@ -111,6 +130,99 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
     void load({ search: '', state: undefined, date_from: '', date_to: '', id_section: idSection ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // ── Agrupación por sección / item y rol de cada foto ──
+  const sectionIds = useMemo(
+    () => [...(idSection != null ? [idSection] : []), ...items.map((i) => i.idSection)],
+    [items, idSection]
+  )
+  const itemsMap = useSectionItemsMap(sectionIds)
+
+  // Fotos tal como se muestran: si hay un arrastre guardándose, con el orden nuevo (optimista)
+  const displayItems = useMemo(() => {
+    if (!localOrder) return items
+    return items.map((i) => ({ ...i, order: localOrder.indexOf(i.id) }))
+  }, [items, localOrder])
+
+  // Los roles y grupos salen de displayItems: así la Principal cambia al instante al soltar
+  const roles = useMemo(() => {
+    const sectionHasItems = (id: number) =>
+      (itemsMap[id]?.length ?? 0) > 0 || displayItems.some((i) => i.idSection === id && i.idSectionItem != null)
+    return getImageRoles(displayItems, sectionHasItems)
+  }, [displayItems, itemsMap])
+
+  const groups = useMemo(
+    () => groupSectionImages(displayItems, itemsMap, idSection != null, idSection != null ? [idSection] : []),
+    [displayItems, itemsMap, idSection]
+  )
+
+  // Embebido y con items: aunque no haya fotos se muestran los grupos para poder agregarles
+  const hasEmptyItemGroups = idSection != null && (itemsMap[idSection]?.length ?? 0) > 0
+
+  // Arrastrar solo si están TODAS las fotos de la sección cargadas (sin filtros):
+  // el backend reordena la sección completa y necesita la lista entera de ids.
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
+  const canMoveInGroup = idSection != null && canReorder && !hasActiveFilters && (meta?.total ?? 0) === items.length
+  // Mientras se guarda (o se recarga la lista) no se puede arrastrar
+  const isSavingOrder = isReordering || isFetching || localOrder != null
+
+  /**
+   * Al soltar una foto sobre otra del mismo grupo: la mueve a ese lugar, lo muestra al instante
+   * y guarda el orden completo de la sección. Si falla, vuelve al orden anterior.
+   */
+  const handleMoveInGroup = async (activeId: number, overId: number) => {
+    if (idSection == null || isSavingOrder) return
+
+    // Orden actual de la sección (como se ve en pantalla)
+    const current = sortByOrder(displayItems)
+    const active = current.find((i) => i.id === activeId)
+    const over = current.find((i) => i.id === overId)
+    if (!active || !over || active.idSectionItem !== over.idSectionItem) return
+
+    // Fotos del grupo en su orden, con la foto arrastrada en su nuevo lugar
+    const isSameGroup = (i: SectionImage) => i.idSectionItem === active.idSectionItem
+    const groupIds = current.filter(isSameGroup).map((i) => i.id)
+    const newGroupIds = arrayMove(groupIds, groupIds.indexOf(activeId), groupIds.indexOf(overId))
+
+    // Orden completo: los lugares del grupo se rellenan con el nuevo orden; las demás fotos no se mueven
+    let next = 0
+    const ids = current.map((i) => (isSameGroup(i) ? newGroupIds[next++] : i.id))
+
+    setLocalOrder(ids) // se ve al instante
+    const ok = await confirmReorder(idSection, ids) // al terminar bien, la lista ya viene recargada
+    setLocalOrder(null) // si falló, esto revierte al orden anterior
+    if (ok) toastSuccess('Orden actualizado', 'Se cambió el orden de la foto dentro del item.')
+    else toastError('Error', 'No se pudo cambiar el orden.')
+  }
+
+  const handleAddToItem = (idSec: number, idSectionItem: number | null) => {
+    NProgress.start()
+    const itemParam = idSectionItem != null ? `&id_section_item=${idSectionItem}` : ''
+    router.push(`/section-images/create?id_section=${idSec}${itemParam}`)
+  }
+
+  const renderCard = (image: SectionImage, group: ImageItemGroup) => {
+    const cardProps: SectionImageCardProps = {
+      item: image,
+      role: roles[image.id],
+      itemHeading: group.idSectionItem != null ? group.heading : null,
+      hideSectionBadge: idSection != null,
+      canDelete,
+      isSelected: selected.has(image.id),
+      onToggleSelect: toggleSelect,
+      onOpenLightbox: openLightbox,
+      onView: handleView,
+      onEdit: handleEdit,
+      onToggleState: (i) => void handleToggleState(i),
+      onDelete: (i) => void handleDelete(i),
+    }
+
+    // Con 2+ fotos en el grupo (y sin filtros) la tarjeta se puede arrastrar
+    if (canMoveInGroup && group.images.length > 1) {
+      return <SortableSectionImageCard key={image.id} {...cardProps} groupKey={group.key} dragDisabled={isSavingOrder} />
+    }
+    return <SectionImageCard key={image.id} {...cardProps} />
+  }
+
   const toggleSelect = (item: SectionImage) => {
     setSelected((prev) => {
       const next = new Set(prev)
@@ -121,7 +233,7 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
   }
 
   const openLightbox = (item: SectionImage) => {
-    const idx = items.filter((i) => i.imageUrl).findIndex((i) => i.id === item.id)
+    const idx = getLightboxIndex(items, item.id)
     if (idx >= 0) setLightboxIdx(idx)
   }
 
@@ -220,9 +332,7 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
   const currentPage = filters.page ?? 1
   const lastPage    = meta?.last_page ?? 1
 
-  const lightboxSlides = items
-    .filter((i) => i.imageUrl)
-    .map((i) => ({ src: i.imageUrl, alt: i.imageName }))
+  const lightboxSlides = toLightboxSlides(items)
 
   if (!hasLoaded && !isInitialLoading) {
     return (
@@ -239,7 +349,7 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
         primaryLabel="Reintentar"
         onPrimaryAction={() => {
           reset();
-          void load({ id_section: idSection ?? undefined })
+          void load({ id_section: idSection ?? undefined, per_page: perPage })
         }}
       />
     )
@@ -293,29 +403,38 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {/* Avisos para que quede claro de dónde sale la foto Principal */}
+      {idSection == null && sectionFilter == null && items.length > 0 && (
+        <p className="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
+          Consejo: filtra por <span className="font-medium">Sección</span> para ver todas sus fotos agrupadas por item.
+          La foto Principal se calcula con las fotos de esta página.
+        </p>
+      )}
+      {idSection != null && canReorder && !canMoveInGroup && items.length > 1 && (
+        <p className="text-xs text-muted-foreground">
+          Para ordenar las fotos arrastrándolas, limpia los filtros. También puedes usar &quot;Reordenar&quot;.
+        </p>
+      )}
+      {canMoveInGroup && items.length > 1 && (
+        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+          <GripVertical className="size-3.5 shrink-0" />
+          Arrastra para ordenar (en celular, mantén presionado)
+        </p>
+      )}
+
+      {items.length === 0 && !hasEmptyItemGroups ? (
         <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed">
           <ImageIcon className="size-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">No hay imágenes para mostrar.</p>
         </div>
       ) : (
-        <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(190px,1fr))]">
-          {items.map((item) => (
-            <SectionImageCard
-              key={item.id}
-              item={item}
-              hideSectionBadge={idSection != null}
-              canDelete={canDelete}
-              isSelected={selected.has(item.id)}
-              onToggleSelect={toggleSelect}
-              onOpenLightbox={openLightbox}
-              onView={handleView}
-              onEdit={handleEdit}
-              onToggleState={(i) => void handleToggleState(i)}
-              onDelete={(i) => void handleDelete(i)}
-            />
-          ))}
-        </div>
+        <SectionImagesGroupedGrid
+          groups={groups}
+          showSectionHeader={idSection == null}
+          renderCard={renderCard}
+          onAddToItem={idSection != null && canAdd ? handleAddToItem : undefined}
+          onMoveInGroup={canMoveInGroup ? (activeId, overId) => void handleMoveInGroup(activeId, overId) : undefined}
+        />
       )}
 
       {hasLoaded && meta && (
@@ -352,16 +471,7 @@ export function SectionImagesTable({ idSection, canDelete = true }: SectionImage
         onClear={() => setSelected(new Set())}
       />
 
-      <Lightbox
-        open={lightboxIdx >= 0}
-        close={() => setLightboxIdx(-1)}
-        index={lightboxIdx}
-        slides={lightboxSlides}
-        plugins={[Zoom]}
-        controller={{ closeOnBackdropClick: true }}
-        zoom={{ maxZoomPixelRatio: 4 }}
-        styles={{ root: { '--yarl__color_backdrop': 'rgba(0,0,0,0.94)', zIndex: 9999 } }}
-      />
+      <SectionImageLightbox slides={lightboxSlides} index={lightboxIdx} onClose={() => setLightboxIdx(-1)} />
     </div>
   )
 }

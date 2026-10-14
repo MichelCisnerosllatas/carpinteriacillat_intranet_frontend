@@ -8,5 +8,7 @@ export const FURNITURES_ENDPOINTS = {
     put:     (id: number) => `${BASE}/${id}`,
     patch:   (id: number) => `${BASE}/${id}`,
     delete:  (id: number) => `${BASE}/${id}`,
+    // Estilos ya usados en la galería web (sugerencias para el campo "Estilo").
+    webStyles: '/v1/intranet/furniture-web/styles',
   },
 }

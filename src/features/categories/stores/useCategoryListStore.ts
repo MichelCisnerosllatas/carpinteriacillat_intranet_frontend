@@ -43,6 +43,10 @@ const mapFromApi = (item: CategoryApiItem): Category => {
     stateValue: item.category_state,
     createdAt: item.category_created_at,
     updatedAt: item.category_updated_at ?? '',
+    // Tarjeta en el carrusel «Muebles a medida» (nombres cortos para la UI)
+    web: item.web
+      ? { showOnWeb: item.web.show_on_web, idSection: item.web.id_section, idSectionItem: item.web.id_section_item }
+      : null,
   }
 }
 

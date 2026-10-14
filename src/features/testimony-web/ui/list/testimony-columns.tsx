@@ -1,12 +1,11 @@
 import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
-import { Star } from 'lucide-react'
+import { Sofa, Star } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
-import { getVisibilityStateOption } from '@/shared/config/entity-states'
-import { formatTestimonyRating } from '../../data/data'
+import { formatTestimonyRating, getTestimonyStateOption } from '../../data/data'
 import type { Testimony } from '../../data/schema'
 import { TestimonyRowActions } from './testimony-row-actions'
 
@@ -74,6 +73,24 @@ export const getTestimonyColumns = ({ hideDelete }: TestimonyColumnsOptions = {}
   },
 
   {
+    // Trabajo de la galería web al que pertenece la reseña ("—" = reseña general)
+    id: 'furniture',
+    accessorFn: (row) => row.furnitureName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Trabajo" />,
+    cell: ({ row }) => row.original.furnitureName
+      ? (
+        <span className="flex max-w-[180px] items-center gap-1 text-xs">
+          <Sofa className="size-3.5 shrink-0 text-muted-foreground" />
+          <span className="truncate">{row.original.furnitureName}</span>
+        </span>
+      )
+      : <span className="text-xs text-muted-foreground">—</span>,
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'w-[160px]', label: 'Trabajo' },
+  },
+
+  {
     id: 'rating',
     accessorFn: (row) => row.rating ?? 0,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Valoración" />,
@@ -92,7 +109,8 @@ export const getTestimonyColumns = ({ hideDelete }: TestimonyColumnsOptions = {}
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
-      const opt = getVisibilityStateOption(row.original.stateValue)
+      // Muestra también "Pendiente" (reseña de la web por aprobar)
+      const opt = getTestimonyStateOption(row.original.stateValue)
       return (
         <Badge variant="outline" className={cn('text-xs', opt.badge)}>
           {opt.label}

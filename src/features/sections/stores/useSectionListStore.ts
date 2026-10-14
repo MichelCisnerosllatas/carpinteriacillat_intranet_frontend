@@ -68,6 +68,9 @@ export const mapSectionFromApi = (item: SectionJoinApiItem): Section => {
     itemsAdd: item.web_settings?.items_add ?? true,
     itemsReorder: item.web_settings?.items_reorder ?? true,
     itemsDelete: item.web_settings?.items_delete ?? true,
+    // Elementos de las tarjetas: el catálogo y los valores los manda el backend (vacíos si no aplica)
+    cardSettings: item.web_settings?.card_settings ?? {},
+    cardSettingsSchema: item.web_settings?.card_settings_schema ?? [],
     typesectionStateValue: item.type_section?.typesection_state ?? null,
     typesectionStateLabel: typesectionStateOpt?.label ?? null,
     typesectionStateBadge: typesectionStateOpt?.badge ?? null,

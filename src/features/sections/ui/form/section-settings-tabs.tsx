@@ -10,7 +10,8 @@ import { SectionSettingsForm } from './section-settings-form'
  * (`useSectionContentVisibilityStore` / `useSectionFormStore`+`useSectionListStore`) para que no
  * se pisen entre sí `isSubmitting`/`error`:
  * - "Visibilidad": qué propiedades de CONTENIDO (título/subtítulo/descripción) se ven en el sitio
- *   público — `SectionContentVisibilityForm`.
+ *   público — `SectionContentVisibilityForm`. Si el tipo de sección tiene catálogo, también los
+ *   "Elementos de las tarjetas" (`card_settings`, ver section-card-settings-fields.tsx).
  * - "Estructura": qué tabs del detalle se muestran y qué acciones (agregar/reordenar/eliminar)
  *   están permitidas en Imágenes/Botones/Items — `SectionSettingsForm` (sin cambios).
  */

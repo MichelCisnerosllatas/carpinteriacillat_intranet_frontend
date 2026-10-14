@@ -31,6 +31,8 @@ function mapFromJoin(raw: FurnitureImageJoinApiItem): FurnitureImage {
     imageTitle: raw.image?.image_title ?? null,
     imageAlt: raw.image?.image_alt ?? null,
     order: raw.furnitureimage_order,
+    caption: raw.web?.furnitureimageweb_caption ?? null,
+    variant: raw.web?.furnitureimageweb_variant ?? null,
     stateValue: raw.furnitureimage_state,
     statusLabel: stateOpt.label,
     createdAt: raw.furnitureimage_created_at,

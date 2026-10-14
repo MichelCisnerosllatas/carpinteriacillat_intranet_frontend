@@ -57,14 +57,20 @@ export function useCompanySettingForm() {
       const formData = new FormData()
       formData.append('file', pendingFile)
       formData.append('folder', "sistema")
+      // Nombre único: el backend responde 409 si ya existe un archivo con el mismo nombre en la carpeta.
+      formData.append('name', `company-logo-${Date.now()}`)
 
-      const uploadResponse = await storageFilesService.upload(formData)
-      if (!uploadResponse.success) {
-        toastError('Error', 'No se pudo subir el logo de la empresa.')
+      try {
+        const uploadResponse = await storageFilesService.upload(formData)
+        if (!uploadResponse.success) {
+          toastError('Error', 'No se pudo subir el logo de la empresa.')
+          return
+        }
+        logo = uploadResponse.data.path
+      } catch (error: any) {
+        toastError('Error', error?.response?.data?.message ?? 'No se pudo subir el logo de la empresa.')
         return
       }
-
-      logo = uploadResponse.data.path
     } else if (logoWasRemoved) {
       logo = undefined
     }

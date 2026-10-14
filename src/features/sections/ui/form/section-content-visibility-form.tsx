@@ -11,26 +11,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/shared/ui/form'
 import { Switch } from '@/shared/ui/switch'
+import { cn } from '@/shared/lib/utils'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { AlertError } from '@/widgets/alerts_components'
 import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionContentVisibilityStore } from '../../stores/useSectionContentVisibilityStore'
+import { SectionCardSettingsFields, resolveCardSettings } from './section-card-settings-fields'
 
 const schema = z.object({
   show_title: z.boolean(),
   show_subtitle: z.boolean(),
   show_description: z.boolean(),
+  // Elementos de las tarjetas { clave: visible } — las claves salen del catálogo del backend
+  card_settings: z.record(z.string(), z.boolean()),
 })
 
 type FormValues = z.infer<typeof schema>
+/** Valores del formulario (los usa también section-card-settings-fields.tsx). */
+export type SectionContentVisibilityFormValues = FormValues
 
 function VisibilityRow({
   control, name, label, icon: Icon, value,
 }: {
   control: Control<FormValues>
-  name: keyof FormValues
+  name: 'show_title' | 'show_subtitle' | 'show_description'
   label: string
   icon: LucideIcon
   value: string | null
@@ -65,10 +71,14 @@ export function SectionContentVisibilityForm({ id }: { id: string }) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { show_title: true, show_subtitle: true, show_description: true },
+    defaultValues: { show_title: true, show_subtitle: true, show_description: true, card_settings: {} },
   })
 
   useEffect(() => { void get(Number(id)) }, [id])
+
+  // Catálogo de "Elementos de las tarjetas" de esta sección (lo manda el backend; [] si no tiene)
+  const cardSchema = section?.cardSettingsSchema ?? []
+  const hasCardSettings = cardSchema.length > 0
 
   useEffect(() => {
     if (section) {
@@ -76,6 +86,7 @@ export function SectionContentVisibilityForm({ id }: { id: string }) {
         show_title: section.showTitle,
         show_subtitle: section.showSubtitle,
         show_description: section.showDescription,
+        card_settings: resolveCardSettings(section.cardSettingsSchema, section.cardSettings),
       })
     }
   }, [section])
@@ -97,6 +108,8 @@ export function SectionContentVisibilityForm({ id }: { id: string }) {
       section_title: values.show_title ? (section?.title ?? null) : null,
       section_subtitle: values.show_subtitle ? (section?.subtitle ?? null) : null,
       section_description: values.show_description ? (section?.description ?? null) : null,
+      // Elementos de las tarjetas: la web los aplica a la sección (preview.resolve). Solo si hay catálogo.
+      ...(hasCardSettings ? { card_settings: resolveCardSettings(cardSchema, values.card_settings) } : {}),
     },
   })
   useLiveSitePreview(form, toPreviewPayload, !!section)
@@ -110,7 +123,13 @@ export function SectionContentVisibilityForm({ id }: { id: string }) {
     })
     if (!confirmed) return
 
-    const success = await update(Number(id), values)
+    const success = await update(Number(id), {
+      show_title: values.show_title,
+      show_subtitle: values.show_subtitle,
+      show_description: values.show_description,
+      // Solo si la sección tiene catálogo, y solo con sus claves (el backend rechaza otras)
+      card_settings: hasCardSettings ? resolveCardSettings(cardSchema, values.card_settings) : undefined,
+    })
     if (success) {
       await swalSuccess('Visibilidad actualizada', section?.name)
       router.push(`/sections/${id}`)
@@ -128,23 +147,29 @@ export function SectionContentVisibilityForm({ id }: { id: string }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Propiedades visibles en el sitio web</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <p className="text-xs text-muted-foreground">
-              Oculta título, subtítulo o descripción de esta sección en el sitio público sin borrar el texto — para
-              volver a mostrarlo más adelante sin tener que escribirlo de nuevo.
-            </p>
-            <VisibilityRow control={form.control} name="show_subtitle" label="Mostrar subtítulo" icon={Type} value={section.subtitle} />
-            <Separator />
-            <VisibilityRow control={form.control} name="show_title" label="Mostrar título" icon={Heading} value={section.title} />
-            <Separator />
-            <VisibilityRow control={form.control} name="show_description" label="Mostrar descripción" icon={AlignLeft} value={section.description} />
-          </CardContent>
-        </Card>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {/* Sin catálogo de tarjetas, "Propiedades visibles" ocupa todo el ancho */}
+        <div className={cn('grid grid-cols-1 items-start gap-4', hasCardSettings && 'lg:grid-cols-2')}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Propiedades visibles en el sitio web</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <p className="text-xs text-muted-foreground">
+                Oculta título, subtítulo o descripción de esta sección en el sitio público sin borrar el texto — para
+                volver a mostrarlo más adelante sin tener que escribirlo de nuevo.
+              </p>
+              <VisibilityRow control={form.control} name="show_subtitle" label="Mostrar subtítulo" icon={Type} value={section.subtitle} />
+              <Separator />
+              <VisibilityRow control={form.control} name="show_title" label="Mostrar título" icon={Heading} value={section.title} />
+              <Separator />
+              <VisibilityRow control={form.control} name="show_description" label="Mostrar descripción" icon={AlignLeft} value={section.description} />
+            </CardContent>
+          </Card>
+
+          {/* Elementos de las tarjetas: un switch por elemento del catálogo del backend (no se muestra si no tiene) */}
+          <SectionCardSettingsFields control={form.control} schema={cardSchema} />
+        </div>
 
         {/* Vista previa — mismo criterio que `SectionHeading` en el sitio público: si no hay
             texto o el interruptor está apagado, esa línea no se pinta. */}

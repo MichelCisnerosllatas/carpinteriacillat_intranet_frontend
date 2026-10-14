@@ -16,6 +16,7 @@ import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 import { useTestimonyDeleteStore } from '../../stores/useTestimonyDeleteStore'
 import type { Testimony } from '../../data/schema'
+import { TESTIMONY_STATE_PENDING } from '../../data/data'
 
 interface TestimonyRowActionsProps {
   row: Row<Testimony>
@@ -28,6 +29,8 @@ export function TestimonyRowActions({ row, hideDelete = false }: TestimonyRowAct
   const { toggleState, deleteItem } = useTestimonyDeleteStore()
 
   const isActive = row.original.stateValue === 1
+  // Pendiente (2): reseña enviada desde la web. "Activar" la aprueba (pasa a 1 = Mostrado).
+  const isPending = row.original.stateValue === TESTIMONY_STATE_PENDING
 
   const handleView = () => {
     setCurrentItem(row.original)
@@ -43,8 +46,8 @@ export function TestimonyRowActions({ row, hideDelete = false }: TestimonyRowAct
 
   const handleToggleState = async () => {
     const newState = isActive ? 0 : 1
-    const actionLabel = newState === 1 ? 'Activar' : 'Desactivar'
-    const resultLabel = newState === 1 ? 'activado' : 'desactivado'
+    const actionLabel = isPending ? 'Aprobar' : newState === 1 ? 'Activar' : 'Desactivar'
+    const resultLabel = isPending ? 'aprobado' : newState === 1 ? 'activado' : 'desactivado'
     await swalConfirmAction({
       title: `¿${actionLabel} este testimonio?`,
       text: row.original.name,
@@ -105,7 +108,7 @@ export function TestimonyRowActions({ row, hideDelete = false }: TestimonyRowAct
         <DropdownMenuItem onClick={() => void handleToggleState()}>
           {isActive
             ? <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
-            : <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
+            : <>{isPending ? 'Aprobar' : 'Activar'} <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
         </DropdownMenuItem>
         {!hideDelete && (
           <>

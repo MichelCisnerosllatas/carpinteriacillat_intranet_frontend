@@ -11,6 +11,9 @@ export const testimonySchema = z.object({
   sectionName: z.string().optional(),
   idImage: z.number().nullable(),
   imageUrl: z.string().optional(),
+  // Trabajo de la galería web (mueble) al que pertenece la reseña — null = ninguno.
+  idFurniture: z.number().nullable(),
+  furnitureName: z.string().nullable(),
   name: z.string(),
   role: z.string().nullable(),
   city: z.string().nullable(),

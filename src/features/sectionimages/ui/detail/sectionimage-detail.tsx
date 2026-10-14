@@ -13,6 +13,9 @@ import { getSectionImageFixLabel } from '../../data/data'
 import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
+import { useSectionImageRole } from '../../lib/use-section-image-role'
+import { SectionImageRoleBadge } from '../list/sectionimage-role-badge'
+import { isRoleBadgeVisible } from '../../lib/image-roles'
 import NProgress from 'nprogress'
 
 export function SectionImageDetail({ id }: { id: string }) {
@@ -26,6 +29,8 @@ export function SectionImageDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+  // Rol en la web (Principal / Oculta) y nombre del item asignado
+  const { role, itemHeading } = useSectionImageRole(item)
 
   usePreviewOnView(item?.id, (): PreviewPayload => ({
     entity: 'section_image',
@@ -62,6 +67,7 @@ export function SectionImageDetail({ id }: { id: string }) {
               <h3 className="text-lg font-semibold">{item.imageName}</h3>
               <Badge variant="secondary" className="w-fit text-xs font-normal">{item.sectionName}</Badge>
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
+              <SectionImageRoleBadge role={role} className="w-fit text-xs" />
             </div>
             <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/section-images/edit/${item.id}`) }}>
               <Pencil className="size-4 mr-1" />Editar
@@ -76,6 +82,20 @@ export function SectionImageDetail({ id }: { id: string }) {
           <div className="flex justify-between">
             <span className="text-muted-foreground">Sección</span>
             <span className="font-medium">{item.sectionName}</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Item</span>
+            <span className="text-right font-medium">
+              {item.idSectionItem != null ? (itemHeading ?? item.sectionItemTitle ?? `Item #${item.idSectionItem}`) : 'Sin item asignado'}
+            </span>
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">Rol en la web</span>
+            {isRoleBadgeVisible(role)
+              ? <SectionImageRoleBadge role={role} className="text-xs" />
+              : <span className="font-medium">—</span>}
           </div>
           <Separator />
           <div className="flex justify-between">

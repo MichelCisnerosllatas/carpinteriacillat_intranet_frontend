@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { testimonyService } from '../services/testimony.service'
-import { getVisibilityStateOption } from '@/shared/config/entity-states'
+import { getTestimonyStateOption } from '../data/data'
 import { buildImageUrl } from '@/shared/lib/images'
 import type { TestimonyListRequestDto, TestimonyApiItem } from '../model/testimonyget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
@@ -30,16 +30,19 @@ type Action = {
   reset: () => void
 }
 
-const defaultFilters: TestimonyListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section: undefined }
+const defaultFilters: TestimonyListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section: undefined, id_furniture: undefined }
 
 const mapFromApi = (item: TestimonyApiItem): Testimony => {
-  const stateOpt = getVisibilityStateOption(item.testimony_state)
+  // Incluye "Pendiente" (2): reseñas enviadas desde la web que esperan aprobación
+  const stateOpt = getTestimonyStateOption(item.testimony_state)
   return {
     id: item.id_testimony_web,
     idSection: item.section?.id_section ?? item.id_section,
     sectionName: item.section?.section_name,
     idImage: item.image?.id_image ?? item.id_image,
     imageUrl: item.image?.image_patch ? (buildImageUrl(item.image.image_patch) ?? undefined) : undefined,
+    idFurniture: item.furniture?.id_furniture ?? item.id_furniture ?? null,
+    furnitureName: item.furniture?.furniture_name ?? null,
     name: item.testimony_name,
     role: item.testimony_role,
     city: item.testimony_city,

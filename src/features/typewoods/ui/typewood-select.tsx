@@ -77,14 +77,14 @@ export function TypeWoodSelect({
               Cargando...
             </span>
           ) : (
-            <span className={cn(!selected && value !== null && 'text-muted-foreground')}>
+            <span className={cn('min-w-0 truncate', !selected && value !== null && 'text-muted-foreground')}>
               {label}
             </span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
           <CommandInput placeholder="Buscar madera..." />
           <CommandList>

@@ -1,177 +1,125 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  arrayMove,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, ChevronUp, GripVertical, Image as ImageIcon, LoaderCircle, MousePointerClick } from 'lucide-react'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import { LoaderCircle, MousePointerClick } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
-import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/lib/utils'
-import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { swalConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
-import { buildImageUrl } from '@/shared/lib/images'
-import { sectionImagesService } from '../../services/sectionimages.service'
 import { useSectionImageReorderStore } from '../../stores/useSectionImageReorderStore'
+import { getImageRoles } from '../../lib/image-roles'
+import { groupSectionImages, type ImageItemGroup } from '../../lib/group-section-images'
+import { useSectionItemsMap } from '../../lib/use-section-items-map'
+import { useReorderImages } from '../../lib/use-reorder-images'
+import { useSectionTypeKey } from '../../lib/use-section-type-key'
+import { SectionImagesReorderGroup } from './section-images-reorder-group'
+// Pantallas propias de las secciones especiales (todo lo exclusivo vive en ../../grouped)
+import { GroupedReorderBoard, getGroupedSectionConfig } from '../../grouped'
 
-type ReorderItem = {
-  id: number
-  label: string
-  imageUrl: string
-  stateValue: number
-}
+/**
+ * Pantalla "Reordenar" de las fotos de UNA sección (`idSection` requerido).
+ * - Secciones especiales (hero de Servicios, carrusel de categorías — ver `getGroupedSectionConfig`):
+ *   acordeón por item con tarjetas arrastrables.
+ * - Cualquier otra sección: la lista de siempre (filas agrupadas por item).
+ */
+export function SectionImagesReorderList({ idSection }: { idSection: number }) {
+  const { typeKey, hasLoaded } = useSectionTypeKey(idSection)
 
-function SortableRow({
-  item, onMoveUp, onMoveDown,
-}: {
-  item: ReorderItem
-  onMoveUp?:   () => void
-  onMoveDown?: () => void
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
-  const stateOpt = getVisibilityStateOption(item.stateValue)
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn(
-        'flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5 shadow-sm',
-        isDragging && 'z-50 opacity-75 shadow-md'
-      )}
-    >
-      {/* Handle — en touch, arrastrar con dnd-kit no es confiable (el gesto se confunde con
-          el scroll de la página), así que se agranda un poco y se agrega touch-none para
-          que el navegador no le dispute el gesto al drag */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="flex size-7 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing pointer-coarse:size-9"
-      >
-        <GripVertical className="size-4 pointer-coarse:size-5" />
+  if (!hasLoaded) {
+    return (
+      <div className="flex min-h-[300px] flex-col items-center justify-center">
+        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Cargando imágenes de sección...</p>
       </div>
-      <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
-        {item.imageUrl
-          ? <img src={item.imageUrl} alt={item.label} className="size-full object-cover" />
-          : <ImageIcon className="size-4 text-muted-foreground" />}
-      </div>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
-      <Badge variant="outline" className={cn('text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
+    )
+  }
 
-      {/* Subir/bajar — alternativa fija al arrastre, siempre funciona (mouse, touch o
-          teclado) sin depender de acertar ni sostener el handle */}
-      <div className="flex shrink-0 flex-col gap-0.5">
-        <button
-          type="button"
-          onClick={onMoveUp}
-          disabled={!onMoveUp}
-          className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30 pointer-coarse:size-8"
-        >
-          <ChevronUp className="size-3.5 pointer-coarse:size-4" />
-        </button>
-        <button
-          type="button"
-          onClick={onMoveDown}
-          disabled={!onMoveDown}
-          className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30 pointer-coarse:size-8"
-        >
-          <ChevronDown className="size-3.5 pointer-coarse:size-4" />
-        </button>
-      </div>
-    </div>
-  )
+  // Secciones especiales: hero de Servicios y carrusel de categorías (ver features/sectionimages/grouped)
+  const groupedConfig = getGroupedSectionConfig(typeKey)
+  if (groupedConfig) return <GroupedReorderBoard config={groupedConfig} idSection={idSection} />
+
+  // Resto de secciones: vista general
+  return <SectionImagesReorderDefault idSection={idSection} />
 }
 
 /**
- * Igual patrón que `SectionButtonsReorderList` — scoped a UNA sola sección (`idSection`
- * requerido), lista plana con un único `<DndContext>`, sin nivel de agrupación.
+ * Lista de siempre: las fotos se muestran agrupadas por item ("01 · Título", ..., "Sin item asignado")
+ * y solo se pueden ordenar dentro de su grupo. Nada se guarda hasta confirmar.
  */
-export function SectionImagesReorderList({ idSection }: { idSection: number }) {
+function SectionImagesReorderDefault({ idSection }: { idSection: number }) {
   const router = useRouter()
   const { isSubmitting, confirm } = useSectionImageReorderStore()
 
-  const [items, setItems]                 = useState<ReorderItem[]>([])
-  const [originalItems, setOriginalItems] = useState<ReorderItem[]>([])
-  const [isLoading, setIsLoading]         = useState(true)
-  const [isError, setIsError]             = useState(false)
+  // Fotos con su orden local (`order` = posición en pantalla), si hubo cambios y cómo mover dentro de un grupo
+  const { images, isLoading, isError, hasChanges, moveInGroup } = useReorderImages(idSection)
 
+  // Sensores del arrastre (igual que la vista agrupada):
+  // - MouseSensor (no PointerSensor): el PointerSensor también toma el dedo y bloquea el scroll en celular.
+  // - TouchSensor: hay que mantener presionado ~¼ s; si el dedo se desliza antes, es scroll normal.
+  // - KeyboardSensor: ordenar con teclado (Espacio + flechas).
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
-  useEffect(() => {
-    let cancelled = false
-    sectionImagesService.getList({ id_section: idSection, per_page: 100, page: 1 })
-      .then((res) => {
-        if (cancelled) return
-        if (!res.success) { setIsError(true); return }
+  // Items de la sección, para los encabezados "01 · Título"
+  const itemsMap = useSectionItemsMap([idSection])
 
-        const built: ReorderItem[] = [...res.data]
-          .sort((a, b) => (a.sectionimage_order ?? 0) - (b.sectionimage_order ?? 0))
-          .map((i) => ({
-            id: i.id_section_image,
-            label: i.image?.image_name ?? `Imagen #${i.id_section_image}`,
-            imageUrl: buildImageUrl(i.image?.image_patch) ?? '',
-            stateValue: i.sectionimage_state,
-          }))
+  // Grupos por item (reutiliza el mismo agrupado que la vista agrupada)
+  const section = useMemo(
+    () => groupSectionImages(images, itemsMap, false, [idSection])[0],
+    [images, itemsMap, idSection],
+  )
+  const groups = section?.groups ?? []
+  const hasItems = section?.hasItems ?? false
 
-        setItems(built)
-        setOriginalItems([...built])
-      })
-      .catch(() => { if (!cancelled) setIsError(true) })
-      .finally(() => { if (!cancelled) setIsLoading(false) })
-    return () => { cancelled = true }
-  }, [idSection])
+  // Rol de cada foto según el orden que se ve AHORA (cambia al soltar o al usar las flechas)
+  const roles = useMemo(() => getImageRoles(images, () => hasItems), [images, hasItems])
 
-  const hasChanges = items.some((item, idx) => item.id !== originalItems[idx]?.id)
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
-    const oldIdx = items.findIndex((i) => i.id === active.id)
-    const newIdx = items.findIndex((i) => i.id === over.id)
-    setItems((prev) => arrayMove(prev, oldIdx, newIdx))
+    // Solo se ordena dentro del mismo grupo: si se suelta en otro, se ignora
+    const groupKey = active.data.current?.groupKey
+    if (groupKey !== over.data.current?.groupKey) return
+    const group = groups.find((g) => g.key === groupKey)
+    if (group) moveInGroup(group.images, Number(active.id), Number(over.id))
   }
 
-  // Alternativa al arrastre que siempre funciona, sin depender de dnd-kit ni del handle.
-  const moveItem = (id: number, direction: -1 | 1) => {
-    const idx = items.findIndex((i) => i.id === id)
-    const newIdx = idx + direction
-    if (idx < 0 || newIdx < 0 || newIdx >= items.length) return
-    setItems((prev) => arrayMove(prev, idx, newIdx))
+  // Flechas subir/bajar: alternativa al arrastre que siempre funciona
+  const handleMove = (group: ImageItemGroup, id: number, direction: -1 | 1) => {
+    const idx = group.images.findIndex((img) => img.id === id)
+    const target = group.images[idx + direction]
+    if (idx < 0 || !target) return
+    moveInGroup(group.images, id, target.id)
   }
 
   const handleConfirm = async () => {
     const confirmed = await swalConfirm({
       title: '¿Confirmar nuevo orden?',
-      text: `Se actualizará el orden de ${items.length} imagen(es).`,
+      text: `Se actualizará el orden de ${images.length} imagen(es).`,
       confirmText: 'Sí, confirmar',
       cancelText: 'Cancelar',
     })
     if (!confirmed) return
 
-    const ok = await confirm(idSection, items.map((i) => i.id))
+    // Orden completo de la sección: los grupos uno tras otro, tal como se ven en pantalla
+    const ids = groups.flatMap((g) => g.images.map((img) => img.id))
+    const ok = await confirm(idSection, ids)
     if (ok) {
       toastSuccess('Orden actualizado', 'El nuevo orden se guardó correctamente.')
       goBackOrFallback(router, '/section-images')
@@ -202,31 +150,32 @@ export function SectionImagesReorderList({ idSection }: { idSection: number }) {
     <div className="flex flex-1 flex-col gap-4">
       <Card>
         <CardContent className="flex flex-col gap-3 pt-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MousePointerClick className="size-4" />
-            Arrastra para cambiar el orden de las imágenes. Nada se guarda hasta que confirmes.
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <MousePointerClick className="mt-0.5 size-4 shrink-0" />
+            <span>
+              Arrastra desde el asa ⋮⋮ (en celular, mantenla presionada) o usa las flechas para cambiar el orden
+              dentro de cada item. Nada se guarda hasta que confirmes. La 1ª foto visible de cada item es la
+              principal.
+            </span>
           </div>
         </CardContent>
       </Card>
 
-      {items.length === 0 ? (
+      {images.length === 0 ? (
         <div className="flex min-h-[120px] items-center justify-center rounded-lg border text-sm text-muted-foreground">
           No hay imágenes para reordenar en esta sección.
         </div>
       ) : (
+        // Un solo DndContext; cada grupo tiene su propio SortableContext
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-col gap-2">
-              {items.map((item, idx) => (
-                <SortableRow
-                  key={item.id}
-                  item={item}
-                  onMoveUp={idx > 0 ? () => moveItem(item.id, -1) : undefined}
-                  onMoveDown={idx < items.length - 1 ? () => moveItem(item.id, 1) : undefined}
-                />
-              ))}
-            </div>
-          </SortableContext>
+          <div className="flex flex-col gap-4">
+            {groups.map((group) => (
+              // Con items, cada grupo va en su propio recuadro
+              <div key={group.key} className={cn(hasItems && 'rounded-xl border bg-muted/30 p-3 sm:p-4')}>
+                <SectionImagesReorderGroup group={group} roles={roles} onMove={handleMove} />
+              </div>
+            ))}
+          </div>
         </DndContext>
       )}
 

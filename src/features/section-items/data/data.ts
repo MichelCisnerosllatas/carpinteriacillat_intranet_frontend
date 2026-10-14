@@ -25,6 +25,13 @@
  *   email         -> correo de contacto (contact)
  *   branch        -> dirección + horario + coordenadas de un local (contact) — un solo item
  *                    reúne los tres datos, por eso lleva `latitude`/`longitude`
+ *   showcase      -> servicio destacado del hero acordeón (service_showcase): título,
+ *                    descripción, label = texto del botón y link = a dónde lleva el botón.
+ *                    Sus fotos son section-images con `id_section_item` de este item.
+ *   word          -> palabra de la cinta animada (marquee): solo usa el título
+ *   restoration   -> trabajo del comparador «Restauración» (restoration_compare): title = nombre del trabajo
+ *                    (obligatorio, libre), key = 'furniture-<id>' si tiene mueble relacionado o null si no.
+ *                    Lo maneja el modo especial ui/form/restoration.
  */
 export const SECTION_ITEM_TYPES: { value: string; label: string }[] = [
   { value: 'stat', label: 'Estadística' },
@@ -42,6 +49,9 @@ export const SECTION_ITEM_TYPES: { value: string; label: string }[] = [
   { value: 'whatsapp', label: 'WhatsApp (contacto)' },
   { value: 'email', label: 'Correo (contacto)' },
   { value: 'branch', label: 'Local / sucursal (contacto)' },
+  { value: 'showcase', label: 'Servicio destacado (hero)' },
+  { value: 'word', label: 'Palabra de la cinta' },
+  { value: 'restoration', label: 'Trabajo de restauración' },
 ]
 
 /**
@@ -78,32 +88,42 @@ export type SectionItemField =
  * Cuando el tipo es "Sin tipo" o uno no listado acá, se muestran TODOS los campos — es el
  * fallback seguro para no ocultar algo que sí se necesita en un caso no contemplado.
  */
+// Revisado contra los componentes de la web (qué campo del item lee cada uno).
+// Un campo oculto NO se borra: si el item ya tenía un valor, se sigue guardando igual.
 export const SECTION_ITEM_TYPE_FIELDS: Record<string, SectionItemField[]> = {
-  stat:       ['key', 'label', 'value', 'suffix'],
-  feature:    ['title', 'description', 'icon'],
-  service:    ['title', 'label', 'description', 'icon'],
-  category:   ['key', 'title', 'icon'],
-  value:      ['title', 'icon', 'variant'],
-  mission:    ['title', 'description', 'icon'],
-  vision:     ['title', 'description', 'icon'],
-  discipline: ['title', 'icon'],
-  milestone:  ['title', 'description'],
+  stat:       ['label', 'value', 'suffix'],                    // Section1.tsx: value + suffix + label
+  feature:    ['title', 'description', 'icon'],                // Section4.tsx
+  service:    ['title', 'label', 'description', 'icon'],       // Section2.tsx (label = etiqueta) / ServiceGrid.tsx
+  category:   ['title', 'icon'],                               // ServiceCategoryGrid.tsx (+ sub-lista de detalles)
+  value:      ['title', 'icon', 'variant'],                    // WeValuesSection.tsx
+  mission:    ['title', 'description', 'icon', 'variant'],     // WeValuesSection.tsx (variant = color de acento)
+  vision:     ['title', 'description', 'icon', 'variant'],     // WeValuesSection.tsx (variant = color de acento)
+  discipline: ['title', 'icon'],                               // WeTeamSection.tsx
+  milestone:  ['title', 'description'],                        // hoy la web arma la historia con las imágenes
   statement:  ['title', 'subtitle', 'label', 'description', 'rating'],
-  step:       ['key', 'title', 'description', 'icon'],
-  phone:      ['key', 'label', 'value', 'icon'],
-  whatsapp:   ['key', 'label', 'value', 'icon', 'variant'],
-  email:      ['key', 'label', 'value', 'icon'],
-  branch:     ['key', 'label', 'value', 'icon', 'location'],
+  step:       ['label', 'title', 'description', 'icon'],       // SectionProcess.tsx: label = número del paso
+  phone:      ['value'],                                       // SectionContact.tsx: solo el número
+  whatsapp:   ['value', 'variant'],                            // findFloatingWhatsapp.ts: número + posición
+  email:      ['value'],                                       // SectionContact.tsx: solo el correo
+  branch:     ['label', 'value', 'location'],                  // SectionContact.tsx: horario, dirección y mapa
+  showcase:   ['title', 'description', 'label', 'link'],
+  word:       ['title'],                                       // ServiceMarquee.tsx: solo el título
 }
+
+/** Color de acento de las tarjetas de Nosotros (valores, misión, visión). */
+const ACCENT_OPTIONS = [
+  { value: 'gold', label: 'Dorado (por defecto)' },
+  { value: 'red', label: 'Rojo' },
+]
 
 /** Opciones fijas para `sectionitem_variant` cuando el tipo elegido le da un significado
  * puntual (en vez de texto libre) — ver notas de cada tipo arriba. Un tipo ausente de este
  * mapa sigue mostrando el campo como texto libre (ej. si algún día se necesita otro valor). */
 export const SECTION_ITEM_VARIANT_OPTIONS: Partial<Record<string, { value: string; label: string }[]>> = {
-  value: [
-    { value: 'gold', label: 'Dorado (por defecto)' },
-    { value: 'red', label: 'Rojo' },
-  ],
+  value: ACCENT_OPTIONS,
+  // Misión y Visión también usan el color de acento (WeValuesSection.tsx: resolveAccent)
+  mission: ACCENT_OPTIONS,
+  vision: ACCENT_OPTIONS,
   whatsapp: [
     { value: 'bottom-right', label: 'Inferior derecha (por defecto)' },
     { value: 'bottom-left', label: 'Inferior izquierda' },
@@ -116,8 +136,40 @@ export const SECTION_ITEM_VARIANT_OPTIONS: Partial<Record<string, { value: strin
 /** Etiqueta del campo "Variante" en el form, según lo que ese tipo realmente representa. */
 export function sectionItemVariantLabel(type: string | undefined): string {
   if (type === 'whatsapp') return 'Posición del botón flotante'
-  if (type === 'value') return 'Color de acento'
+  if (type === 'value' || type === 'mission' || type === 'vision') return 'Color de acento'
   return 'Variante'
+}
+
+/** Etiqueta del campo "Título" en el form, según lo que ese tipo realmente representa. */
+export function sectionItemTitleLabel(type: string | undefined): string {
+  if (type === 'word') return 'Palabra'
+  return 'Título'
+}
+
+/** Etiqueta del campo "Label" en el form, según lo que ese tipo realmente representa. */
+export function sectionItemLabelLabel(type: string | undefined): string {
+  if (type === 'showcase') return 'Texto del botón'
+  if (type === 'stat') return 'Texto (ej. Años de experiencia)'
+  if (type === 'step') return 'Número del paso (ej. 01)'
+  if (type === 'service') return 'Etiqueta'
+  if (type === 'branch') return 'Horario de atención'
+  return 'Label'
+}
+
+/** Etiqueta del campo "Valor" en el form, según lo que ese tipo realmente representa. */
+export function sectionItemValueLabel(type: string | undefined): string {
+  if (type === 'stat') return 'Número'
+  if (type === 'phone') return 'Teléfono'
+  if (type === 'whatsapp') return 'Número de WhatsApp'
+  if (type === 'email') return 'Correo'
+  if (type === 'branch') return 'Dirección'
+  return 'Valor'
+}
+
+/** Etiqueta del campo "Enlace" en el form, según lo que ese tipo realmente representa. */
+export function sectionItemLinkLabel(type: string | undefined): string {
+  if (type === 'showcase') return 'Enlace del botón (ej. /gallery?cat=Restauración)'
+  return 'Enlace'
 }
 
 /** Clases de posicionamiento absoluto para la vista previa del botón flotante — mismos 5

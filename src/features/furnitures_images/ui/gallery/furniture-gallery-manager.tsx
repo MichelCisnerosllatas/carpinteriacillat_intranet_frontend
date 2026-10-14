@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   KeyboardSensor,
   useSensor,
@@ -31,6 +31,9 @@ import { cn } from '@/shared/lib/utils'
 import { FurnitureGalleryItem } from './furniture-gallery-item'
 import { FurnitureGalleryAddPicker, type PickedImage } from './furniture-gallery-add-picker'
 import { FurnitureGalleryUpload } from './furniture-gallery-upload'
+import { FurnitureGalleryWebFields } from './furniture-gallery-web-fields'
+import { FurnitureGalleryBadges } from './furniture-gallery-badges'
+import type { FurnitureImageVariant } from '../../data/data'
 
 export type GalleryEntry = {
   localKey: string
@@ -38,16 +41,24 @@ export type GalleryEntry = {
   imageId: number
   imageUrl: string | null
   imageName: string | null
+  // Datos web de la foto (galería del sitio): pie de foto y antes/después.
+  caption: string
+  variant: FurnitureImageVariant | null
 }
 
-export type PendingGalleryItem  = { imageId: number; order: number }
+export type PendingGalleryItem  = { imageId: number; order: number; caption: string; variant: FurnitureImageVariant | null }
 export type ReorderedGalleryItem = { furnitureImageId: number; order: number }
+/** Foto ya guardada a la que se le cambió el pie de foto o la variante. */
+export type WebChangedGalleryItem = { furnitureImageId: number; caption: string; variant: FurnitureImageVariant | null }
 
 interface FurnitureGalleryManagerProps {
   initialGallery?: GalleryEntry[]
   onPendingItemsChange:   (items: PendingGalleryItem[])   => void
   onRemovedIdsChange:     (furnitureImageIds: number[])   => void
   onReorderedItemsChange: (items: ReorderedGalleryItem[]) => void
+  onWebChangedItemsChange?: (items: WebChangedGalleryItem[]) => void
+  /** Avisa qué imagen quedó en la posición 1: esa es la portada del mueble (`id_image`). `null` = galería vacía. */
+  onCoverChange?: (imageId: number | null) => void
   disabled?: boolean
 }
 
@@ -57,18 +68,24 @@ const nextKey = () => `k-${++keyCounter}`
 // ── Sortable wrapper ────────────────────────────────────────────────
 function SortableItem({
   entry,
+  position,
+  isCover,
   disabled,
   onRemove,
   onClick,
   onMoveBack,
   onMoveForward,
+  onWebChange,
 }: {
   entry: GalleryEntry
+  position: number
+  isCover: boolean
   disabled: boolean
   onRemove: () => void
   onClick: () => void
   onMoveBack?: () => void
   onMoveForward?: () => void
+  onWebChange: (patch: Partial<Pick<GalleryEntry, 'caption' | 'variant'>>) => void
 }) {
   const {
     attributes, listeners, setNodeRef,
@@ -108,6 +125,20 @@ function SortableItem({
         onMoveBack={onMoveBack}
         onMoveForward={onMoveForward}
       />
+      {/* Número de la foto, Antes/Después y si es la portada */}
+      <div className="mt-1.5">
+        <FurnitureGalleryBadges position={position} variant={entry.variant} isCover={isCover} />
+      </div>
+      {/* Pie de foto y Normal/Antes/Después — van fuera del handle de arrastre, así se puede escribir sin mover la foto */}
+      <div className="mt-1.5">
+        <FurnitureGalleryWebFields
+          caption={entry.caption}
+          variant={entry.variant}
+          disabled={disabled}
+          onCaptionChange={(caption) => onWebChange({ caption })}
+          onVariantChange={(variant) => onWebChange({ variant })}
+        />
+      </div>
     </div>
   )
 }
@@ -118,23 +149,34 @@ export function FurnitureGalleryManager({
   onPendingItemsChange,
   onRemovedIdsChange,
   onReorderedItemsChange,
+  onWebChangedItemsChange,
+  onCoverChange,
   disabled = false,
 }: FurnitureGalleryManagerProps) {
   const [items, setItems]               = useState<GalleryEntry[]>(() =>
     initialGallery.map((i) => ({ ...i, localKey: nextKey() }))
   )
+  // Pie de foto/variante con que llegó cada foto guardada: sirve para saber cuáles cambió el usuario
+  // y así hacer PATCH solo de esas (y no de todas) al guardar.
+  const [initialWeb] = useState(() => {
+    const map = new Map<number, Pick<GalleryEntry, 'caption' | 'variant'>>()
+    initialGallery.forEach((i) => {
+      if (i.furnitureImageId) map.set(i.furnitureImageId, { caption: i.caption, variant: i.variant })
+    })
+    return map
+  })
   const [removedFiIds, setRemovedFiIds] = useState<number[]>([])
   const [pickerOpen, setPickerOpen]     = useState(false)
   const [uploadOpen, setUploadOpen]     = useState(false)
   const [lightboxIdx, setLightboxIdx]   = useState(-1)
 
-  // PointerSensor cubre mouse (distancia chica: el mouse no tiembla). TouchSensor aparte
-  // para touch, con activación por demora (mantener el dedo quieto un instante) en vez de
-  // distancia — sin esto, cualquier intento de hacer scroll sobre la galería se confundía
-  // con un arrastre. KeyboardSensor agrega reordenar con flechas para quien no puede arrastrar.
+  // MouseSensor solo para mouse (distancia chica: el mouse no tiembla). Antes era PointerSensor,
+  // pero ese también toma el dedo y bloqueaba el scroll en celular. TouchSensor aparte para
+  // touch: hay que mantener presionado ~¼ s; si el dedo se desliza antes, es scroll normal.
+  // KeyboardSensor agrega reordenar con flechas para quien no puede arrastrar.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -142,13 +184,26 @@ export function FurnitureGalleryManager({
   useEffect(() => {
     const pending: PendingGalleryItem[] = items
       .filter((i) => !i.furnitureImageId)
-      .map((i) => ({ imageId: i.imageId, order: items.indexOf(i) + 1 }))
+      .map((i) => ({ imageId: i.imageId, order: items.indexOf(i) + 1, caption: i.caption, variant: i.variant }))
     onPendingItemsChange(pending)
 
     const reordered: ReorderedGalleryItem[] = items
       .filter((i) => !!i.furnitureImageId)
       .map((i) => ({ furnitureImageId: i.furnitureImageId!, order: items.indexOf(i) + 1 }))
     onReorderedItemsChange(reordered)
+
+    // Fotos ya guardadas cuyo pie de foto o variante es distinto al original
+    const webChanged: WebChangedGalleryItem[] = items
+      .filter((i) => {
+        if (!i.furnitureImageId) return false
+        const original = initialWeb.get(i.furnitureImageId)
+        return !original || original.caption !== i.caption || original.variant !== i.variant
+      })
+      .map((i) => ({ furnitureImageId: i.furnitureImageId!, caption: i.caption, variant: i.variant }))
+    onWebChangedItemsChange?.(webChanged)
+
+    // La Foto 1 es la portada: para cambiarla se arrastra otra foto al primer lugar
+    onCoverChange?.(items[0]?.imageId ?? null)
   }, [items])
 
   useEffect(() => {
@@ -160,6 +215,7 @@ export function FurnitureGalleryManager({
   const handlePickerConfirm = (picked: PickedImage[]) => {
     const newEntries: GalleryEntry[] = picked.map((p) => ({
       localKey: nextKey(), imageId: p.imageId, imageUrl: p.imageUrl, imageName: p.imageName,
+      caption: '', variant: null,
     }))
     setItems((prev) => [...prev, ...newEntries])
   }
@@ -167,8 +223,14 @@ export function FurnitureGalleryManager({
   const handleUploadDone = (images: PickedImage[]) => {
     const newEntries: GalleryEntry[] = images.map((p) => ({
       localKey: nextKey(), imageId: p.imageId, imageUrl: p.imageUrl, imageName: p.imageName,
+      caption: '', variant: null,
     }))
     setItems((prev) => [...prev, ...newEntries])
+  }
+
+  // Cambia el pie de foto o la variante de una foto (nueva o ya guardada)
+  const updateWebField = (localKey: string, patch: Partial<Pick<GalleryEntry, 'caption' | 'variant'>>) => {
+    setItems((prev) => prev.map((i) => (i.localKey === localKey ? { ...i, ...patch } : i)))
   }
 
   const handleRemove = (entry: GalleryEntry) => {
@@ -218,11 +280,14 @@ export function FurnitureGalleryManager({
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={items.map((i) => i.localKey)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6">
+            {/* Columnas automáticas: entran tantas como quepan (mín. 12rem c/u, porque cada foto lleva debajo su pie de foto y variante); a más ancho, más columnas */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]">
               {items.map((entry, idx) => (
                 <SortableItem
                   key={entry.localKey}
                   entry={entry}
+                  position={idx + 1}
+                  isCover={idx === 0}
                   disabled={disabled}
                   onRemove={() => handleRemove(entry)}
                   onClick={() => {
@@ -231,6 +296,7 @@ export function FurnitureGalleryManager({
                   }}
                   onMoveBack={!disabled && idx > 0 ? () => moveItem(entry.localKey, -1) : undefined}
                   onMoveForward={!disabled && idx < items.length - 1 ? () => moveItem(entry.localKey, 1) : undefined}
+                  onWebChange={(patch) => updateWebField(entry.localKey, patch)}
                 />
               ))}
             </div>

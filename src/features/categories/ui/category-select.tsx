@@ -68,7 +68,7 @@ export function CategorySelect({
               Cargando...
             </span>
           ) : (
-            <span className={cn('truncate', !selected && 'text-muted-foreground')}>
+            <span className={cn('min-w-0 truncate', !selected && 'text-muted-foreground')}>
               {label}
             </span>
           )}

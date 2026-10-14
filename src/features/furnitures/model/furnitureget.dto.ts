@@ -9,6 +9,8 @@ export type FurnitureListRequestDto = {
   state?: number
   date_from?: string
   date_to?: string
+  /** 1 = solo muebles visibles en la galería web (furniture_web state 1) · 0 = solo los no visibles. */
+  web?: number
   per_page?: number
   page?: number
 }

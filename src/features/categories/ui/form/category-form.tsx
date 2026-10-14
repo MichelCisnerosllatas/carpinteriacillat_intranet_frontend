@@ -20,11 +20,14 @@ import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { AlertError } from '@/widgets/alerts_components'
 import { useCategoryListStore } from '../../stores/useCategoryListStore'
 import { useCategoryFormStore } from '../../stores/useCategoryFormStore'
+import { CategoryWebCheck } from './category-web-check'
 
 const schema = z.object({
   category_name:        z.string().min(1, 'El nombre es requerido.').max(255),
   category_description: z.string().optional(),
   category_state:       z.number(),
+  // Atajo: tarjeta de la categoría en el carrusel «Muebles a medida» de la web
+  show_on_web:          z.boolean(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -38,7 +41,7 @@ export function CategoryForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { category_name: '', category_description: '', category_state: 1 },
+    defaultValues: { category_name: '', category_description: '', category_state: 1, show_on_web: false },
   })
 
   useEffect(() => {
@@ -47,6 +50,7 @@ export function CategoryForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
         category_name:        resolved.name,
         category_description: resolved.description ?? '',
         category_state:       resolved.stateValue,
+        show_on_web:          resolved.web?.showOnWeb ?? false,
       })
     }
   }, [isEdit, resolved?.id])
@@ -62,18 +66,24 @@ export function CategoryForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
     })
     if (!confirmed) return
 
+    // Al editar, show_on_web solo se manda si el backend ya informó la tarjeta (web) o si se tocó el check:
+    // así no se oculta una tarjeta por accidente cuando el dato no vino.
+    const sendShowOnWeb = resolved?.web != null || form.getFieldState('show_on_web').isDirty
+
     const success = isEdit
       ? await update(resolved!.id, {
           category_name:        values.category_name,
           category_description: values.category_description ?? '',
           category_state:       values.category_state,
           category_updated_at:  formatDatetime(),
+          show_on_web:          sendShowOnWeb ? values.show_on_web : undefined,
         })
       : await create({
           category_name:        values.category_name,
           category_description: values.category_description,
           category_state:       String(values.category_state),
           category_created_at:  formatDatetime(),
+          show_on_web:          values.show_on_web,
         })
 
     if (success) {
@@ -118,6 +128,19 @@ export function CategoryForm({ mode, id }: { mode: 'create' | 'edit'; id?: strin
                 <FormControl>
                   <Textarea placeholder="Descripción opcional de la categoría" className="resize-none" rows={3} {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Atajo al final: tarjeta en el carrusel «Muebles a medida» (página Servicios) */}
+            <FormField control={form.control} name="show_on_web" render={({ field }) => (
+              <FormItem>
+                <CategoryWebCheck
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  idSection={resolved?.web?.idSection}
+                  disabled={isSubmitting}
+                />
                 <FormMessage />
               </FormItem>
             )} />

@@ -1,6 +1,20 @@
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
 
+/**
+ * Un elemento de las tarjetas que se puede mostrar/ocultar (ej. "Contador «N trabajos»").
+ * El CATÁLOGO vive SOLO en el backend (config/section_card_settings.php, una lista por
+ * typesection_key); el intranet no lo repite: pinta un switch por cada entrada que llega.
+ */
+export type SectionCardSettingSchemaItem = {
+  /** Clave que se guarda en `card_settings` (ej. 'show_card_count'). */
+  key: string
+  /** Texto del switch (ej. 'Contador «N trabajos»'). */
+  label: string
+  /** Valor si nunca se guardó. */
+  default: boolean
+}
+
 export type SectionApiItem = {
   id_section: number
   section_name: string
@@ -52,6 +66,13 @@ export type SectionJoinApiItem = Omit<SectionApiItem, 'id_type_section' | 'id_na
     items_add: boolean
     items_reorder: boolean
     items_delete: boolean
+    /**
+     * Elementos de las tarjetas: { "<clave>": true|false } ya resuelto por el backend (todas las
+     * claves del catálogo del tipo de sección). Vacío/ausente si el tipo no tiene catálogo.
+     */
+    card_settings?: Record<string, boolean> | null
+    /** Catálogo de elementos de las tarjetas de este tipo de sección ([] si no tiene). */
+    card_settings_schema?: SectionCardSettingSchemaItem[] | null
   } | null
   type_section: {
     id_typesection: number

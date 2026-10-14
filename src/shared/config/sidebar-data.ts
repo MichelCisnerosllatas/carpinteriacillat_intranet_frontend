@@ -14,7 +14,6 @@ import {
   Folder,
   FolderOpen,
   GalleryVerticalEnd,
-  GalleryHorizontalEnd,
   HardDrive,
   HelpCircle,
   ImageIcon,

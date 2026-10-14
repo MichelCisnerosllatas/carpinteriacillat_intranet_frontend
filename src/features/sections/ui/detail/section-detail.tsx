@@ -13,6 +13,7 @@ import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
 import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
+import { getGroupedSectionConfig } from '@/features/sectionimages/grouped'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionDetailInfoTab } from './tabs/info/section-detail-info-tab'
 import { SectionDetailImagesTab } from './tabs/images/section-detail-images-tab'
@@ -82,6 +83,25 @@ export function SectionDetail({ id }: { id: string }) {
   }
   const effectiveTab = visibility[activeTab] ? activeTab : (TABS.find((t) => visibility[t]) ?? activeTab)
 
+  // Secciones especiales con pestaña de items propia (ver GROUPED_SECTION_CONFIG[...].itemsTab):
+  //   carrusel «Muebles a medida» → "Categorías" · «Restauración» → "Trabajos".
+  // Esa pestaña va ANTES de Imágenes (Info general | Categorías/Trabajos | Imágenes).
+  // El resto (incluido el hero de Servicios) sigue con "Items" en su lugar de siempre.
+  const groupedConfig = getGroupedSectionConfig(item.typesectionKey)
+  const specialItemsTab = groupedConfig?.itemsTab ?? null
+  const itemsTabTrigger = showItems && (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="flex flex-1">
+          <TabsTrigger value="items" className="w-full">{specialItemsTab?.label ?? 'Items'}</TabsTrigger>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {specialItemsTab?.tooltip ?? 'Estadísticas, características, ubicaciones y valoraciones'}
+      </TooltipContent>
+    </Tooltip>
+  )
+
   return (
     <div className="flex flex-col gap-6">
       {/* ── Header ── */}
@@ -148,6 +168,9 @@ export function SectionDetail({ id }: { id: string }) {
             </Tooltip>
           )}
 
+          {/* Carrusel / Restauración: "Categorías" / "Trabajos" va antes de "Imágenes" */}
+          {specialItemsTab && itemsTabTrigger}
+
           {showImages && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -170,16 +193,7 @@ export function SectionDetail({ id }: { id: string }) {
             </Tooltip>
           )}
 
-          {showItems && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="flex flex-1">
-                  <TabsTrigger value="items" className="w-full">Items</TabsTrigger>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>Estadísticas, características, ubicaciones y valoraciones</TooltipContent>
-            </Tooltip>
-          )}
+          {!specialItemsTab && itemsTabTrigger}
 
           {showTestimonies && (
             <Tooltip>
@@ -203,6 +217,7 @@ export function SectionDetail({ id }: { id: string }) {
           <TabsContent value="images" className="flex flex-col gap-3">
             <SectionDetailImagesTab
               sectionId={item.id}
+              typesectionKey={item.typesectionKey}
               canAdd={item.imagesAdd}
               canReorder={item.imagesReorder}
               canDelete={item.imagesDelete}
@@ -225,6 +240,9 @@ export function SectionDetail({ id }: { id: string }) {
           <TabsContent value="items" className="flex flex-col gap-3">
             <SectionDetailItemsTab
               sectionId={item.id}
+              // Carrusel / Restauración: los items son tarjetas (categorías / trabajos)
+              title={specialItemsTab?.title}
+              addLabel={specialItemsTab ? groupedConfig?.addItemLabel : undefined}
               canAdd={item.itemsAdd}
               canReorder={item.itemsReorder}
               canDelete={item.itemsDelete}

@@ -21,6 +21,11 @@ interface LogoFieldProps {
   previewHeight?: number
   previewWidth?: number | null
   previewObjectFit?: 'contain' | 'cover'
+  /**
+   * Ancho máximo del espacio donde se pinta el logo en el sitio (ej. la columna del footer) —
+   * simula ese tope en la vista previa. Sin esto, el tope es el ancho del recuadro.
+   */
+  previewMaxWidth?: number
 }
 
 const DEFAULT_HEIGHT = 96
@@ -35,7 +40,7 @@ const DEFAULT_HEIGHT = 96
  * criterio que `PersonPhotoPicker` (formulario de Usuarios).
  */
 export const LogoField = forwardRef<LogoFieldHandle, LogoFieldProps>(
-  function LogoField({ value, disabled, alt = 'Logo', previewHeight, previewWidth, previewObjectFit = 'contain' }, ref) {
+  function LogoField({ value, disabled, alt = 'Logo', previewHeight, previewWidth, previewObjectFit = 'contain', previewMaxWidth }, ref) {
     const [file, setFile] = useState<File | null>(null)
     const [removed, setRemoved] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(value ? buildImageUrl(value) : null)
@@ -88,12 +93,14 @@ export const LogoField = forwardRef<LogoFieldHandle, LogoFieldProps>(
               <img
                 src={previewUrl}
                 alt={alt}
-                style={{
-                  height,
-                  width: previewWidth ?? 'auto',
-                  maxWidth: previewWidth ? undefined : '100%',
-                  objectFit: previewObjectFit,
-                }}
+                // Misma lógica que el Footer del sitio web: con ancho fijo, caja exacta +
+                // object-fit; con ancho automático, el alto es un máximo y la imagen escala
+                // proporcional (sin espacio vacío arriba/abajo del dibujo).
+                style={
+                  previewWidth
+                    ? { height, width: previewWidth, maxWidth: previewMaxWidth ?? '100%', objectFit: previewObjectFit }
+                    : { height: 'auto', width: 'auto', maxHeight: height, maxWidth: previewMaxWidth ?? '100%' }
+                }
               />
             ) : (
               <Building2 className="size-10 text-muted-foreground" />

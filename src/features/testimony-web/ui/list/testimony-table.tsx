@@ -14,9 +14,11 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
-import { VISIBILITY_STATES } from '@/shared/config/entity-states'
+import { Clock } from 'lucide-react'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { FurnitureSelect } from '@/features/furnitures/ui/furniture-select'
+import { TESTIMONY_STATES, TESTIMONY_STATE_PENDING } from '../../data/data'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 import { useTestimonyDeleteStore } from '../../stores/useTestimonyDeleteStore'
 import { getTestimonyColumns, getTestimonyScopedColumns } from './testimony-columns'
@@ -51,6 +53,8 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [search, setSearch]                     = useState(filters.search ?? '')
   const [state, setState]                       = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
+  /** Filtro "Trabajo": solo reseñas de ese mueble de la galería web. */
+  const [furnitureFilter, setFurnitureFilter]   = useState<number | null>(filters.id_furniture ?? null)
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
   /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
   const [isUserFetching, setIsUserFetching]     = useState(false)
@@ -76,7 +80,7 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
-      void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), page: 1 }).finally(() => setIsUserFetching(false))
+      void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_furniture: furnitureFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
   }, [search])
@@ -86,8 +90,19 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
   const handleStateChange = (value: string) => {
     setState(value)
     setIsUserFetching(true)
-    void load({ id_section: idSection, search, state: value === 'all' ? undefined : Number(value), page: 1 }).finally(() => setIsUserFetching(false))
+    void load({ id_section: idSection, search, state: value === 'all' ? undefined : Number(value), id_furniture: furnitureFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Filtro por trabajo (mueble) — también es una selección, se aplica de inmediato
+  const handleFurnitureChange = (value: number | null) => {
+    setFurnitureFilter(value)
+    setIsUserFetching(true)
+    void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_furniture: value ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+  }
+
+  // Filtro rápido "Solo pendientes": reseñas de la web que esperan aprobación
+  const isPendingOnly = state === String(TESTIMONY_STATE_PENDING)
+  const togglePendingOnly = () => handleStateChange(isPendingOnly ? 'all' : String(TESTIMONY_STATE_PENDING))
 
   const table = useReactTable({
     data: items,
@@ -113,9 +128,9 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
 
   const resetFilters = () => {
     appliedSearch.current = ''
-    setSearch(''); setState('all')
+    setSearch(''); setState('all'); setFurnitureFilter(null)
     setIsUserFetching(true)
-    void load({ id_section: idSection, search: '', state: undefined, page: 1 }).finally(() => setIsUserFetching(false))
+    void load({ id_section: idSection, search: '', state: undefined, id_furniture: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   const handleBulkActivate = async () => {
@@ -193,9 +208,30 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
               <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
-                {VISIBILITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+                {TESTIMONY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Trabajo</span>
+            <div className="w-full sm:w-[220px]">
+              <FurnitureSelect
+                value={furnitureFilter}
+                onValueChange={handleFurnitureChange}
+                placeholder="Todos los trabajos"
+                disabled={isFetching}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col justify-end">
+            <Button
+              variant={isPendingOnly ? 'default' : 'outline'}
+              size="sm"
+              disabled={isFetching}
+              onClick={togglePendingOnly}
+            >
+              <Clock className="mr-1.5 size-4" />Solo pendientes
+            </Button>
           </div>
           <div className="flex flex-col justify-end">
             <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>

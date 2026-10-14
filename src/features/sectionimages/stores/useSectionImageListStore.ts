@@ -32,7 +32,8 @@ type Action = {
 
 const defaultFilters: SectionImageListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
-const mapFromApi = (item: SectionImageJoinApiItem): SectionImage => {
+/** Convierte una foto del API (endpoint _join) al tipo SectionImage que usa la UI. */
+export const mapSectionImageFromApi = (item: SectionImageJoinApiItem): SectionImage => {
   const stateOpt = getVisibilityStateOption(item.sectionimage_state)
   return {
     id: item.id_section_image,
@@ -41,10 +42,19 @@ const mapFromApi = (item: SectionImageJoinApiItem): SectionImage => {
     // Leerlos como `item.id_section`/`item.id_image` daba siempre `undefined`.
     idSection: item.section?.id_section ?? 0,
     sectionName: item.section?.section_name ?? '',
+    navigationName: item.section?.navigation?.navigation_name ?? null,
     idImage: item.image?.id_image ?? 0,
     imageName: item.image?.image_name ?? '',
     imageUrl: buildImageUrl(item.image?.image_patch) ?? '',
     objectFit: item.sectionimage_fix ?? null,
+    title: item.sectionimage_title ?? null,
+    description: item.sectionimage_description ?? null,
+    label: item.sectionimage_label ?? null,
+    link: item.sectionimage_link ?? null,
+    linkLabel: item.sectionimage_link_label ?? null,
+    variant: item.sectionimage_variant ?? null,
+    idSectionItem: item.section_item?.id_section_item ?? item.id_section_item ?? null,
+    sectionItemTitle: item.section_item?.sectionitem_title ?? null,
     order: item.sectionimage_order ?? null,
     status: item.sectionimage_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
@@ -70,7 +80,7 @@ export const useSectionImageListStore = create<State & Action>((set, get) => ({
     try {
       const response = await sectionImagesService.getById(id)
       if (!response.success) throw new Error(response.message)
-      const mapped = mapFromApi(response.data)
+      const mapped = mapSectionImageFromApi(response.data)
       set({ isFetching: false, currentItem: mapped, hasLoaded: true })
       return true
     } catch (error: any) {
@@ -90,7 +100,7 @@ export const useSectionImageListStore = create<State & Action>((set, get) => ({
       set({
         hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
         message: response.message,
-        items: response.data.map(mapFromApi),
+        items: response.data.map(mapSectionImageFromApi),
         links: response.links, meta: response.meta,
         filters: { ...nextFilters, page: response.meta?.current_page ?? nextFilters.page, per_page: response.meta?.per_page ?? nextFilters.per_page },
       })

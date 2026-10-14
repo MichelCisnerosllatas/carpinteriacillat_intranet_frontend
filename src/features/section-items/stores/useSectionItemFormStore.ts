@@ -13,6 +13,8 @@ type State = {
 type Action = {
   create: (params: SectionItemPostRequestDto) => Promise<boolean>
   update: (id: number, data: SectionItemPutRequestDto) => Promise<boolean>
+  /** Cambia solo algunos campos del item (PATCH), ej. el título desde la pestaña Imágenes. */
+  patch: (id: number, data: Partial<SectionItemPutRequestDto>) => Promise<boolean>
   reset: () => void
 }
 
@@ -48,6 +50,28 @@ export const useSectionItemFormStore = create<State & Action>((set) => ({
         set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
         return false
       }
+      await useSectionItemListStore.getState().load()
+      set({ isSubmitting: false })
+      return true
+    } catch (error: any) {
+      set({
+        isSubmitting: false,
+        error: error?.response?.data?.message ?? error?.message ?? 'Error al actualizar.',
+        fieldErrors: error?.response?.data?.errors ?? null,
+      })
+      return false
+    }
+  },
+
+  patch: async (id, data) => {
+    set({ isSubmitting: true, error: null, fieldErrors: null })
+    try {
+      const res = await sectionItemsService.patch(id, data)
+      if (!res.success) {
+        set({ isSubmitting: false, error: res.message, fieldErrors: res.errors ?? null })
+        return false
+      }
+      // Refresca la lista de items (la usa la pestaña "Items")
       await useSectionItemListStore.getState().load()
       set({ isSubmitting: false })
       return true

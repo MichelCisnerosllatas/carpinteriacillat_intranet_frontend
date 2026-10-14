@@ -12,6 +12,8 @@ export type TestimonyApiItem = {
   id_testimony_web: number
   id_section: number
   id_image: number | null
+  /** Trabajo de la galería web al que pertenece esta reseña (opcional). */
+  id_furniture: number | null
   testimony_name: string
   testimony_role: string | null
   testimony_city: string | null
@@ -34,10 +36,14 @@ export type TestimonyApiItem = {
   updated_at_formatted: string | null
   section?: { id_section: number; section_name: string }
   image?: { id_image: number; image_name: string | null; image_alt: string | null; image_patch: string } | null
+  /** Solo en el endpoint `_join`. */
+  furniture?: { id_furniture: number; furniture_name: string } | null
 }
 
 export type TestimonyListRequestDto = {
   id_section?: number
+  /** Solo reseñas de este trabajo (mueble). */
+  id_furniture?: number
   search?: string
   state?: number
   per_page?: number

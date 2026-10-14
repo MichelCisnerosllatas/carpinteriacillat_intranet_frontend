@@ -45,6 +45,8 @@ const mapFromApi = (item: FurnitureImageJoinApiItem): FurnitureImage => {
     imageTitle: item.image?.image_title ?? null,
     imageAlt: item.image?.image_alt ?? null,
     order: item.furnitureimage_order,
+    caption: item.web?.furnitureimageweb_caption ?? null,
+    variant: item.web?.furnitureimageweb_variant ?? null,
     stateValue: item.furnitureimage_state,
     statusLabel: stateOpt.label,
     createdAt: item.furnitureimage_created_at,

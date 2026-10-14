@@ -156,8 +156,8 @@ export function SectionSettingsForm({ id }: { id: string }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 max-w-3xl">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardHeader><CardTitle className="text-base">Pestañas visibles</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-3">

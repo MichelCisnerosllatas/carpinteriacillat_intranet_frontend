@@ -1,5 +1,9 @@
+import type { FurnitureWebRequestDto } from './furniture-web.dto'
+
+// También se usa para PATCH (Partial<FurniturePutRequestDto>).
 export type FurniturePutRequestDto = {
   furniture_name: string
+  furniture_title?: string | null
   furniture_description?: string
   furniture_largo?: number | null
   furniture_ancho?: number | null
@@ -9,6 +13,12 @@ export type FurniturePutRequestDto = {
   id_typewood: number
   id_image?: number | null
   furniture_updated_at: string
+  /** Opcional: datos de la galería web. Si no se manda, el backend no toca la galería. */
+  web?: FurnitureWebRequestDto
+  /** Opcional: usar (true) o quitar (false) la portada en la tarjeta de su categoría. Si no se manda, no se toca. */
+  show_cover_on_category_card?: boolean
+  /** Opcional: mostrar (true) u ocultar (false) su tarjeta en «Restauración». Si no se manda, no se toca. */
+  show_on_restoration?: boolean
 }
 
 export type FurniturePutResponseDto = {

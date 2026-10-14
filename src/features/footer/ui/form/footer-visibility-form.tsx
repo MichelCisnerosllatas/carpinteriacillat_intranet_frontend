@@ -40,6 +40,10 @@ const schema = z.object({
 })
 
 type FormValues = z.infer<typeof schema>
+
+// Ancho de la columna "Marca" del footer en el sitio web, en desktop: Container max-w-7xl
+// (1280 - 64 de padding) en 4 columnas con gap-8 → (1216 - 96) / 4 = 280px.
+const FOOTER_BRAND_COLUMN_MAX_WIDTH = 280
 type ColumnField = 'show_brand' | 'show_quick_links' | 'show_services' | 'show_access'
 
 function ColumnRow({
@@ -153,12 +157,19 @@ export function FooterVisibilityForm() {
       const formData = new FormData()
       formData.append('file', pendingFile)
       formData.append('folder', 'sistema')
-      const uploadResponse = await storageFilesService.upload(formData)
-      if (!uploadResponse.success) {
-        toastError('Error', 'No se pudo subir el logo del footer.')
+      // Nombre único: el backend responde 409 si ya existe un archivo con el mismo nombre en la carpeta.
+      formData.append('name', `footer-logo-${Date.now()}`)
+      try {
+        const uploadResponse = await storageFilesService.upload(formData)
+        if (!uploadResponse.success) {
+          toastError('Error', 'No se pudo subir el logo del footer.')
+          return
+        }
+        logo = uploadResponse.data.path
+      } catch (error: any) {
+        toastError('Error', error?.response?.data?.message ?? 'No se pudo subir el logo del footer.')
         return
       }
-      logo = uploadResponse.data.path
     } else if (logoWasRemoved) {
       logo = null
     }
@@ -209,6 +220,7 @@ export function FooterVisibilityForm() {
                       previewHeight={watched.logo_height}
                       previewWidth={watched.logo_width}
                       previewObjectFit={watched.logo_object_fit}
+                      previewMaxWidth={FOOTER_BRAND_COLUMN_MAX_WIDTH}
                     />
                   </FormControl>
                   <p className="max-w-sm text-xs text-muted-foreground">
