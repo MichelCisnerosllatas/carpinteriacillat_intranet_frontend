@@ -79,7 +79,7 @@ export function SectionImageTextFields({ control, captionOnly }: SectionImageTex
       <FormField control={control} name="sectionimage_variant" render={({ field }) => (
         <FormItem>
           <FormLabel>Variante</FormLabel>
-          <FormControl><Input placeholder="Ej: before, after, wide..." maxLength={50} {...field} /></FormControl>
+          <FormControl><Input placeholder="Ej: wide..." maxLength={50} {...field} /></FormControl>
           <FormDescription>Opcional. Texto libre que algunas secciones usan para mostrar la foto de otra forma.</FormDescription>
           <FormMessage />
         </FormItem>

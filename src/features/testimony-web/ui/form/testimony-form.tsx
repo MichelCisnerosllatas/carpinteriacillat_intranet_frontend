@@ -23,7 +23,7 @@ import { StarRatingInput } from '@/shared/ui/star-rating-input'
 import { ImageSelect } from '@/features/images/ui/image-select'
 import { ImageQuickUploadDialog } from '@/features/images/ui/image-quick-upload-dialog'
 import { getImageUrl } from '@/features/images/lib/image-url'
-import { FurnitureSelect } from '@/features/furnitures/ui/furniture-select'
+import { WebWorkSelect } from '../web-work-select'
 import type { ImageApiItem } from '@/features/images/model/imageget.dto'
 import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
@@ -40,7 +40,7 @@ const schema = z.object({
   testimony_rating:       z.number().min(TESTIMONY_RATING_MIN, 'Mínimo 0.').max(TESTIMONY_RATING_MAX, 'Máximo 5.').nullable().optional(),
   testimony_message:      z.string().min(1, 'El mensaje es requerido.'),
   id_image:               z.number().nullable().optional(),
-  id_furniture:           z.number().nullable().optional(),
+  id_web_work:            z.number().nullable().optional(),
   testimony_is_delivered: z.boolean(),
   testimony_is_verified:  z.boolean(),
   testimony_state:        z.number(),
@@ -72,7 +72,7 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
       testimony_rating: null,
       testimony_message: '',
       id_image: null,
-      id_furniture: null,
+      id_web_work: null,
       testimony_is_delivered: true,
       testimony_is_verified: true,
       testimony_state: 1,
@@ -94,7 +94,7 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
         testimony_rating:       resolved.rating,
         testimony_message:      resolved.message,
         id_image:               resolved.idImage,
-        id_furniture:           resolved.idFurniture,
+        id_web_work:            resolved.idWebWork,
         testimony_is_delivered: resolved.isDelivered,
         testimony_is_verified:  resolved.isVerified,
         testimony_state:        resolved.stateValue,
@@ -145,7 +145,7 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
       ? await update(resolved!.id, {
           id_section:               idSection,
           id_image:                 values.id_image,
-          id_furniture:             values.id_furniture ?? null,
+          id_web_work:              values.id_web_work ?? null,
           testimony_name:           values.testimony_name,
           testimony_role:           values.testimony_role,
           testimony_city:           values.testimony_city,
@@ -160,7 +160,7 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
       : await create({
           id_section:               idSection,
           id_image:                 values.id_image,
-          id_furniture:             values.id_furniture ?? null,
+          id_web_work:              values.id_web_work ?? null,
           testimony_name:           values.testimony_name,
           testimony_role:           values.testimony_role,
           testimony_city:           values.testimony_city,
@@ -268,14 +268,15 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
               </FormItem>
             )} />
 
-            <FormField control={form.control} name="id_furniture" render={({ field }) => (
+            <FormField control={form.control} name="id_web_work" render={({ field }) => (
               <FormItem>
-                <FormLabel>Trabajo de galería (opcional)</FormLabel>
+                <FormLabel>Trabajo de la galería (opcional)</FormLabel>
                 <FormControl>
-                  <FurnitureSelect
+                  <WebWorkSelect
                     value={field.value ?? null}
                     onValueChange={(v) => field.onChange(v)}
-                    placeholder="Seleccionar mueble / trabajo"
+                    placeholder="Seleccionar trabajo de la galería"
+                    selectedLabel={resolved?.webWorkTitle ?? null}
                     disabled={isSubmitting}
                   />
                 </FormControl>

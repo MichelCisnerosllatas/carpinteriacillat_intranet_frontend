@@ -31,7 +31,7 @@ type Action = {
 
 const defaultFilters: SectionListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
-/** Exportado para que `useSectionContentVisibilityStore` (tab "Visibilidad" de Configuración) reutilice el mismo mapeo sin duplicarlo. */
+/** Exportado para que `useSectionAppearanceStore` (tab "Apariencia" de Configuración) reutilice el mismo mapeo sin duplicarlo. */
 export const mapSectionFromApi = (item: SectionJoinApiItem): Section => {
   const stateOpt = getVisibilityStateOption(item.section_state)
   const typesectionStateOpt = item.type_section ? getVisibilityStateOption(item.type_section.typesection_state) : null
@@ -52,13 +52,11 @@ export const mapSectionFromApi = (item: SectionJoinApiItem): Section => {
     // `web_settings` ausente (backend viejo, o una sección creada a mano sin fila de settings
     // todavía) = tratar como "todo permitido/visible", para no ocultar tabs/acciones por error
     // solo porque no hay config técnica cargada para esta sección puntual.
-    showTitle: item.web_settings?.show_title ?? true,
-    showSubtitle: item.web_settings?.show_subtitle ?? true,
-    showDescription: item.web_settings?.show_description ?? true,
     tabInfo: item.web_settings?.tab_info ?? true,
     tabImages: item.web_settings?.tab_images ?? true,
     tabButtons: item.web_settings?.tab_buttons ?? true,
     tabItems: item.web_settings?.tab_items ?? true,
+    tabWorks: item.web_settings?.tab_works ?? false,
     imagesAdd: item.web_settings?.images_add ?? true,
     imagesReorder: item.web_settings?.images_reorder ?? true,
     imagesDelete: item.web_settings?.images_delete ?? true,
@@ -68,9 +66,12 @@ export const mapSectionFromApi = (item: SectionJoinApiItem): Section => {
     itemsAdd: item.web_settings?.items_add ?? true,
     itemsReorder: item.web_settings?.items_reorder ?? true,
     itemsDelete: item.web_settings?.items_delete ?? true,
-    // Elementos de las tarjetas: el catálogo y los valores los manda el backend (vacíos si no aplica)
-    cardSettings: item.web_settings?.card_settings ?? {},
-    cardSettingsSchema: item.web_settings?.card_settings_schema ?? [],
+    // Apariencia: el catálogo y los valores los manda el backend (vacíos si no vienen)
+    displaySettings: item.display_settings ?? {},
+    displaySettingsSchema: {
+      groups: item.display_settings_schema?.groups ?? [],
+      fields: item.display_settings_schema?.fields ?? [],
+    },
     typesectionStateValue: item.type_section?.typesection_state ?? null,
     typesectionStateLabel: typesectionStateOpt?.label ?? null,
     typesectionStateBadge: typesectionStateOpt?.badge ?? null,

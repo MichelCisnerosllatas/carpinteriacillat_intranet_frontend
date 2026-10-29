@@ -1,7 +1,7 @@
 'use client'
 
-// SOLO carrusel «Muebles a medida» y «Restauración».
-// Botón "Personalizar fotos": copia las fotos automáticas de un item a la sección (sections_images)
+// SOLO carrusel «Muebles a medida».
+// Botón "Personalizar fotos": copia las fotos automáticas de una tarjeta a la sección (sections_images)
 // para que el admin pueda ocultarlas, ordenarlas o cambiarlas. Ver grouped/README.md → "Fotos automáticas".
 
 import { formatDatetime } from '@/shared/lib/utils'
@@ -9,12 +9,13 @@ import { swalConfirmAction } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import type { SectionItemApiItem } from '@/features/section-items/model/sectionitemget.dto'
 import { sectionImagesService } from '../../services/sectionimages.service'
-import { buildFurnitureGalleryLink } from '../coverflow/coverflow-links'
+import { buildWorkGalleryLink } from '../coverflow/coverflow-links'
 import type { AutoPhoto } from './auto-photos'
 
 /**
  * Devuelve `personalize(item, fotos)`: pide confirmación y crea una imagen de sección por cada
- * foto automática (en el mismo orden). Al terminar llama a `onDone` (recargar).
+ * foto automática (en el mismo orden), enlazada a su trabajo ('/gallery/<id_web_work>') y con el
+ * título del trabajo como pie de foto. Al terminar llama a `onDone` (recargar).
  * `extraText` se agrega a la pregunta (ej. en Reordenar: "se perderá el orden sin confirmar").
  */
 export function usePersonalizeAutoPhotos(idSection: number, onDone: () => Promise<unknown> | void) {
@@ -35,10 +36,8 @@ export function usePersonalizeAutoPhotos(idSection: number, onDone: () => Promis
               id_section: idSection,
               id_section_item: item.id_section_item,
               id_image: photo.imageId,
-              sectionimage_link: buildFurnitureGalleryLink(photo.idFurniture),
-              sectionimage_title: photo.furnitureTitle,
-              // Restauración: 'before' / 'after'. Categoría: sin variante.
-              sectionimage_variant: photo.variant,
+              sectionimage_link: buildWorkGalleryLink(photo.idWebWork),
+              sectionimage_title: photo.workTitle,
               sectionimage_state: 1,
               sectionimage_created_at: formatDatetime(),
             })

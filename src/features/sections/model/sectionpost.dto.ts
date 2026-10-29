@@ -9,6 +9,7 @@ export type SectionPostRequestDto = {
   tab_images?: boolean
   tab_buttons?: boolean
   tab_items?: boolean
+  tab_works?: boolean
   images_add?: boolean
   images_reorder?: boolean
   images_delete?: boolean

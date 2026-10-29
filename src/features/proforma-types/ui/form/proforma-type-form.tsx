@@ -9,9 +9,10 @@ import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
@@ -23,6 +24,7 @@ import { useProformaTypeFormStore } from '../../stores/useProformaTypeFormStore'
 const schema = z.object({
   name:   z.string().min(1, 'El nombre es requerido.').max(100),
   code:   z.string().max(20).optional(),
+  description: z.string().optional(),
   status: z.number(),
 })
 
@@ -37,7 +39,7 @@ export function ProformaTypeForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', code: '', status: 1 },
+    defaultValues: { name: '', code: '', description: '', status: 1 },
   })
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export function ProformaTypeForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
       form.reset({
         name:   resolved.name,
         code:   resolved.code ?? '',
+        description: resolved.description ?? '',
         status: resolved.stateValue,
       })
     }
@@ -60,8 +63,8 @@ export function ProformaTypeForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
     if (!confirmed) return
 
     const success = isEdit
-      ? await update(resolved!.id, { name: values.name, code: values.code, status: values.status })
-      : await create({ name: values.name, code: values.code, status: values.status })
+      ? await update(resolved!.id, { name: values.name, code: values.code, description: values.description?.trim() || null, status: values.status })
+      : await create({ name: values.name, code: values.code, description: values.description?.trim() || null, status: values.status })
 
     if (success) {
       await swalSuccess(isEdit ? 'Actualizado' : 'Creado', values.name)
@@ -101,6 +104,14 @@ export function ProformaTypeForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descripción</FormLabel>
+                <FormControl><Textarea placeholder="Para qué sirve este tipo..." className="resize-none" rows={3} {...field} /></FormControl>
+                <FormDescription>Nota interna: no se muestra a los clientes.</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />

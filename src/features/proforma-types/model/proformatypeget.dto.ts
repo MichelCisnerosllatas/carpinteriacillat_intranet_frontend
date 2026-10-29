@@ -5,6 +5,8 @@ export type ProformaTypeApiItem = {
   id: number
   name: string
   code: string | null
+  /** Nota interna: para qué sirve este tipo. */
+  description: string | null
   status: number
   created_at: string
   updated_at: string | null

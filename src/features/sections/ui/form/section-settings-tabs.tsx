@@ -1,34 +1,41 @@
 'use client'
 
-import { Eye, SlidersHorizontal } from 'lucide-react'
+import { Palette, SlidersHorizontal } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { SectionContentVisibilityForm } from './section-content-visibility-form'
+import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
+import { SectionAppearanceEditor } from '../appearance/section-appearance-editor'
 import { SectionSettingsForm } from './section-settings-form'
+
+const TABS = ['appearance', 'structure'] as const
 
 /**
  * Configuración de Sección tiene dos responsabilidades separadas, cada una con su propio store
- * (`useSectionContentVisibilityStore` / `useSectionFormStore`+`useSectionListStore`) para que no
+ * (`useSectionAppearanceStore` / `useSectionFormStore`+`useSectionListStore`) para que no
  * se pisen entre sí `isSubmitting`/`error`:
- * - "Visibilidad": qué propiedades de CONTENIDO (título/subtítulo/descripción) se ven en el sitio
- *   público — `SectionContentVisibilityForm`. Si el tipo de sección tiene catálogo, también los
- *   "Elementos de las tarjetas" (`card_settings`, ver section-card-settings-fields.tsx).
+ * - "Apariencia": qué MUESTRA la web pública de esta sección (visibilidad de cada elemento,
+ *   textos, números, opciones y listas) — `SectionAppearanceEditor`, armado solo con el catálogo
+ *   `display_settings_schema` que manda el backend.
  * - "Estructura": qué tabs del detalle se muestran y qué acciones (agregar/reordenar/eliminar)
  *   están permitidas en Imágenes/Botones/Items — `SectionSettingsForm` (sin cambios).
+ * La pestaña activa vive en `?tab=` (ej. el botón "Apariencia" del detalle abre `?tab=appearance`).
  */
 export function SectionSettingsTabs({ id }: { id: string }) {
+  const [activeTab, setActiveTab] = useTabQueryParam(TABS, 'appearance')
+
   return (
-    <Tabs defaultValue="visibility" className="flex-1">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
       <TabsList>
-        <TabsTrigger value="visibility" className="gap-1.5">
-          <Eye className="size-4" />Visibilidad
+        <TabsTrigger value="appearance" className="gap-1.5">
+          <Palette className="size-4" />Apariencia
         </TabsTrigger>
         <TabsTrigger value="structure" className="gap-1.5">
           <SlidersHorizontal className="size-4" />Estructura
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="visibility" className="pt-4">
-        <SectionContentVisibilityForm id={id} />
+      {/* forceMount: pasar a "Estructura" y volver no debe perder los cambios sin guardar */}
+      <TabsContent value="appearance" forceMount className="pt-4 data-[state=inactive]:hidden">
+        <SectionAppearanceEditor id={id} />
       </TabsContent>
 
       <TabsContent value="structure" className="pt-4">

@@ -16,6 +16,7 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
 import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
+import { FurnitureWebWorksCard } from '../furniture-web-works-card'
 
 export function FurnitureDetail({ id }: { id: string }) {
   const router  = useRouter()
@@ -189,6 +190,8 @@ export function FurnitureDetail({ id }: { id: string }) {
             )}
           </CardContent>
         </Card>
+
+        <FurnitureWebWorksCard furnitureId={item.id} webWorks={item.webWorks} />
 
         <Card>
           <CardHeader>

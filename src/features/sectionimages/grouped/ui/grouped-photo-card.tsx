@@ -6,7 +6,6 @@
 
 import type { ReactNode } from 'react'
 import { CheckCircle2, Eye, ImageIcon, MoreVertical, Pencil, Trash2, XCircle } from 'lucide-react'
-import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import {
@@ -20,7 +19,7 @@ import { SectionImageRoleBadge } from '../../ui/list/sectionimage-role-badge'
 /** Acciones del menú de cada foto (las decide el contenedor). */
 export type GroupedPhotoActions = {
   onView: (image: SectionImage) => void
-  /** Opcional: si no viene, el menú no muestra "Editar" (ej. Restauración edita las fotos de a par). */
+  /** Opcional: si no viene, el menú no muestra "Editar". */
   onEdit?: (image: SectionImage) => void
   onToggleState: (image: SectionImage) => void
   onDelete: (image: SectionImage) => void
@@ -42,8 +41,6 @@ interface GroupedPhotoCardProps {
   selectionActive?: boolean
   /** Marcar / desmarcar la foto. Si no viene, no se muestra el checkbox (ej. en "Reordenar"). */
   onSelectChange?: (checked: boolean) => void
-  /** Badge de variante abajo a la izquierda (ej. Restauración: "Antes" / "Después"). Ver getPhotoVariantLabel. */
-  variantLabel?: string | null
 }
 
 /**
@@ -52,7 +49,6 @@ interface GroupedPhotoCardProps {
  */
 export function GroupedPhotoCard({
   image, role, onOpen, actions, canDelete = true, dragHandle, selected = false, selectionActive = false, onSelectChange,
-  variantLabel,
 }: GroupedPhotoCardProps) {
   const isActive = image.stateValue === 1
 
@@ -138,13 +134,6 @@ export function GroupedPhotoCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      )}
-
-      {/* Abajo a la izquierda: variante de la foto (ej. "Antes" / "Después" en Restauración) */}
-      {variantLabel && (
-        <Badge className="pointer-events-none absolute bottom-1.5 left-1.5 border-transparent bg-black/70 px-1.5 py-0 text-[10px] font-medium text-white shadow-sm">
-          {variantLabel}
-        </Badge>
       )}
 
       {/* Asa para arrastrar (solo en "Reordenar") */}

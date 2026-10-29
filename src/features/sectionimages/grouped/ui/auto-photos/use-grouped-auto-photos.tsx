@@ -1,9 +1,9 @@
 'use client'
 
-// SOLO carrusel «Muebles a medida» y «Restauración» (config.autoPhotos).
-// Junta todo lo de "Fotos automáticas" para un item: el bloque (GroupedAutoPhotos) y el texto del
+// SOLO carrusel «Muebles a medida» (config.autoPhotos).
+// Junta todo lo de "Fotos automáticas" para una tarjeta: el bloque (GroupedAutoPhotos) y el texto del
 // contador del encabezado. Lo usan la pestaña Imágenes (GroupedImagesManager) y Reordenar
-// (GroupedReorderBoard), así no se repite. En el hero (autoPhotos: null) no pinta nada.
+// (GroupedReorderBoard), así no se repite. En el hero (autoPhotos: false) no pinta nada.
 // Ver grouped/README.md → "Fotos automáticas".
 
 import type { ReactNode } from 'react'
@@ -11,9 +11,8 @@ import type { SectionItemApiItem } from '@/features/section-items/model/sectioni
 import type { SectionImage } from '../../../data/schema'
 import type { LightboxSlide } from '../../../lib/lightbox-slides'
 import type { GroupedSectionConfig } from '../../grouped-section.config'
-import { getFurnitureIdFromRestorationKey } from '../../restoration/restoration-links'
-import { autoPhotosToSlides, getMissingRestorationVariants } from '../../lib/auto-photos'
-import { getAutoPhotosCounter, getRestorationMissingText } from '../../lib/auto-photos-texts'
+import { autoPhotosToSlides } from '../../lib/auto-photos'
+import { getAutoPhotosCounter } from '../../lib/auto-photos-texts'
 import { useAutoPhotos } from '../../lib/use-auto-photos'
 import { usePersonalizeAutoPhotos } from '../../lib/use-personalize-auto-photos'
 import { GroupedAutoPhotos } from './grouped-auto-photos'
@@ -44,32 +43,20 @@ export function useGroupedAutoPhotos({
   const { personalize } = usePersonalizeAutoPhotos(idSection, onReload)
 
   const forItem = (item: SectionItemApiItem, ownPhotos: SectionImage[]): ItemAutoPhotos => {
-    const mode = auto.mode
-    if (!mode) return { block: undefined, counter: null }
+    if (!auto.enabled) return { block: undefined, counter: null }
 
-    const result = auto.getFor(item, ownPhotos)
-
-    // Restauración, trabajo SIN mueble (clave null): solo cuenta con sus fotos propias.
-    // Si le falta la «Antes» o la «Después» visible, se avisa (la web no mostrará la tarjeta).
-    const hasFurniture = getFurnitureIdFromRestorationKey(item.sectionitem_key) != null
-    const missingWarning = mode === 'restoration' && !hasFurniture
-      ? getRestorationMissingText(getMissingRestorationVariants(ownPhotos, []))
-      : null
-
+    const photos = auto.getFor(item, ownPhotos)
     const block = (
       <GroupedAutoPhotos
-        config={config}
-        mode={mode}
-        result={result}
+        photos={photos}
         isLoading={auto.isLoading}
         isError={auto.isError}
         hasOwnPhotos={ownPhotos.length > 0}
-        onOpenPhoto={(photos, index) => onOpenSlides(autoPhotosToSlides(photos), index)}
-        onPersonalize={() => void personalize(item, result.photos, personalizeExtraText)}
-        missingWarning={missingWarning}
+        onOpenPhoto={(list, index) => onOpenSlides(autoPhotosToSlides(list), index)}
+        onPersonalize={() => void personalize(item, photos, personalizeExtraText)}
       />
     )
-    return { block, counter: getAutoPhotosCounter(mode, ownPhotos, result) }
+    return { block, counter: getAutoPhotosCounter(ownPhotos, photos) }
   }
 
   return { forItem }

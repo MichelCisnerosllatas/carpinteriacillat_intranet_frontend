@@ -19,8 +19,6 @@ interface SortableGroupedPhotoCardProps {
   groupKey: string
   /** Tocar la foto: abrirla en grande. */
   onOpen: (image: SectionImage) => void
-  /** Badge de variante (ej. "Antes" / "Después"), ver getPhotoVariantLabel. */
-  variantLabel?: string | null
 }
 
 /**
@@ -28,7 +26,7 @@ interface SortableGroupedPhotoCardProps {
  * Se arrastra SOLO desde el asa ⋮⋮: tocar la foto la abre en grande y,
  * en celular, deslizar sobre la foto hace scroll normal.
  */
-export function SortableGroupedPhotoCard({ image, role, groupKey, onOpen, variantLabel }: SortableGroupedPhotoCardProps) {
+export function SortableGroupedPhotoCard({ image, role, groupKey, onOpen }: SortableGroupedPhotoCardProps) {
   const {
     attributes, listeners, setNodeRef, setActivatorNodeRef,
     transform, transition, isDragging,
@@ -56,7 +54,7 @@ export function SortableGroupedPhotoCard({ image, role, groupKey, onOpen, varian
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn('relative', isDragging && 'z-50 opacity-80 shadow-lg')}
     >
-      <GroupedPhotoCard image={image} role={role} onOpen={onOpen} dragHandle={handle} variantLabel={variantLabel} />
+      <GroupedPhotoCard image={image} role={role} onOpen={onOpen} dragHandle={handle} />
     </div>
   )
 }

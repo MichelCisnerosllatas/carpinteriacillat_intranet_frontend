@@ -40,6 +40,7 @@ export function ProformaTypeDetail({ id }: { id: string }) {
             <div className="flex flex-1 flex-col gap-1">
               <h3 className="text-lg font-semibold">{item.name}</h3>
               {item.code && <p className="text-sm text-muted-foreground">{item.code}</p>}
+              {item.description && <p className="text-sm text-muted-foreground whitespace-pre-line">{item.description}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
             <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/proforma-types/edit/${item.id}`) }}>

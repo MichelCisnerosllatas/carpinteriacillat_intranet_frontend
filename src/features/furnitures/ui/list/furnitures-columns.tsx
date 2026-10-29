@@ -96,10 +96,6 @@ export const furnituresColumns: ColumnDef<Furniture>[] = [
           <Badge variant="outline" className={cn('text-xs w-fit', opt.badge)}>
             {opt.label}
           </Badge>
-          {/* Se ve en la "Galería de trabajos" del sitio web */}
-          {row.original.isPublishedOnWeb && (
-            <Badge variant="outline" className="text-xs w-fit text-sky-700 dark:text-sky-300">Publicado en web</Badge>
-          )}
         </div>
       )
     },

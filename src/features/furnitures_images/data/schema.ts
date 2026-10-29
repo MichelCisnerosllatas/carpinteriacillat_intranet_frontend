@@ -11,9 +11,6 @@ export const furnitureImageSchema = z.object({
   imageTitle: z.string().nullable(),
   imageAlt: z.string().nullable(),
   order: z.number().nullable(),
-  // Datos web: pie de foto y variante ('before' | 'after' | null = foto normal)
-  caption: z.string().nullable(),
-  variant: z.string().nullable(),
   stateValue: z.number(),
   statusLabel: z.string(),
   createdAt: z.string().nullable(),

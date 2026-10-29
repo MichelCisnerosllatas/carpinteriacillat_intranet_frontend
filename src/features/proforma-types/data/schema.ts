@@ -7,6 +7,7 @@ export const proformaTypeSchema = z.object({
   id: z.number(),
   name: z.string(),
   code: z.string().nullable(),
+  description: z.string().nullable(),
   status: proformaTypeStatusSchema,
   statusLabel: z.string(),
   stateValue: z.number(),

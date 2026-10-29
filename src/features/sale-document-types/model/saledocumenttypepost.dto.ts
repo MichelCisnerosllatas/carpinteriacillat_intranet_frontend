@@ -4,6 +4,7 @@ export type SaleDocumentTypePostRequestDto = {
   name: string
   code?: string
   series: string
+  description?: string | null
   status?: number
 }
 

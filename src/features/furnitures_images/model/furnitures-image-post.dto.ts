@@ -4,9 +4,6 @@ export type FurnitureImagePostRequestDto = {
   furnitureimage_order?: number
   furnitureimage_state?: number
   furnitureimage_created_at?: string
-  // Datos web opcionales (pie de foto y antes/después). Si ambos van null, el backend no guarda nada.
-  furnitureimageweb_caption?: string | null
-  furnitureimageweb_variant?: 'before' | 'after' | null
 }
 
 export type FurnitureImagePostResponseDto = {

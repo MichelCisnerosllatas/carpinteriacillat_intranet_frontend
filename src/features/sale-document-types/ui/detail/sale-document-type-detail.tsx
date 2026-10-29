@@ -43,6 +43,7 @@ export function SaleDocumentTypeDetail({ id }: { id: string }) {
                 {item.code && <p className="text-sm text-muted-foreground">{item.code}</p>}
                 <Badge variant="outline" className="text-xs font-mono">{item.series}</Badge>
               </div>
+              {item.description && <p className="text-sm text-muted-foreground whitespace-pre-line">{item.description}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
             <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/sale-document-types/edit/${item.id}`) }}>

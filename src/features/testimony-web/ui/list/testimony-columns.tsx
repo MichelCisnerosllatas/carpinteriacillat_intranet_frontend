@@ -74,14 +74,14 @@ export const getTestimonyColumns = ({ hideDelete }: TestimonyColumnsOptions = {}
 
   {
     // Trabajo de la galería web al que pertenece la reseña ("—" = reseña general)
-    id: 'furniture',
-    accessorFn: (row) => row.furnitureName ?? '',
+    id: 'webWork',
+    accessorFn: (row) => row.webWorkTitle ?? '',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Trabajo" />,
-    cell: ({ row }) => row.original.furnitureName
+    cell: ({ row }) => row.original.webWorkTitle
       ? (
         <span className="flex max-w-[180px] items-center gap-1 text-xs">
           <Sofa className="size-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate">{row.original.furnitureName}</span>
+          <span className="truncate">{row.original.webWorkTitle}</span>
         </span>
       )
       : <span className="text-xs text-muted-foreground">—</span>,

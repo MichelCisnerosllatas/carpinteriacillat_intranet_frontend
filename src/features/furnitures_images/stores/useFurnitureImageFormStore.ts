@@ -11,12 +11,8 @@ type State = {
   fieldErrors: Record<string, string[]> | null
 }
 
-type BulkCreateItem    = { imageId: number; order: number; caption?: string; variant?: 'before' | 'after' | null }
-type BulkReorderItem   = { furnitureImageId: number; order: number }
-type BulkUpdateWebItem = { furnitureImageId: number; caption: string; variant: 'before' | 'after' | null }
-
-/** Pie de foto vacío → null (el backend borra la fila web si caption y variant quedan null). */
-const captionOrNull = (caption?: string) => (caption && caption.trim() !== '' ? caption.trim() : null)
+type BulkCreateItem  = { imageId: number; order: number }
+type BulkReorderItem = { furnitureImageId: number; order: number }
 
 type Action = {
   create: (params: FurnitureImagePostRequestDto) => Promise<number | null>
@@ -26,8 +22,6 @@ type Action = {
   bulkCreate: (furnitureId: number, items: BulkCreateItem[]) => Promise<boolean>
   bulkReorder: (items: BulkReorderItem[]) => Promise<boolean>
   bulkRemove: (ids: number[]) => Promise<boolean>
-  /** PATCH del pie de foto/variante solo de las fotos ya guardadas que el usuario cambió. */
-  bulkUpdateWeb: (items: BulkUpdateWebItem[]) => Promise<boolean>
   reset: () => void
 }
 
@@ -116,8 +110,6 @@ export const useFurnitureImageFormStore = create<State & Action>((set) => ({
           furnitureimage_order: item.order,
           furnitureimage_state: 1,
           furnitureimage_created_at: formatDatetime(),
-          furnitureimageweb_caption: captionOrNull(item.caption),
-          furnitureimageweb_variant: item.variant ?? null,
         })
       }
       set({ isSubmitting: false })
@@ -126,6 +118,7 @@ export const useFurnitureImageFormStore = create<State & Action>((set) => ({
       set({
         isSubmitting: false,
         error: error?.response?.data?.message ?? error?.message ?? 'Error al guardar imágenes de galería.',
+        fieldErrors: error?.response?.data?.errors ?? null,
       })
       return false
     }
@@ -158,29 +151,6 @@ export const useFurnitureImageFormStore = create<State & Action>((set) => ({
       return true
     } catch (error: any) {
       set({ isSubmitting: false, error: error?.response?.data?.message ?? 'Error al eliminar imágenes de galería.' })
-      return false
-    }
-  },
-
-  bulkUpdateWeb: async (items) => {
-    if (items.length === 0) return true
-    set({ isSubmitting: true, error: null, fieldErrors: null })
-    try {
-      // Una petición por foto: solo se mandan los 2 campos web (no se toca orden ni estado).
-      for (const item of items) {
-        await furnitureImagesService.patch(item.furnitureImageId, {
-          furnitureimageweb_caption: captionOrNull(item.caption),
-          furnitureimageweb_variant: item.variant,
-        })
-      }
-      set({ isSubmitting: false })
-      return true
-    } catch (error: any) {
-      set({
-        isSubmitting: false,
-        error: error?.response?.data?.message ?? error?.message ?? 'Error al guardar los pies de foto.',
-        fieldErrors: error?.response?.data?.errors ?? null,
-      })
       return false
     }
   },

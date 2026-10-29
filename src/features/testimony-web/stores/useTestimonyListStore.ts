@@ -30,7 +30,7 @@ type Action = {
   reset: () => void
 }
 
-const defaultFilters: TestimonyListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section: undefined, id_furniture: undefined }
+const defaultFilters: TestimonyListRequestDto = { page: 1, per_page: 10, search: '', state: undefined, id_section: undefined, id_web_work: undefined, has_web_work: undefined }
 
 const mapFromApi = (item: TestimonyApiItem): Testimony => {
   // Incluye "Pendiente" (2): reseñas enviadas desde la web que esperan aprobación
@@ -41,8 +41,8 @@ const mapFromApi = (item: TestimonyApiItem): Testimony => {
     sectionName: item.section?.section_name,
     idImage: item.image?.id_image ?? item.id_image,
     imageUrl: item.image?.image_patch ? (buildImageUrl(item.image.image_patch) ?? undefined) : undefined,
-    idFurniture: item.furniture?.id_furniture ?? item.id_furniture ?? null,
-    furnitureName: item.furniture?.furniture_name ?? null,
+    idWebWork: item.web_work?.id_web_work ?? item.id_web_work ?? null,
+    webWorkTitle: item.web_work?.webwork_title ?? null,
     name: item.testimony_name,
     role: item.testimony_role,
     city: item.testimony_city,

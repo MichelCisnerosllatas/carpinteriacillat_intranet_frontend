@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { SectionDisplaySettingsSchema } from '../model/sectionget.dto'
 
 export const sectionStatusSchema = z.union([z.literal('active'), z.literal('inactive')])
 export type SectionStatus = z.infer<typeof sectionStatusSchema>
@@ -24,14 +25,12 @@ export const sectionSchema = z.object({
    * `SectionDetailButtonsTab`/`SectionDetailItemsTab`). Dos secciones del mismo tipo pueden
    * tener valores distintos acá — no es config compartida por tipo.
    */
-  /** Visibilidad de title/subtitle/description en el sitio público — independiente de si tienen texto. */
-  showTitle: z.boolean(),
-  showSubtitle: z.boolean(),
-  showDescription: z.boolean(),
   tabInfo: z.boolean(),
   tabImages: z.boolean(),
   tabButtons: z.boolean(),
   tabItems: z.boolean(),
+  // Pestaña "Trabajos" (web_works) — solo «Galería» y «Restauración» (ver section-works.config.ts)
+  tabWorks: z.boolean(),
   imagesAdd: z.boolean(),
   imagesReorder: z.boolean(),
   imagesDelete: z.boolean(),
@@ -41,10 +40,13 @@ export const sectionSchema = z.object({
   itemsAdd: z.boolean(),
   itemsReorder: z.boolean(),
   itemsDelete: z.boolean(),
-  /** Elementos de las tarjetas { clave: visible } (resuelto por el backend). {} si el tipo no tiene catálogo. */
-  cardSettings: z.record(z.string(), z.boolean()),
-  /** Catálogo de elementos de las tarjetas (viene del backend, config/section_card_settings.php). [] si no tiene. */
-  cardSettingsSchema: z.array(z.object({ key: z.string(), label: z.string(), default: z.boolean() })),
+  /**
+   * Apariencia: qué muestra la web de esta sección (`section_display_setting`, ver pestaña
+   * "Apariencia" de Configuración). Valores ya resueltos por el backend { clave: valor }.
+   */
+  displaySettings: z.record(z.string(), z.unknown()),
+  /** Catálogo de la apariencia (lo manda el backend, config/section_display/*.php). Tal cual llega de la API. */
+  displaySettingsSchema: z.custom<SectionDisplaySettingsSchema>(),
   typesectionStateValue: z.number().nullable(),
   typesectionStateLabel: z.string().nullable(),
   typesectionStateBadge: z.string().nullable(),

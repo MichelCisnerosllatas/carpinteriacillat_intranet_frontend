@@ -39,6 +39,7 @@ const mapFromApi = (item: SaleDocumentTypeApiItem): SaleDocumentType => {
     name: item.name,
     code: item.code,
     series: item.series,
+    description: item.description ?? null,
     status: item.status === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.status,

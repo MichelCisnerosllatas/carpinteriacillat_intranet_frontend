@@ -4,13 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { Globe, Images, Loader2, Sofa } from 'lucide-react'
+import { Images, Loader2, Sofa } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
-import { Switch } from '@/shared/ui/switch'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
@@ -23,22 +22,13 @@ import { AlertError } from '@/widgets/alerts_components'
 import { CategorySelect } from '@/features/categories/ui/category-select'
 import { TypeColorSelect } from '@/features/typecolors/ui/typecolor-select'
 import { TypeWoodSelect } from '@/features/typewoods/ui/typewood-select'
-import { FurnitureGalleryManager, type GalleryEntry, type PendingGalleryItem, type ReorderedGalleryItem, type WebChangedGalleryItem } from '@/features/furnitures_images/ui/gallery/furniture-gallery-manager'
+import { FurnitureGalleryManager, type GalleryEntry, type PendingGalleryItem, type ReorderedGalleryItem } from '@/features/furnitures_images/ui/gallery/furniture-gallery-manager'
 import { useFurnitureImageFormStore } from '@/features/furnitures_images/stores/useFurnitureImageFormStore'
-import { toFurnitureImageVariant } from '@/features/furnitures_images/data/data'
 import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
 import { useFurnitureFormStore } from '../../stores/useFurnitureFormStore'
-import {
-  furnitureFormSchema,
-  furnitureWebToFormValues,
-  furnitureWebToRequest,
-  type FurnitureFormValues,
-} from '../../data/furniture-form.schema'
-import { FurnitureWebCard } from './furniture-web-card'
-import { FurnitureCategoryCardCheck } from './furniture-category-card-check'
-import { FurnitureRestorationCardCheck } from './furniture-restoration-card-check'
+import { furnitureFormSchema, type FurnitureFormValues } from '../../data/furniture-form.schema'
+import { FurnitureWebWorksCard } from '../furniture-web-works-card'
 
-// El schema vive en data/furniture-form.schema.ts porque también lo usa FurnitureWebCard.
 const schema = furnitureFormSchema
 type FormValues = FurnitureFormValues
 
@@ -46,7 +36,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
   const router   = useRouter()
   const { currentItem, items, meta, isError: isLoadError, loadById, setCurrentItem } = useFurnitureListStore()
   const { isSubmitting, error, fieldErrors, create, update, reset } = useFurnitureFormStore()
-  const { bulkCreate, bulkReorder, bulkRemove, bulkUpdateWeb, error: galleryError, fieldErrors: galleryFieldErrors, isSubmitting: isGallerySubmitting } = useFurnitureImageFormStore()
+  const { bulkCreate, bulkReorder, bulkRemove, error: galleryError, fieldErrors: galleryFieldErrors, isSubmitting: isGallerySubmitting } = useFurnitureImageFormStore()
   const isBusy   = isSubmitting || isGallerySubmitting
   const isEdit   = mode === 'edit'
   const resolved = currentItem ?? (id ? items.find((i) => i.id === Number(id)) ?? null : null)
@@ -55,7 +45,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
   const pendingGalleryItemsRef   = useRef<PendingGalleryItem[]>([])
   const removedGalleryIdsRef     = useRef<number[]>([])
   const reorderedGalleryItemsRef = useRef<ReorderedGalleryItem[]>([])
-  const webChangedGalleryItemsRef = useRef<WebChangedGalleryItem[]>([])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -64,19 +53,12 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
       furniture_largo: null, furniture_ancho: null,
       furniture_state: 1, id_category: undefined,
       id_typecolor: undefined, id_typewood: undefined, id_image: null,
-      web: furnitureWebToFormValues(null),
-      show_cover_on_category_card: false,
-      show_on_restoration: false,
     },
   })
 
-  // Si el check "Publicar en la galería web" está marcado se muestra la tarjeta con los datos web
-  const isPublishing = form.watch('web.publish') ?? false
   // Portada = la Foto 1 de la galería (la informa FurnitureGalleryManager); al guardar se manda como id_image
   const [coverImageId, setCoverImageId] = useState<number | null>(null)
-  const hasCover = coverImageId != null
-  // Al editar, hasta que llega el mueble no se sabe si se publica (y por tanto qué layout usar):
-  // se muestra un skeleton en vez del formulario vacío.
+  // Al editar, hasta que llega el mueble se muestra un skeleton en vez del formulario vacío.
   const isLoadingItem = isEdit && !isLoadError && currentItem?.id !== Number(id)
 
   // Always fetch fresh data when opening edit form
@@ -99,12 +81,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
         id_typecolor:          resolved.idTypecolor,
         id_typewood:           resolved.idTypewood,
         id_image:              resolved.idImage,
-        // publish = true solo si ya está visible en la galería (state 1)
-        web:                   furnitureWebToFormValues(resolved.web),
-        // Atajo del carrusel: ¿su portada ya está en la tarjeta de su categoría?
-        show_cover_on_category_card: resolved.categoryCard?.showCover ?? false,
-        // Atajo de Restauración: ¿ya tiene su tarjeta visible en «Restauración»?
-        show_on_restoration: resolved.restorationCard?.show ?? false,
       })
     }
   }, [isEdit, resolved?.id])
@@ -118,8 +94,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
     imageId:           g.imageId,
     imageUrl:          g.imageUrl,
     imageName:         g.imageName,
-    caption:           g.caption ?? '',
-    variant:           toFurnitureImageVariant(g.variant),
   }))
   // La portada guardada (id_image) va siempre como Foto 1, así lo que se ve coincide con el sitio:
   // si ya está en la galería se sube al primer lugar; si no (muebles de antes, cuando la portada
@@ -130,7 +104,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
     : coverIdx >= 0 ? [savedGallery[coverIdx], ...savedGallery.filter((_, i) => i !== coverIdx)]
     : [{
         localKey: 'init-cover', imageId: resolved.idImage, imageUrl: resolved.imageUrl,
-        imageName: resolved.imageName, caption: '', variant: null,
+        imageName: resolved.imageName,
       }, ...savedGallery]
 
   const onSubmit = async (values: FormValues) => {
@@ -150,15 +124,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
 
     // Título público vacío → null (la web usará el nombre del mueble)
     const furnitureTitle = values.furniture_title?.trim() || null
-    // Objeto web: { publish, ...campos } con los textos vacíos convertidos a null
-    const webPayload = values.web ? furnitureWebToRequest(values.web) : undefined
-    // Atajo del carrusel: al editar solo se manda si el backend ya informó la tarjeta o si se tocó el check
-    // (así no se quita una foto por accidente cuando el dato no vino). Al crear se manda siempre.
-    const sendCoverOnCard = !isEdit || resolved?.categoryCard != null || form.getFieldState('show_cover_on_category_card').isDirty
-    const coverOnCard = sendCoverOnCard ? values.show_cover_on_category_card : undefined
-    // Atajo de Restauración: mismo criterio, se manda solo si el backend informó la tarjeta o si se tocó el check
-    const sendRestoration = resolved?.restorationCard != null || form.getFieldState('show_on_restoration').isDirty
-    const showOnRestoration = sendRestoration ? values.show_on_restoration : undefined
 
     if (isEdit) {
       const ok = await update(resolved!.id, {
@@ -173,23 +138,15 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
         id_typewood:           values.id_typewood,
         id_image:              coverImageId,
         furniture_updated_at:  formatDatetime(),
-        web:                   webPayload,
-        show_cover_on_category_card: coverOnCard,
-        show_on_restoration:   showOnRestoration,
       })
       if (ok) {
         const pending    = pendingGalleryItemsRef.current
         const removed    = removedGalleryIdsRef.current
         const reordered  = reorderedGalleryItemsRef.current
-        // Fotos ya guardadas a las que se les cambió el pie de foto o la variante
-        // (sin las que se acaban de quitar, porque se van a borrar)
-        const webChanged = webChangedGalleryItemsRef.current.filter((i) => !removed.includes(i.furnitureImageId))
-        console.log('[FurnitureForm] gallery submit →', { pending, removed, reordered, webChanged })
 
-        if (pending.length > 0) {
-          const ok2 = await bulkCreate(resolved!.id, pending)
-          if (!ok2) { toastError('Error al agregar imágenes de galería'); return }
-        }
+        // Orden obligatorio: eliminar → reordenar → crear. El backend exige furnitureimage_order único
+        // por mueble; si se crea primero, la foto nueva choca con el orden de una fila que aún no se
+        // borró o que todavía no se movió a su posición final.
         if (removed.length > 0) {
           const ok3 = await bulkRemove(removed)
           if (!ok3) { toastError('Error al eliminar imágenes de galería'); return }
@@ -198,9 +155,9 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
           const ok4 = await bulkReorder(reordered)
           if (!ok4) { toastError('Error al guardar el orden de la galería'); return }
         }
-        if (webChanged.length > 0) {
-          const ok5 = await bulkUpdateWeb(webChanged)
-          if (!ok5) { toastError('Error al guardar los pies de foto de la galería'); return }
+        if (pending.length > 0) {
+          const ok2 = await bulkCreate(resolved!.id, pending)
+          if (!ok2) { toastError('Error al agregar imágenes de galería'); return }
         }
         await swalSuccess('Actualizado', values.furniture_name)
         router.push('/furnitures')
@@ -221,9 +178,6 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
         id_typewood:           values.id_typewood,
         id_image:              coverImageId,
         furniture_created_at:  formatDatetime(),
-        web:                   webPayload,
-        show_cover_on_category_card: coverOnCard,
-        show_on_restoration:   showOnRestoration,
       })
       if (createdId !== null) {
         const pending = pendingGalleryItemsRef.current
@@ -243,14 +197,15 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
 
   return (
     <Form {...form}>
+      {/* Los refs de la galería solo se leen dentro de onSubmit (al enviar), no durante el render */}
+      {/* eslint-disable-next-line react-hooks/refs */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* ── Row 1: Basic info (izq.) + Specs / Galería web apilados (der.) en desktop ──
-            Solo hay 2 columnas si se publica en la web: sin la tarjeta "Galería web", la columna
+            Solo hay 2 columnas al editar (con la tarjeta "En la galería web"): al crear, la columna
             derecha quedaría con "Especificaciones" sola y un hueco debajo; en ese caso los dos
             cards van a todo el ancho, uno debajo del otro.
-            `items-start`: cada columna mide solo lo que ocupa su contenido (sin esto el grid
-            estiraba "Especificaciones" a la altura de "Información básica"). */}
-        <div className={cn('grid grid-cols-1 items-start gap-4', isPublishing && 'lg:grid-cols-2')}>
+            `items-start`: cada columna mide solo lo que ocupa su contenido. */}
+        <div className={cn('grid grid-cols-1 items-start gap-4', isEdit && resolved && 'lg:grid-cols-2')}>
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Sofa className="size-4" />Información básica</CardTitle></CardHeader>
             <CardContent className="@container flex flex-col gap-4">
@@ -407,8 +362,8 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
               </CardContent>
             </Card>
 
-            {/* ── Datos de la galería web: solo si se marcó "Publicar en la galería web" ── */}
-            {isPublishing && <FurnitureWebCard form={form} disabled={isBusy} />}
+            {/* ── Trabajos de la galería web que usan este mueble (solo al editar) ── */}
+            {isEdit && resolved && <FurnitureWebWorksCard furnitureId={resolved.id} webWorks={resolved.webWorks} />}
           </div>
         </div>
 
@@ -422,8 +377,7 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              La <span className="font-medium text-foreground">Foto 1 es la portada</span> (la tarjeta del trabajo en la galería web): arrastra otra foto al primer lugar para cambiarla.
-              En la web se muestran en este orden. Marca &quot;Antes&quot; y &quot;Después&quot; para el comparador de restauraciones.
+              La <span className="font-medium text-foreground">Foto 1 es la portada</span>: arrastra otra foto al primer lugar para cambiarla.
             </p>
             <FurnitureGalleryManager
               key={resolved?.id ?? 'new'}
@@ -431,62 +385,11 @@ export function FurnitureForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
               onPendingItemsChange={(items) => { pendingGalleryItemsRef.current = items }}
               onRemovedIdsChange={(ids) => { removedGalleryIdsRef.current = ids }}
               onReorderedItemsChange={(items) => { reorderedGalleryItemsRef.current = items }}
-              onWebChangedItemsChange={(items) => { webChangedGalleryItemsRef.current = items }}
               onCoverChange={setCoverImageId}
               disabled={isBusy}
             />
           </CardContent>
         </Card>
-
-        {/* ── Al final, primero de los checks: visible en la "Galería de trabajos" del sitio ── */}
-        <FormField control={form.control} name="web.publish" render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between gap-3 rounded-lg border p-3">
-            <div className="flex flex-col gap-1">
-              <FormLabel className="flex items-center gap-1.5"><Globe className="size-4 text-sky-600 dark:text-sky-400" />Visible en la web</FormLabel>
-              <FormDescription>
-                Muestra este mueble en la "Galería de trabajos" del sitio. Si lo apagas se oculta, pero sus datos web se conservan.
-              </FormDescription>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value ?? false}
-                onCheckedChange={(checked) => field.onChange(checked)}
-                disabled={isBusy}
-              />
-            </FormControl>
-          </FormItem>
-        )} />
-
-        {/* ── Atajo al final: portada en la tarjeta de su categoría (independiente de "Visible en la web") ── */}
-        <FormField control={form.control} name="show_cover_on_category_card" render={({ field }) => (
-          <FormItem>
-            <FurnitureCategoryCardCheck
-              checked={field.value}
-              onCheckedChange={field.onChange}
-              idCategory={form.watch('id_category') ?? null}
-              fallbackCategoryName={resolved?.categoryCard?.categoryName ?? resolved?.categoryName ?? null}
-              idSection={resolved?.categoryCard?.idSection}
-              hasCover={hasCover}
-              disabled={isBusy}
-            />
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        {/* ── Atajo al final: tarjeta en «Restauración» (necesita fotos Antes/Después guardadas en su galería) ── */}
-        <FormField control={form.control} name="show_on_restoration" render={({ field }) => (
-          <FormItem>
-            <FurnitureRestorationCardCheck
-              checked={field.value}
-              onCheckedChange={field.onChange}
-              idSection={resolved?.restorationCard?.idSection}
-              // Lo informa el backend con la galería YA guardada (al crear todavía no hay fotos guardadas)
-              hasBeforeAfter={resolved?.restorationCard?.hasBeforeAfter ?? false}
-              disabled={isBusy}
-            />
-            <FormMessage />
-          </FormItem>
-        )} />
 
         <Separator />
         {error && (

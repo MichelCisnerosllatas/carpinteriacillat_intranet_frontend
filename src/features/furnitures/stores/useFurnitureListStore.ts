@@ -6,8 +6,7 @@ import type { FurnitureListRequestDto } from '../model/furnitureget.dto'
 import type { FurnitureJoinApiItem } from '../model/furniture-api-item.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
-import type { FurnitureWebApiItem } from '../model/furniture-web.dto'
-import type { Furniture, FurnitureWeb } from '../data/schema'
+import type { Furniture } from '../data/schema'
 import { buildImageUrl } from '@/shared/lib/images'
 
 type State = {
@@ -35,29 +34,8 @@ type Action = {
 
 const defaultFilters: FurnitureListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
-// Convierte el objeto `web` del backend (nombres largos) a uno simple para la UI.
-const mapWebFromApi = (web: FurnitureWebApiItem | null | undefined): FurnitureWeb | null => {
-  if (!web) return null
-  return {
-    id: web.id_furniture_web,
-    title: web.furnitureweb_title,
-    style: web.furnitureweb_style,
-    measures: web.furnitureweb_measures,
-    finish: web.furnitureweb_finish,
-    buildTime: web.furnitureweb_build_time,
-    location: web.furnitureweb_location,
-    // El backend puede mandar "2026-05-10" o con hora; el input date solo entiende YYYY-MM-DD.
-    deliveredAt: web.furnitureweb_delivered_at ? web.furnitureweb_delivered_at.slice(0, 10) : null,
-    // Los decimal de Laravel pueden llegar como string, por eso Number().
-    priceApprox: web.furnitureweb_price_approx != null ? Number(web.furnitureweb_price_approx) : null,
-    order: web.furnitureweb_order,
-    state: web.furnitureweb_state,
-  }
-}
-
 const mapFromApi = (item: FurnitureJoinApiItem): Furniture => {
   const stateOpt = getStateOption(item.furniture_state)
-  const web = mapWebFromApi(item.web)
   return {
     id: item.id_furniture,
     name: item.furniture_name,
@@ -81,19 +59,13 @@ const mapFromApi = (item: FurnitureJoinApiItem): Furniture => {
       imageId: g.image?.id_image ?? 0,
       imageUrl: buildImageUrl(g.image?.image_patch ?? null),
       imageName: g.image?.image_name ?? null,
-      caption: g.web?.furnitureimageweb_caption ?? null,
-      variant: g.web?.furnitureimageweb_variant ?? null,
     })),
-    web,
-    isPublishedOnWeb: web?.state === 1,
-    // Portada en la tarjeta de su categoría (carrusel «Muebles a medida»)
-    categoryCard: item.category_card
-      ? { showCover: item.category_card.show_cover, idSection: item.category_card.id_section, categoryName: item.category_card.category_name }
-      : null,
-    // Tarjeta en «Restauración» (comparador antes/después)
-    restorationCard: item.restoration_card
-      ? { show: item.restoration_card.show, idSection: item.restoration_card.id_section, hasBeforeAfter: item.restoration_card.has_before_after }
-      : null,
+    webWorks: (item.web_works ?? []).map((w) => ({
+      id: w.id_web_work,
+      title: w.webwork_title,
+      state: w.webwork_state,
+      typeworkKey: w.typework_key ?? null,
+    })),
     status: item.furniture_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.furniture_state,

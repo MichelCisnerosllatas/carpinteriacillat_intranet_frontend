@@ -20,8 +20,10 @@ import { SectionDetailImagesTab } from './tabs/images/section-detail-images-tab'
 import { SectionDetailButtonsTab } from './tabs/buttons/section-detail-buttons-tab'
 import { SectionDetailItemsTab } from './tabs/items/section-detail-items-tab'
 import { SectionDetailTestimoniesTab } from './tabs/testimonies/section-detail-testimonies-tab'
+import { SectionDetailWorksTab } from './tabs/works/section-detail-works-tab'
+import { getSectionWorksConfig } from './tabs/works/section-works.config'
 
-const TABS = ['info', 'images', 'buttons', 'items', 'testimonies'] as const
+const TABS = ['info', 'works', 'images', 'buttons', 'items', 'testimonies'] as const
 
 /**
  * Detalle de Section — cabecera de solo lectura + Tabs. Cada tab es su propio componente bajo
@@ -78,14 +80,18 @@ export function SectionDetail({ id }: { id: string }) {
   // testimonios no son un concepto genérico de cualquier sección, solo existen para la única
   // sección tipo `testimonial_carousel` de todo el sitio (ver TestimonyWebSeeder).
   const showTestimonies = item.typesectionKey === 'testimonial_carousel'
+  // «Galería» / «Restauración»: su contenido son trabajos (`web_works`). El flag dice SI se muestra
+  // la pestaña; la config del tipo de sección dice QUÉ trabajos lista (ver section-works.config.ts).
+  const worksConfig = getSectionWorksConfig(item.typesectionKey)
+  const showWorks = item.tabWorks && worksConfig !== null
   const visibility: Record<string, boolean> = {
-    info: showInfo, images: showImages, buttons: showButtons, items: showItems, testimonies: showTestimonies,
+    info: showInfo, works: showWorks, images: showImages, buttons: showButtons, items: showItems, testimonies: showTestimonies,
   }
   const effectiveTab = visibility[activeTab] ? activeTab : (TABS.find((t) => visibility[t]) ?? activeTab)
 
   // Secciones especiales con pestaña de items propia (ver GROUPED_SECTION_CONFIG[...].itemsTab):
-  //   carrusel «Muebles a medida» → "Categorías" · «Restauración» → "Trabajos".
-  // Esa pestaña va ANTES de Imágenes (Info general | Categorías/Trabajos | Imágenes).
+  //   carrusel «Muebles a medida» → "Categorías".
+  // Esa pestaña va ANTES de Imágenes (Info general | Categorías | Imágenes).
   // El resto (incluido el hero de Servicios) sigue con "Items" en su lugar de siempre.
   const groupedConfig = getGroupedSectionConfig(item.typesectionKey)
   const specialItemsTab = groupedConfig?.itemsTab ?? null
@@ -105,15 +111,18 @@ export function SectionDetail({ id }: { id: string }) {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Header ── */}
-      <div className="overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-background to-background">
-        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm sm:size-14">
-              <LayoutGrid className="size-6 sm:size-7" />
+      {/* Responsive por el ancho del CONTENEDOR (`@container`), no de la pantalla: con el panel de
+          vista previa abierto el contenido es mucho más angosto que la ventana, y con `sm:` los
+          botones se quedaban a la derecha aplastando el texto en una columna mínima. */}
+      <div className="@container overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="flex flex-col gap-4 p-4 @md:p-6 @3xl:flex-row @3xl:items-start @3xl:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-3 @md:gap-4">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm @md:size-14">
+              <LayoutGrid className="size-6 @md:size-7" />
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-2">
               <div>
-                <h2 className="text-xl font-bold leading-tight sm:text-2xl">{item.name}</h2>
+                <h2 className="break-words text-xl font-bold leading-tight @md:text-2xl">{item.name}</h2>
                 {item.title && <p className="text-sm text-muted-foreground">{item.title}</p>}
                 {item.subtitle && <p className="text-xs text-muted-foreground">{item.subtitle}</p>}
               </div>
@@ -128,13 +137,15 @@ export function SectionDetail({ id }: { id: string }) {
               </div>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          {/* Angosto: debajo del texto, en una fila que puede partirse. Ancho: a la derecha. */}
+          <div className="flex flex-wrap items-center gap-2 @3xl:shrink-0 @3xl:flex-nowrap">
             <Button
               variant="outline"
               size="sm"
+              title="Configuración"
               onClick={() => { NProgress.start(); router.push(`/sections/settings/${item.id}`) }}
             >
-              <Settings className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Configuración</span>
+              <Settings className="size-4 @sm:mr-1.5" /><span className="hidden @sm:inline">Configuración</span>
             </Button>
             <Button
               variant="outline"
@@ -168,7 +179,18 @@ export function SectionDetail({ id }: { id: string }) {
             </Tooltip>
           )}
 
-          {/* Carrusel / Restauración: "Categorías" / "Trabajos" va antes de "Imágenes" */}
+          {showWorks && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex flex-1">
+                  <TabsTrigger value="works" className="w-full">Trabajos</TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{worksConfig?.title ?? 'Trabajos'} que muestra esta sección</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Carrusel: "Categorías" va antes de "Imágenes" */}
           {specialItemsTab && itemsTabTrigger}
 
           {showImages && (
@@ -213,6 +235,12 @@ export function SectionDetail({ id }: { id: string }) {
           </TabsContent>
         )}
 
+        {showWorks && worksConfig && (
+          <TabsContent value="works" className="flex flex-col gap-3">
+            <SectionDetailWorksTab config={worksConfig} sectionId={item.id} />
+          </TabsContent>
+        )}
+
         {showImages && (
           <TabsContent value="images" className="flex flex-col gap-3">
             <SectionDetailImagesTab
@@ -240,7 +268,7 @@ export function SectionDetail({ id }: { id: string }) {
           <TabsContent value="items" className="flex flex-col gap-3">
             <SectionDetailItemsTab
               sectionId={item.id}
-              // Carrusel / Restauración: los items son tarjetas (categorías / trabajos)
+              // Carrusel: los items son tarjetas (categorías)
               title={specialItemsTab?.title}
               addLabel={specialItemsTab ? groupedConfig?.addItemLabel : undefined}
               canAdd={item.itemsAdd}

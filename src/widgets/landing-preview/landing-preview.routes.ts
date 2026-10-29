@@ -14,6 +14,7 @@ import type { PreviewFocus } from './landing-preview.types'
 export const LANDING_PREVIEW_ROUTE_PATTERNS: RegExp[] = [
   /^\/navigations(\/|$)/,
   /^\/footer(\/|$)/,
+  /^\/web-alerts(\/|$)/,
   /^\/contact-messages(\/|$)/,
   /^\/sections(\/|$)/,
   /^\/section-buttons(\/|$)/,
@@ -32,11 +33,14 @@ export function isLandingPreviewRoute(pathname: string): boolean {
 // donde ninguna página manda un PreviewPayload (ni form ni detalle) — si se agregara una ruta
 // que sí lo manda, el foco (que el widget postea DESPUÉS que la página, ver
 // use-landing-preview-route-focus.ts) pisaría ese payload. Por eso /footer no está acá: su
-// form ya lleva el preview al footer solo.
+// form ya lleva el preview al footer solo. Tampoco /sections/settings/<id>: la pestaña
+// "Apariencia" manda sus propios focus (Listado | Detalle) y payloads.
 const LANDING_PREVIEW_ROUTE_FOCUS: { pattern: RegExp; focus: PreviewFocus }[] = [
   { pattern: /^\/navigations\/?$/, focus: { navigationUrl: '/', label: 'Navegaciones' } },
   { pattern: /^\/navigations\/reorder\/?$/, focus: { navigationUrl: '/', label: 'Navegaciones' } },
   { pattern: /^\/contact-messages(\/|$)/, focus: { navigationUrl: '/', anchorId: 'contacto', label: 'Contacto' } },
+  // Alertas del sitio: las barras salen arriba de todo en cualquier página → se muestra el inicio, arriba.
+  { pattern: /^\/web-alerts(\/|$)/, focus: { navigationUrl: '/', label: 'Alertas del sitio' } },
 ]
 
 export function getLandingPreviewRouteFocus(pathname: string): PreviewFocus | null {

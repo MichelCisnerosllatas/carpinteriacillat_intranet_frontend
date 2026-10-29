@@ -18,9 +18,7 @@
  */
 
 // Se importa directo del archivo de constantes (no del index de grouped) para no cargar componentes aquí.
-import {
-  CATEGORY_COVERFLOW_TYPE_KEY, RESTORATION_COMPARE_TYPE_KEY, SERVICE_SHOWCASE_TYPE_KEY,
-} from '@/features/sectionimages/grouped/special-sections.constants'
+import { CATEGORY_COVERFLOW_TYPE_KEY, SERVICE_SHOWCASE_TYPE_KEY } from '@/features/sectionimages/grouped/special-sections.constants'
 
 export const ITEM_TYPES_BY_SECTION: Record<string, string[]> = {
   // Hero acordeón de Servicios. Ya lo resuelve el modo especial (ui/form/showcase);
@@ -30,10 +28,6 @@ export const ITEM_TYPES_BY_SECTION: Record<string, string[]> = {
   // Carrusel «Muebles a medida» de Servicios: cada item es una categoría (tarjeta).
   // Ya lo resuelve el modo especial (ui/form/category); está acá para fijar el tipo.
   [CATEGORY_COVERFLOW_TYPE_KEY]: ['category'],
-
-  // «Restauración» de Servicios ("02"): cada item es un trabajo (mueble con fotos antes/después).
-  // Ya lo resuelve el modo especial (ui/form/restoration); está acá para fijar el tipo.
-  [RESTORATION_COMPARE_TYPE_KEY]: ['restoration'],
 
   // Cinta de palabras animada de Servicios: cada item es una palabra.
   marquee: ['word'],

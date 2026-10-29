@@ -33,14 +33,10 @@ import { useSectionItemListStore } from '../../stores/useSectionItemListStore'
 import { useSectionItemFormStore } from '../../stores/useSectionItemFormStore'
 // Secciones especiales (ver features/sectionimages/grouped/README.md):
 //   hero de Servicios → campos propios en ./showcase · carrusel de categorías → ./category
-//   «Restauración» → ./restoration
 import { ShowcaseItemFields } from './showcase/showcase-item-fields'
 import { useShowcaseItemMode, SHOWCASE_ITEM_TYPE } from './showcase/use-showcase-item-mode'
 import { CategoryItemFields } from './category/category-item-fields'
-import { RestorationItemFields } from './restoration/restoration-item-fields'
-import {
-  CATEGORY_ITEM_TYPE, getCategoryIdFromKey, RESTORATION_ITEM_TYPE,
-} from '@/features/sectionimages/grouped'
+import { CATEGORY_ITEM_TYPE, getCategoryIdFromKey } from '@/features/sectionimages/grouped'
 
 /** Sentinel para "sin tipo" — Radix <Select> no admite value="" en <SelectItem>. */
 const NO_TYPE = '__none__'
@@ -145,13 +141,12 @@ export function SectionItemForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
   // ¿La sección elegida es especial? Ahí el formulario solo muestra lo que la web usa:
   //   isShowcase          → hero de Servicios (modo "Servicio")
   //   isCategoryCoverflow → carrusel «Muebles a medida» (modo "Categoría")
-  //   isRestorationCompare → «Restauración» (modo "Trabajo")
   const watchedIdSection = form.watch('id_section')
   const {
-    isShowcase, isCategoryCoverflow, isRestorationCompare, isChecking: isCheckingSection, typeKey: sectionTypeKey,
+    isShowcase, isCategoryCoverflow, isChecking: isCheckingSection, typeKey: sectionTypeKey,
   } = useShowcaseItemMode(watchedIdSection)
   // Modos especiales: el formulario va a todo el ancho
-  const isSpecialMode = isShowcase || isCategoryCoverflow || isRestorationCompare
+  const isSpecialMode = isShowcase || isCategoryCoverflow
 
   // Tipos de item que acepta la sección en la web (ver data/item-types-by-section.ts):
   //   fixedType    → la sección usa UN solo tipo: se fija y no se muestra el select.
@@ -192,11 +187,10 @@ export function SectionItemForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
     }
   }, [isSpecialMode, isCheckingSection, sectionTypeKey, isEdit, resolved?.id])
 
-  /** Tipo a guardar: hero 'showcase'; carrusel 'category'; Restauración 'restoration'; en el resto, el elegido en el select. */
+  /** Tipo a guardar: hero 'showcase'; carrusel 'category'; en el resto, el elegido en el select. */
   const getItemType = (values: FormValues) => {
     if (isShowcase) return SHOWCASE_ITEM_TYPE
     if (isCategoryCoverflow) return CATEGORY_ITEM_TYPE
-    if (isRestorationCompare) return RESTORATION_ITEM_TYPE
     return values.sectionitem_type && values.sectionitem_type !== NO_TYPE ? values.sectionitem_type : undefined
   }
 
@@ -248,12 +242,6 @@ export function SectionItemForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
     // Carrusel de categorías: hay que elegir la categoría (su clave lleva el id)
     if (isCategoryCoverflow && getCategoryIdFromKey(values.sectionitem_key) == null) {
       form.setError('sectionitem_key', { message: 'Elige una categoría.' })
-      return
-    }
-    // Restauración: el nombre del trabajo es obligatorio. El mueble relacionado es opcional
-    // (sin mueble la clave va vacía → el backend la guarda null).
-    if (isRestorationCompare && !values.sectionitem_title?.trim()) {
-      form.setError('sectionitem_title', { message: 'Escribe el nombre del trabajo.' })
       return
     }
 
@@ -346,15 +334,6 @@ export function SectionItemForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
         ) : isCategoryCoverflow ? (
           // Sección especial: carrusel «Muebles a medida» (ver ./category)
           <CategoryItemFields
-            form={form}
-            sectionField={sectionField}
-            isEdit={isEdit}
-            idSection={watchedIdSection}
-            idSectionItem={isEdit ? resolved?.id : null}
-          />
-        ) : isRestorationCompare ? (
-          // Sección especial: «Restauración» (ver ./restoration)
-          <RestorationItemFields
             form={form}
             sectionField={sectionField}
             isEdit={isEdit}

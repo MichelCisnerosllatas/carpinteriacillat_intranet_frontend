@@ -6,13 +6,11 @@ export type SectionPutRequestDto = {
   section_content?: string
   section_variant?: string
   /** Config técnica de esta sección (`section_web_setting`, 1 a 1) — ver `section-settings-form.tsx`. */
-  show_title?: boolean
-  show_subtitle?: boolean
-  show_description?: boolean
   tab_info?: boolean
   tab_images?: boolean
   tab_buttons?: boolean
   tab_items?: boolean
+  tab_works?: boolean
   images_add?: boolean
   images_reorder?: boolean
   images_delete?: boolean
@@ -23,10 +21,11 @@ export type SectionPutRequestDto = {
   items_reorder?: boolean
   items_delete?: boolean
   /**
-   * Elementos de las tarjetas { "<clave>": true|false } — solo claves del catálogo del tipo de
-   * sección (el backend responde 422 si llega otra). Se mezcla con lo ya guardado.
+   * Apariencia (`section_display_setting`) { "<clave>": valor | null } — solo claves del catálogo
+   * del tipo de sección (el backend responde 422 si llega otra). Se MEZCLA con lo guardado:
+   * `null` en una clave = volver a su valor por defecto; `display_settings: null` = todo por defecto.
    */
-  card_settings?: Record<string, boolean>
+  display_settings?: Record<string, unknown> | null
   section_state: number
   id_type_section: number
   id_navigation: number

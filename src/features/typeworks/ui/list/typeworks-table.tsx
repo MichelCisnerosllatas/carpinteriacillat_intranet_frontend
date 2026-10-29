@@ -1,0 +1,265 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type PaginationState, type SortingState, type VisibilityState,
+  flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
+} from '@tanstack/react-table'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { DataTablePagination } from '@/shared/ui/data-table/pagination'
+import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { useTypeWorkListStore } from '../../stores/useTypeWorkListStore'
+import { useTypeWorkDeleteStore } from '../../stores/useTypeWorkDeleteStore'
+import { typeworksColumns } from './typeworks-columns'
+import { TypeWorkStatsBar } from './typework-stats-bar'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+
+export function TypeWorksTable() {
+  const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
+    useTypeWorkListStore()
+  const { bulkToggleState, bulkDeleteItems } = useTypeWorkDeleteStore()
+
+  const [rowSelection, setRowSelection]         = useState({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [sorting, setSorting]                   = useState<SortingState>([])
+  const [search, setSearch]                     = useState(filters.search ?? '')
+  const [state, setState]                       = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
+  const [dateFrom, setDateFrom]                 = useState(filters.date_from ?? '')
+  const [dateTo, setDateTo]                     = useState(filters.date_to ?? '')
+  const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
+
+  const pagination = useMemo<PaginationState>(() => ({
+    pageIndex: Math.max((filters.page ?? 1) - 1, 0),
+    pageSize: filters.per_page ?? 10,
+  }), [filters.page, filters.per_page])
+
+  const appliedSearch = useRef(search)
+
+  useEffect(() => { void load() }, [])
+
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
+  useEffect(() => {
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
+
+    const t = window.setTimeout(() => {
+      setIsUserFetching(true)
+      void load({ search, state: state === 'all' ? undefined : Number(state), date_from: dateFrom, date_to: dateTo, page: 1 }).finally(() => setIsUserFetching(false))
+    }, 500)
+    return () => window.clearTimeout(t)
+  }, [search])
+
+  // Estado/Fecha son acciones discretas (un clic o una selección), no texto que se esté
+  // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
+  const applyFilters = (overrides: {
+    state?: string
+    dateFrom?: string
+    dateTo?: string
+  }) => {
+    const nextState = overrides.state ?? state
+    const nextDateFrom = overrides.dateFrom ?? dateFrom
+    const nextDateTo = overrides.dateTo ?? dateTo
+    setIsUserFetching(true)
+    void load({
+      search,
+      state: nextState === 'all' ? undefined : Number(nextState),
+      date_from: nextDateFrom,
+      date_to: nextDateTo,
+      page: 1,
+    }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleStateChange = (value: string) => { setState(value); applyFilters({ state: value }) }
+  const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
+  const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
+
+  const table = useReactTable({
+    data: items,
+    columns: typeworksColumns,
+    pageCount: meta?.last_page ?? 1,
+    manualPagination: true,
+    state: { sorting, pagination, rowSelection, columnVisibility },
+    enableRowSelection: true,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater
+      setIsUserFetching(true)
+      void load({ page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
+    },
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
+  const activeCount   = items.filter((i) => i.stateValue === 1).length
+  const inactiveCount = items.filter((i) => i.stateValue !== 1).length
+
+  const resetFilters = () => {
+    appliedSearch.current = ''
+    setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
+    setIsUserFetching(true)
+    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
+  }
+
+  const handleBulkActivate = async () => {
+    setIsBulkLoading(true)
+    const ok = await bulkToggleState(selectedRows.map((r) => r.original.id), 1)
+    if (ok) { toastSuccess('Activados', `${selectedCount} registro(s) activado(s).`); table.resetRowSelection() }
+    else toastError('Error', 'No se pudieron activar todos los registros.')
+    setIsBulkLoading(false)
+  }
+
+  const handleBulkDeactivate = async () => {
+    setIsBulkLoading(true)
+    const ok = await bulkToggleState(selectedRows.map((r) => r.original.id), 0)
+    if (ok) { toastSuccess('Desactivados', `${selectedCount} registro(s) desactivado(s).`); table.resetRowSelection() }
+    else toastError('Error', 'No se pudieron desactivar todos los registros.')
+    setIsBulkLoading(false)
+  }
+
+  const handleBulkDelete = async () => {
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ok = await bulkDeleteItems(selectedRows.map((r) => r.original.id))
+        if (ok) {
+          toastSuccess('Eliminados', `${selectedCount} registro(s) eliminado(s).`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError(useTypeWorkDeleteStore.getState().error ?? 'No se pudieron eliminar todos los registros.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
+  }
+
+  if (!hasLoaded && !isInitialLoading) {
+    return (
+      <CircleProgressIndicatorPage/>
+    )
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar tipos de trabajo'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset();
+          void load()
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="relative flex flex-1 flex-col gap-4">
+      <TypeWorkStatsBar total={meta?.total ?? 0} active={activeCount} inactive={inactiveCount} />
+
+      <TableLoadingBar active={isUserFetching} />
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Buscar</span>
+            <Input placeholder="Nombre, clave o descripción..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Estado</span>
+            <Select value={state} disabled={isFetching} onValueChange={handleStateChange}>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Fecha desde</span>
+            <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => handleDateFromChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Fecha hasta</span>
+            <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
+          </div>
+          <div className="flex flex-col justify-end">
+            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          </div>
+        </div>
+        <DataTableViewOptions table={table} />
+      </div>
+
+      <div className="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id} colSpan={h.colSpan} className={cn('bg-muted/50 text-xs', (h.column.columnDef.meta as any)?.className)}>
+                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className={cn('transition-colors', selectedCount > 0 && !row.getIsSelected() && 'opacity-50')}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={typeworksColumns.length} className="h-20 text-center text-sm text-muted-foreground">
+                  No hay tipos de trabajo para mostrar.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <DataTablePagination table={table} className="mt-auto"
+        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
+      />
+
+      <DataTableBulkActions
+        selectedCount={selectedCount}
+        isLoading={isBulkLoading}
+        onActivate={handleBulkActivate}
+        onDeactivate={handleBulkDeactivate}
+        onDelete={handleBulkDelete}
+        onClear={() => table.resetRowSelection()}
+      />
+    </div>
+  )
+}

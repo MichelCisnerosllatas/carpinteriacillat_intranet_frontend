@@ -29,9 +29,6 @@
  *                    descripción, label = texto del botón y link = a dónde lleva el botón.
  *                    Sus fotos son section-images con `id_section_item` de este item.
  *   word          -> palabra de la cinta animada (marquee): solo usa el título
- *   restoration   -> trabajo del comparador «Restauración» (restoration_compare): title = nombre del trabajo
- *                    (obligatorio, libre), key = 'furniture-<id>' si tiene mueble relacionado o null si no.
- *                    Lo maneja el modo especial ui/form/restoration.
  */
 export const SECTION_ITEM_TYPES: { value: string; label: string }[] = [
   { value: 'stat', label: 'Estadística' },
@@ -51,7 +48,6 @@ export const SECTION_ITEM_TYPES: { value: string; label: string }[] = [
   { value: 'branch', label: 'Local / sucursal (contacto)' },
   { value: 'showcase', label: 'Servicio destacado (hero)' },
   { value: 'word', label: 'Palabra de la cinta' },
-  { value: 'restoration', label: 'Trabajo de restauración' },
 ]
 
 /**

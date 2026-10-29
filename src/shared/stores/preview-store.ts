@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { PreviewFocus, PreviewOutboundMessage, PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
+import type { PreviewFocus, PreviewPayload, PreviewStateMessage } from '@/widgets/landing-preview/landing-preview.types'
 
 const DEFAULT_WIDTH_PX = 480
 // Debe quedar igual al de landing-preview-shell.tsx (el drag del borde ya clampea ahí antes de
@@ -20,7 +20,14 @@ type PreviewState = {
   // reenviarlo si el iframe se recarga o si el panel estaba colapsado al momento del cambio.
   // Uno solo para los dos tipos a propósito: así un foco nuevo reemplaza al payload de la
   // pantalla anterior (y no queda "pegada" la sección que se editó antes).
-  lastMessage: PreviewOutboundMessage | null
+  lastMessage: PreviewStateMessage | null
+  // Canal APARTE para "resaltá este elemento" (pestaña Apariencia de una sección): si fuera por
+  // `lastMessage`, pisaría el payload/foco vigente y una recarga del iframe reenviaría un
+  // highlight viejo en vez del contenido. `seq` sube en cada pedido para que resaltar dos veces
+  // el mismo elemento también se reenvíe (ver landing-preview-iframe.tsx).
+  // `sectionId`: la web busca el elemento primero DENTRO de esa sección (`#section-<id>`) — los
+  // `data-el` se repiten entre secciones (ej. "header-subtitle" está en todas).
+  lastHighlight: { element: string | null; sectionId: number | null; seq: number } | null
   iframeReady: boolean
   // A qué navigation_url real quedó apuntando el preview — se lo manda el sitio web solo
   // (mensaje "active-url", ver landing-preview-iframe.tsx), el intranet nunca lo resuelve por
@@ -49,6 +56,7 @@ type PreviewState = {
   reload: () => void
   postPreview: (payload: PreviewPayload) => void
   postFocus: (focus: PreviewFocus) => void
+  postHighlight: (element: string | null, sectionId?: number | null) => void
 }
 
 export const usePreviewStore = create<PreviewState>()(
@@ -61,6 +69,7 @@ export const usePreviewStore = create<PreviewState>()(
       isOpen: false,
       widthPx: DEFAULT_WIDTH_PX,
       lastMessage: null,
+      lastHighlight: null,
       iframeReady: false,
       resolvedNavigationUrl: null,
       viewportMode: 'auto',
@@ -75,6 +84,9 @@ export const usePreviewStore = create<PreviewState>()(
       reload: () => set((s) => ({ reloadToken: s.reloadToken + 1, iframeReady: false })),
       postPreview: (payload) => set({ lastMessage: { type: 'preview', payload } }),
       postFocus: (focus) => set({ lastMessage: { type: 'focus', focus } }),
+      postHighlight: (element, sectionId = null) => set((s) => ({
+        lastHighlight: { element, sectionId, seq: (s.lastHighlight?.seq ?? 0) + 1 },
+      })),
     }),
     {
       name: 'landing-preview-panel',

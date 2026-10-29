@@ -141,7 +141,7 @@ export function TestimonyDetail({ id }: { id: string }) {
             <Separator />
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">Trabajo</span>
-              <span className="font-medium">{item.furnitureName ?? '—'}</span>
+              <span className="font-medium">{item.webWorkTitle ?? '—'}</span>
             </div>
             <Separator />
             <div className="flex items-center justify-between">

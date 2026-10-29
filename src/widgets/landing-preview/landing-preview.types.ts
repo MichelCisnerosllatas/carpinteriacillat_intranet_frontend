@@ -37,6 +37,15 @@ export type PreviewPayload = {
   id_navigation?: number
   id_section?: number
   id_section_item?: number
+  /**
+   * Entity "section", además de sus campos de siempre:
+   *   - display_settings: objeto { "<clave>": valor } COMPLETO y resuelto (todas las claves del
+   *     catálogo, lo arma la pestaña "Apariencia" con schema + valores del formulario). La web lo
+   *     aplica a esa sección. Reemplaza al viejo `card_settings`.
+   *   - section_title/subtitle/description: en null si `header.show_*` está apagado.
+   * Si la página montada ya pertenece a la navegación de esa sección (ej. /gallery/<id> y la
+   * sección es de /gallery), la web NO cambia de página al recibir el payload.
+   */
   fields: Record<string, unknown>
 }
 
@@ -44,7 +53,10 @@ export type PreviewPayload = {
  * "Llevame a tal lugar" SIN ningún registro de por medio — para pantallas que no editan ni
  * muestran contenido del sitio (ej. Mensajes de Contacto, la lista de Navegaciones). Lo manda
  * el propio widget según la ruta del intranet (ver landing-preview.routes.ts), no cada página.
- *   - navigationUrl: página del sitio a montar (ausente = se queda en la que ya estaba).
+ * También lo usa la pestaña "Apariencia" para cambiar entre Listado y Detalle.
+ *   - navigationUrl: página del sitio a montar (ausente = se queda en la que ya estaba). Puede
+ *                    ser `/gallery/<id_web_work>` (detalle de un trabajo): si el id no existe en
+ *                    `site.works` la web usa el primer trabajo; si no hay trabajos, la galería.
  *   - anchorId:      id del DOM al que hacer scroll (ausente = arriba de todo).
  *   - label:         solo para el header del panel — el sitio web lo ignora.
  */
@@ -58,6 +70,20 @@ export type PreviewFocus = {
 export type PreviewOutboundMessage =
   | { type: 'preview'; payload: PreviewPayload }
   | { type: 'focus'; focus: PreviewFocus }
+  /**
+   * Resalta un elemento de la página montada: la web busca `[data-el="<element>"]` (si hay
+   * varios, el primero visible), le hace scrollIntoView al centro y le pone un contorno de acento
+   * ~1.6 s. `element: null` quita el resaltado. Si no lo encuentra (ej. oculto por un toggle
+   * apagado), no hace nada. En el intranet va por un canal aparte (`postHighlight` en
+   * preview-store.ts): NO pisa el último preview/focus guardado.
+   * `sectionId`: la web busca primero dentro de `#section-<id>` (los `data-el` se repiten entre
+   * secciones, ej. "header-subtitle"); si ahí no está (ej. detalle /gallery/<id>, que no tiene
+   * contenedor de sección), busca en toda la página.
+   */
+  | { type: 'highlight'; element: string | null; sectionId?: number | null }
+
+/** Los mensajes que se guardan como "último" en preview-store (`lastMessage`) — el highlight va aparte. */
+export type PreviewStateMessage = Exclude<PreviewOutboundMessage, { type: 'highlight' }>
 
 /** Lo que manda el sitio web de vuelta — copia de `PreviewOutboundMessage` en `preview.types.ts` del otro proyecto. */
 export type PreviewInboundAck =

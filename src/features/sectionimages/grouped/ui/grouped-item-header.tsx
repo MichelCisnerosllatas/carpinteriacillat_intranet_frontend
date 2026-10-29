@@ -28,7 +28,7 @@ interface GroupedItemHeaderProps {
   visibleCount: number
   /** Total de fotos del item (visibles + ocultas). Si no viene, el contador solo muestra las visibles. */
   totalCount?: number
-  /** Texto del contador en lugar de "N fotos" (ej. "Fotos automáticas (del mueble)"). */
+  /** Texto del contador en lugar de "N fotos" (ej. "2 fotos · de sus trabajos"). */
   counterOverride?: string | null
   onRename: (title: string) => Promise<boolean>
   onToggleVisible: (visible: boolean) => Promise<void>
@@ -38,6 +38,8 @@ interface GroupedItemHeaderProps {
   /** Checkbox "todas las fotos de este item": true, false o 'indeterminate'. Si no viene, no se muestra. */
   selectAllState?: boolean | 'indeterminate'
   onSelectAll?: (checked: boolean) => void
+  /** Si viene, el checkbox sale deshabilitado y este texto explica por qué (al pasar el mouse). */
+  selectAllDisabledReason?: string
 }
 
 /**
@@ -51,7 +53,7 @@ interface GroupedItemHeaderProps {
  * así el clic les llega a ellos y no al Trigger. No hay botones dentro de botones.
  */
 export function GroupedItemHeader({
-  config, item, index, visibleCount, totalCount, counterOverride, onRename, onToggleVisible, onEditDetails, onDelete, selectAllState, onSelectAll,
+  config, item, index, visibleCount, totalCount, counterOverride, onRename, onToggleVisible, onEditDetails, onDelete, selectAllState, onSelectAll, selectAllDisabledReason,
 }: GroupedItemHeaderProps) {
   const [isToggling, setIsToggling] = useState(false)
 
@@ -96,11 +98,19 @@ export function GroupedItemHeader({
       <div className="flex min-w-0 flex-1 basis-full items-center gap-1 sm:basis-0">
         {/* Seleccionar todas las fotos del item (encima del Trigger: no abre/cierra) */}
         {onSelectAll && (
-          <label className="relative z-10 mr-1 flex size-7 shrink-0 cursor-pointer items-center justify-center pointer-coarse:size-9">
+          <label
+            className={cn(
+              'relative z-10 mr-1 flex size-7 shrink-0 items-center justify-center pointer-coarse:size-9',
+              selectAllDisabledReason ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+            )}
+            // Motivo al pasar el mouse cuando no hay fotos propias que seleccionar
+            title={selectAllDisabledReason}
+          >
             <Checkbox
-              checked={selectAllState ?? false}
+              checked={selectAllDisabledReason ? false : (selectAllState ?? false)}
+              disabled={!!selectAllDisabledReason}
               onCheckedChange={(checked) => onSelectAll(checked === true)}
-              aria-label={`Seleccionar todas las fotos de ${name}`}
+              aria-label={selectAllDisabledReason ?? `Seleccionar todas las fotos de ${name}`}
               className="pointer-coarse:size-5"
             />
           </label>

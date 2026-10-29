@@ -1,9 +1,3 @@
-/** Datos web de una foto (tabla furniture_image_web) — null si la foto no tiene. */
-export type FurnitureImageWebApiItem = {
-  furnitureimageweb_caption: string | null
-  furnitureimageweb_variant: 'before' | 'after' | null
-} | null
-
 export type FurnitureImageApiItem = {
   id_furniture_image: number
   id_furniture: number
@@ -12,7 +6,6 @@ export type FurnitureImageApiItem = {
   furnitureimage_state: number
   furnitureimage_created_at: string | null
   furnitureimage_updated_at: string | null
-  web?: FurnitureImageWebApiItem
 }
 
 export type FurnitureImageJoinApiItem = {
@@ -23,7 +16,6 @@ export type FurnitureImageJoinApiItem = {
   furnitureimage_created_at_format: string | null
   furnitureimage_updated_at: string | null
   furnitureimage_updated_at_format: string | null
-  web?: FurnitureImageWebApiItem
   furniture: {
     id_furniture: number
     furniture_name: string

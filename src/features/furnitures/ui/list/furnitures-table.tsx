@@ -33,8 +33,6 @@ export function FurnituresTable() {
   const [selected, setSelected]         = useState<Set<number>>(new Set())
   const [search, setSearch]             = useState(filters.search ?? '')
   const [state, setState]               = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
-  /** 'all' = todos · '1' = visibles en la galería del sitio web · '0' = no visibles (filtro `web`). */
-  const [web, setWeb]                   = useState<string>(filters.web !== undefined ? String(filters.web) : 'all')
   const [dateFrom, setDateFrom]         = useState(filters.date_from ?? '')
   const [dateTo, setDateTo]             = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
@@ -43,7 +41,7 @@ export function FurnituresTable() {
 
   const appliedSearch = useRef(search)
 
-  // Carga inicial con los filtros que ya tenga el store (incluido `web`).
+  // Carga inicial con los filtros que ya tenga el store.
   useEffect(() => {
     void load()
   }, [])
@@ -59,7 +57,6 @@ export function FurnituresTable() {
       void load({
         search,
         state: state === 'all' ? undefined : Number(state),
-        web: web === 'all' ? undefined : Number(web),
         date_from: dateFrom,
         date_to: dateTo,
         page: 1,
@@ -72,19 +69,16 @@ export function FurnituresTable() {
   // escribiendo: se disparan de inmediato, sin esperar el debounce de "Buscar".
   const applyFilters = (overrides: {
     state?: string
-    web?: string
     dateFrom?: string
     dateTo?: string
   }) => {
     const nextState = overrides.state ?? state
-    const nextWeb = overrides.web ?? web
     const nextDateFrom = overrides.dateFrom ?? dateFrom
     const nextDateTo = overrides.dateTo ?? dateTo
     setIsUserFetching(true)
     void load({
       search,
       state: nextState === 'all' ? undefined : Number(nextState),
-      web: nextWeb === 'all' ? undefined : Number(nextWeb),
       date_from: nextDateFrom,
       date_to: nextDateTo,
       page: 1,
@@ -92,7 +86,6 @@ export function FurnituresTable() {
   }
 
   const handleStateChange = (value: string) => { setState(value); applyFilters({ state: value }) }
-  const handleWebChange = (value: string) => { setWeb(value); applyFilters({ web: value }) }
   const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
   const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
@@ -111,9 +104,9 @@ export function FurnituresTable() {
 
   const resetFilters = () => {
     appliedSearch.current = ''
-    setSearch(''); setState('all'); setWeb('all'); setDateFrom(''); setDateTo('')
+    setSearch(''); setState('all'); setDateFrom(''); setDateTo('')
     setIsUserFetching(true)
-    void load({ search: '', state: undefined, web: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
+    void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   // ── Card actions ──
@@ -247,17 +240,6 @@ export function FurnituresTable() {
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Galería web</span>
-          <Select value={web} disabled={isFetching} onValueChange={handleWebChange}>
-            <SelectTrigger className="h-8 w-full sm:w-[175px]"><SelectValue placeholder="Galería web" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los muebles</SelectItem>
-              <SelectItem value="1">Visibles en web</SelectItem>
-              <SelectItem value="0">No visibles en web</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">Fecha desde</span>
           <Input type="date" value={dateFrom} disabled={isFetching} onChange={(e) => handleDateFromChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
@@ -289,7 +271,7 @@ export function FurnituresTable() {
         <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed">
           <Sofa className="size-8 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">
-            {web === '1' ? 'No hay muebles visibles en la web.' : 'No hay muebles para mostrar.'}
+            No hay muebles para mostrar.
           </p>
         </div>
       ) : (

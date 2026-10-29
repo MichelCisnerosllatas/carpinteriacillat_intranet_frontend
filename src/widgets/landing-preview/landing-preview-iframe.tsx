@@ -52,6 +52,21 @@ export function LandingPreviewIframe({ style }: Props) {
     iframeRef.current?.contentWindow?.postMessage({ source: 'cillat-intranet-preview', ...lastMessage }, webOrigin)
   }, [webOrigin, iframeReady, lastMessage])
 
+  // Resaltado de un elemento (canal aparte, ver preview-store.ts → lastHighlight). Mismo
+  // envelope/origin que los demás mensajes. A diferencia de `lastMessage`, se manda UNA sola vez
+  // por pedido (`seq`): una recarga del iframe no debe repetir un resaltado viejo.
+  const lastHighlight = usePreviewStore((s) => s.lastHighlight)
+  const sentHighlightSeqRef = useRef(0)
+  useEffect(() => {
+    if (!webOrigin || !iframeReady || !lastHighlight) return
+    if (lastHighlight.seq === sentHighlightSeqRef.current) return
+    sentHighlightSeqRef.current = lastHighlight.seq
+    iframeRef.current?.contentWindow?.postMessage(
+      { source: 'cillat-intranet-preview', type: 'highlight', element: lastHighlight.element, sectionId: lastHighlight.sectionId },
+      webOrigin
+    )
+  }, [webOrigin, iframeReady, lastHighlight])
+
   if (!webOrigin) {
     return (
       <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">

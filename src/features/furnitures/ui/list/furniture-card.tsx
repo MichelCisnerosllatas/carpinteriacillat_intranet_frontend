@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, MoreHorizontal, Pencil, CheckCircle2, XCircle, Trash2, Sofa, Images, Globe } from 'lucide-react'
+import { Eye, MoreHorizontal, Pencil, CheckCircle2, XCircle, Trash2, Sofa, Images } from 'lucide-react'
 import Lightbox from 'yet-another-react-lightbox'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import 'yet-another-react-lightbox/styles.css'
@@ -86,20 +86,6 @@ export function FurnitureCard({
           >
             {stateOpt.label}
           </Badge>
-          {/* Indica que el mueble se ve en la "Galería de trabajos" del sitio web */}
-          {item.isPublishedOnWeb && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  aria-label="Visible en la web"
-                  className="flex size-6 items-center justify-center rounded-full border bg-background/85 text-sky-700 backdrop-blur-sm dark:text-sky-300"
-                >
-                  <Globe className="size-3.5" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>Visible en la web</TooltipContent>
-            </Tooltip>
-          )}
         </div>
 
         <div className="absolute left-2 top-2">

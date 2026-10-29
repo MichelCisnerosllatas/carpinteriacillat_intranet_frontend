@@ -2,7 +2,6 @@
 
 // Secciones especiales cuyas tarjetas (items) están enlazadas por su clave:
 //   carrusel «Muebles a medida» → 'category-<id_category>'  (ver ./category)
-//   «Restauración»             → 'furniture-<id_furniture>' (ver ./restoration)
 // ¿Qué ids ya tienen tarjeta en esta sección? Así el select no deja repetir uno.
 
 import { useEffect, useState } from 'react'

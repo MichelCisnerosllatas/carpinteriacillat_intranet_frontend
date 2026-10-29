@@ -17,7 +17,7 @@ import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { Clock } from 'lucide-react'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
-import { FurnitureSelect } from '@/features/furnitures/ui/furniture-select'
+import { WebWorkSelect } from '../web-work-select'
 import { TESTIMONY_STATES, TESTIMONY_STATE_PENDING } from '../../data/data'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 import { useTestimonyDeleteStore } from '../../stores/useTestimonyDeleteStore'
@@ -53,8 +53,8 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
   const [sorting, setSorting]                   = useState<SortingState>([])
   const [search, setSearch]                     = useState(filters.search ?? '')
   const [state, setState]                       = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
-  /** Filtro "Trabajo": solo reseñas de ese mueble de la galería web. */
-  const [furnitureFilter, setFurnitureFilter]   = useState<number | null>(filters.id_furniture ?? null)
+  /** Filtro "Trabajo": solo reseñas de ese trabajo de la galería web. */
+  const [webWorkFilter, setWebWorkFilter]   = useState<number | null>(filters.id_web_work ?? null)
   const [isBulkLoading, setIsBulkLoading]       = useState(false)
   /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
   const [isUserFetching, setIsUserFetching]     = useState(false)
@@ -80,7 +80,7 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
 
     const t = window.setTimeout(() => {
       setIsUserFetching(true)
-      void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_furniture: furnitureFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+      void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_web_work: webWorkFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
     }, 500)
     return () => window.clearTimeout(t)
   }, [search])
@@ -90,14 +90,14 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
   const handleStateChange = (value: string) => {
     setState(value)
     setIsUserFetching(true)
-    void load({ id_section: idSection, search, state: value === 'all' ? undefined : Number(value), id_furniture: furnitureFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+    void load({ id_section: idSection, search, state: value === 'all' ? undefined : Number(value), id_web_work: webWorkFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
-  // Filtro por trabajo (mueble) — también es una selección, se aplica de inmediato
-  const handleFurnitureChange = (value: number | null) => {
-    setFurnitureFilter(value)
+  // Filtro por trabajo de la galería — también es una selección, se aplica de inmediato
+  const handleWebWorkChange = (value: number | null) => {
+    setWebWorkFilter(value)
     setIsUserFetching(true)
-    void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_furniture: value ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+    void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_web_work: value ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   // Filtro rápido "Solo pendientes": reseñas de la web que esperan aprobación
@@ -128,9 +128,9 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
 
   const resetFilters = () => {
     appliedSearch.current = ''
-    setSearch(''); setState('all'); setFurnitureFilter(null)
+    setSearch(''); setState('all'); setWebWorkFilter(null)
     setIsUserFetching(true)
-    void load({ id_section: idSection, search: '', state: undefined, id_furniture: undefined, page: 1 }).finally(() => setIsUserFetching(false))
+    void load({ id_section: idSection, search: '', state: undefined, id_web_work: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
   const handleBulkActivate = async () => {
@@ -215,9 +215,9 @@ export function TestimonyTable({ idSection, canDelete = true }: TestimonyTablePr
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Trabajo</span>
             <div className="w-full sm:w-[220px]">
-              <FurnitureSelect
-                value={furnitureFilter}
-                onValueChange={handleFurnitureChange}
+              <WebWorkSelect
+                value={webWorkFilter}
+                onValueChange={handleWebWorkChange}
                 placeholder="Todos los trabajos"
                 disabled={isFetching}
               />

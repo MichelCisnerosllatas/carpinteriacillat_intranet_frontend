@@ -10,7 +10,7 @@ import { AccordionContent, AccordionItem } from '@/shared/ui/accordion'
 import type { SectionItemApiItem } from '@/features/section-items/model/sectionitemget.dto'
 import type { SectionImage } from '../../../data/schema'
 import type { ImageRole } from '../../../lib/image-roles'
-import { capitalize, getPhotoVariantLabel, type GroupedSectionConfig } from '../../grouped-section.config'
+import { capitalize, type GroupedSectionConfig } from '../../grouped-section.config'
 import { GroupedItemHeader } from '../grouped-item-header'
 import { GroupedPhotoRow } from '../grouped-photo-row'
 import { SortableGroupedPhotoCard } from './sortable-grouped-photo-card'
@@ -28,7 +28,7 @@ interface GroupedReorderItemProps {
   onOpenPhoto: (image: SectionImage) => void
   onRename: (title: string) => Promise<boolean>
   onToggleVisible: (visible: boolean) => Promise<void>
-  /** Carrusel / Restauración: bloque "Fotos automáticas" (no se arrastran). Reemplaza al texto "sin fotos". */
+  /** Carrusel: bloque "Fotos automáticas" (no se arrastran). Reemplaza al texto "sin fotos". */
   autoPhotos?: ReactNode
   /** Texto del contador del encabezado en lugar de "N fotos". */
   counterOverride?: string | null
@@ -70,14 +70,13 @@ export function GroupedReorderItem({
                   role={roles[photo.id]}
                   groupKey={groupKey}
                   onOpen={onOpenPhoto}
-                  variantLabel={getPhotoVariantLabel(config, photo)}
                 />
               ))}
             </GroupedPhotoRow>
           </SortableContext>
         )}
 
-        {/* Carrusel / Restauración: fotos que la web usa sola (no se arrastran) */}
+        {/* Carrusel: fotos que la web usa sola (no se arrastran) */}
         {autoPhotos}
       </AccordionContent>
     </AccordionItem>

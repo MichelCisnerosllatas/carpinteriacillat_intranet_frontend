@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, ChevronsUpDown, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Check, ChevronsUpDown, Loader2, AlertCircle, RefreshCw, X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/shared/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useCategorySelectStore } from '../stores/useCategorySelectStore'
 
 interface CategorySelectProps {
@@ -14,6 +15,8 @@ interface CategorySelectProps {
   placeholder?: string
   disabled?: boolean
   showAll?: boolean
+  /** Muestra una X dentro del select para dejarlo vacío (campos opcionales). */
+  clearable?: boolean
 }
 
 export function CategorySelect({
@@ -22,6 +25,7 @@ export function CategorySelect({
   placeholder = 'Seleccionar categoría',
   disabled = false,
   showAll = false,
+  clearable = false,
 }: CategorySelectProps) {
   const { options, isLoading, isError, load, setForceReload } = useCategorySelectStore()
   const [open, setOpen] = useState(false)
@@ -72,7 +76,24 @@ export function CategorySelect({
               {label}
             </span>
           )}
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+          <span className="ml-2 flex shrink-0 items-center gap-1">
+            {clearable && selected && !disabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    role="button"
+                    aria-label="Quitar categoría"
+                    onClick={(e) => { e.stopPropagation(); onValueChange(null) }}
+                    className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Quitar categoría</TooltipContent>
+              </Tooltip>
+            )}
+            <ChevronsUpDown className="size-4 opacity-50" />
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">

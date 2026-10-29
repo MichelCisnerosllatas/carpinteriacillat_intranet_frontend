@@ -9,7 +9,7 @@ import { AccordionContent, AccordionItem } from '@/shared/ui/accordion'
 import type { SectionItemApiItem } from '@/features/section-items/model/sectionitemget.dto'
 import type { SectionImage } from '../../data/schema'
 import type { ImageRole } from '../../lib/image-roles'
-import { getPhotoVariantLabel, type GroupedSectionConfig } from '../grouped-section.config'
+import type { GroupedSectionConfig } from '../grouped-section.config'
 import { GroupedPhotoCard, type GroupedPhotoActions } from './grouped-photo-card'
 import { GroupedPhotoRow } from './grouped-photo-row'
 import { GroupedItemHeader } from './grouped-item-header'
@@ -35,11 +35,11 @@ interface GroupedItemAccordionProps {
   /** Si no viene, el menú no ofrece eliminar el item. */
   onDelete?: () => void
   /**
-   * Carrusel / Restauración: bloque "Fotos automáticas" (GroupedAutoPhotos), debajo de las fotos propias.
+   * Carrusel: bloque "Fotos automáticas (de sus trabajos)" (GroupedAutoPhotos), debajo de las fotos propias.
    * Si viene, reemplaza al texto "sin fotos" (el bloque ya trae su propio texto).
    */
   autoPhotos?: ReactNode
-  /** Texto del contador del encabezado en lugar de "N fotos" (ej. "Fotos automáticas (del mueble)"). */
+  /** Texto del contador del encabezado en lugar de "N fotos" (ej. "2 fotos · de sus trabajos"). */
   counterOverride?: string | null
 }
 
@@ -67,9 +67,12 @@ export function GroupedItemAccordion({
         onToggleVisible={onToggleVisible}
         onEditDetails={onEditDetails}
         onDelete={onDelete}
-        // Checkbox "todas las de este item" (solo si tiene fotos)
+        // Checkbox "todas las fotos PROPIAS de este item". Sale en TODOS los items para que la
+        // lista se vea pareja; si el item no tiene fotos propias (ej. solo fotos automáticas
+        // de sus trabajos, que no son de la sección), sale deshabilitado con el motivo.
         selectAllState={getGroupCheckState(selection, photoIds)}
-        onSelectAll={photos.length > 0 ? (checked) => selection.setMany(photoIds, checked) : undefined}
+        onSelectAll={(checked) => selection.setMany(photoIds, checked)}
+        selectAllDisabledReason={photos.length > 0 ? undefined : 'No tiene fotos propias para seleccionar.'}
       />
 
       {/* ── Fotos del item: una sola fila ── */}
@@ -90,13 +93,12 @@ export function GroupedItemAccordion({
                 selected={selection.isSelected(photo.id)}
                 selectionActive={selection.isActive}
                 onSelectChange={(checked) => selection.toggle(photo.id, checked)}
-                variantLabel={getPhotoVariantLabel(config, photo)}
               />
             ))}
           </GroupedPhotoRow>
         )}
 
-        {/* Carrusel / Restauración: fotos que la web usa sola (sin checkbox ni menú) */}
+        {/* Carrusel: fotos que la web usa sola (sin checkbox ni menú) */}
         {autoPhotos}
       </AccordionContent>
     </AccordionItem>

@@ -31,7 +31,7 @@ import { getImageRoles, sortByOrder } from '../../../lib/image-roles'
 import { useReorderImages } from '../../../lib/use-reorder-images'
 import { usePhotoLightbox } from '../../../lib/use-photo-lightbox'
 import { SectionImageLightbox } from '../../../ui/list/section-image-lightbox'
-import { getPhotoVariantLabel, type GroupedSectionConfig } from '../../grouped-section.config'
+import type { GroupedSectionConfig } from '../../grouped-section.config'
 import { useGroupItems } from '../../lib/use-group-items'
 import { useGroupItemActions } from '../../lib/use-group-item-actions'
 import { GroupedPhotoRow } from '../grouped-photo-row'
@@ -71,7 +71,7 @@ export function GroupedReorderBoard({ config, idSection }: GroupedReorderBoardPr
   // Visor de fotos en grande
   const lightbox = usePhotoLightbox()
 
-  // Carrusel / Restauración: fotos que la web usa sola si el item no tiene propias (no se arrastran).
+  // Carrusel: fotos que la web usa sola si la tarjeta no tiene propias (no se arrastran).
   // "Personalizar fotos" recarga las fotos: si hay cambios sin confirmar, se avisa que se pierden.
   const autoPhotos = useGroupedAutoPhotos({
     config,
@@ -235,7 +235,6 @@ export function GroupedReorderBoard({ config, idSection }: GroupedReorderBoardPr
                         role={roles[photo.id]?.kind === 'hidden' ? roles[photo.id] : null}
                         groupKey={unassignedGroup.key}
                         onOpen={(image) => lightbox.open(unassignedGroup.photos, image)}
-                        variantLabel={getPhotoVariantLabel(config, photo)}
                       />
                     ))}
                   </GroupedPhotoRow>

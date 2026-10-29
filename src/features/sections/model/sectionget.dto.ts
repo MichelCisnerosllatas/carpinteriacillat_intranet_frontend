@@ -2,17 +2,58 @@ import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
 
 /**
- * Un elemento de las tarjetas que se puede mostrar/ocultar (ej. "Contador «N trabajos»").
- * El CATÁLOGO vive SOLO en el backend (config/section_card_settings.php, una lista por
- * typesection_key); el intranet no lo repite: pinta un switch por cada entrada que llega.
+ * "Apariencia" de la sección (tabla `section_display_setting`): qué MUESTRA la web pública de
+ * esta sección (visibilidad de cada elemento, textos, números, opciones y listas). El CATÁLOGO
+ * vive SOLO en el backend (config/section_display/*.php: el grupo común "Encabezado" + uno por
+ * typesection_key); el intranet no lo repite: arma el editor con `display_settings_schema`.
  */
-export type SectionCardSettingSchemaItem = {
-  /** Clave que se guarda en `card_settings` (ej. 'show_card_count'). */
+export type SectionDisplayFieldType = 'toggle' | 'text' | 'textarea' | 'number' | 'select' | 'list'
+
+/** Página de la web donde se ve un grupo: 'listing' = la de la navegación de la sección; 'detail' = /gallery/<id>. */
+export type SectionDisplayPage = 'listing' | 'detail'
+
+export type SectionDisplaySchemaGroup = {
   key: string
-  /** Texto del switch (ej. 'Contador «N trabajos»'). */
   label: string
-  /** Valor si nunca se guardó. */
-  default: boolean
+  /** null = listing. */
+  page: SectionDisplayPage | null
+  description: string | null
+}
+
+/** Una fila de un campo `list` (ej. una fila de la ficha técnica). */
+export type SectionDisplayListItem = { key: string; label: string; visible: boolean }
+
+type SectionDisplaySchemaFieldBase = {
+  /** Clave `<grupo>.<nombre>` (ej. 'card.show_price'). */
+  key: string
+  group: string
+  label: string
+  /** Frase para un admin no técnico: QUÉ es y DÓNDE está. */
+  help: string | null
+  /** Ancla `data-el` en la web — la usa la vista previa para resaltar el elemento. */
+  element: string | null
+  /** Clave de un toggle. Solo UX: el campo se atenúa si ese toggle está apagado (el valor igual se guarda). */
+  depends_on: string | null
+}
+
+export type SectionDisplaySchemaField =
+  | (SectionDisplaySchemaFieldBase & { type: 'toggle'; default: boolean })
+  | (SectionDisplaySchemaFieldBase & { type: 'text' | 'textarea'; default: string; max?: number; allow_empty?: boolean })
+  | (SectionDisplaySchemaFieldBase & { type: 'number'; default: number; min?: number; max?: number })
+  | (SectionDisplaySchemaFieldBase & { type: 'select'; default: string; options: { value: string; label: string }[] })
+  | (SectionDisplaySchemaFieldBase & {
+      type: 'list'
+      /** Puede no venir: el default de una lista son sus `items` en orden, todos visibles. */
+      default?: SectionDisplayListItem[] | null
+      items: { key: string; label: string }[]
+      label_max?: number
+    })
+
+export type SectionDisplaySettingsSchema = {
+  /** En el ORDEN en que aparecen en la página. */
+  groups: SectionDisplaySchemaGroup[]
+  /** En el orden del catálogo. */
+  fields: SectionDisplaySchemaField[]
 }
 
 export type SectionApiItem = {
@@ -50,13 +91,11 @@ export type SectionJoinApiItem = Omit<SectionApiItem, 'id_type_section' | 'id_na
    * lo trata igual que "todo permitido/visible" (ver `useSectionListStore.mapFromApi`).
    */
   web_settings: {
-    show_title: boolean
-    show_subtitle: boolean
-    show_description: boolean
     tab_info: boolean
     tab_images: boolean
     tab_buttons: boolean
     tab_items: boolean
+    tab_works: boolean
     images_add: boolean
     images_reorder: boolean
     images_delete: boolean
@@ -66,14 +105,11 @@ export type SectionJoinApiItem = Omit<SectionApiItem, 'id_type_section' | 'id_na
     items_add: boolean
     items_reorder: boolean
     items_delete: boolean
-    /**
-     * Elementos de las tarjetas: { "<clave>": true|false } ya resuelto por el backend (todas las
-     * claves del catálogo del tipo de sección). Vacío/ausente si el tipo no tiene catálogo.
-     */
-    card_settings?: Record<string, boolean> | null
-    /** Catálogo de elementos de las tarjetas de este tipo de sección ([] si no tiene). */
-    card_settings_schema?: SectionCardSettingSchemaItem[] | null
   } | null
+  /** Apariencia resuelta por el backend: { "<clave>": valor } con TODAS las claves del catálogo. */
+  display_settings?: Record<string, unknown> | null
+  /** Catálogo de la apariencia de este tipo de sección (siempre trae al menos el grupo "Encabezado"). */
+  display_settings_schema?: SectionDisplaySettingsSchema | null
   type_section: {
     id_typesection: number
     typesection_key: string | null

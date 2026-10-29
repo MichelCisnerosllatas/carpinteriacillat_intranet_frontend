@@ -64,6 +64,20 @@ export const saleDocumentTypesColumns: ColumnDef<SaleDocumentType>[] = [
   },
 
   {
+    id: 'description',
+    accessorFn: (row) => row.description ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Descripción" />,
+    cell: ({ row }) => (
+      <span className="line-clamp-2 max-w-[280px] text-xs text-muted-foreground" title={row.original.description ?? undefined}>
+        {row.original.description || '—'}
+      </span>
+    ),
+    enableSorting: false,
+    enableHiding: true,
+    meta: { label: 'Descripción' },
+  },
+
+  {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {

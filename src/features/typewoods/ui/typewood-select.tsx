@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertCircle, Check, ChevronsUpDown, Loader2, RefreshCw } from 'lucide-react'
+import { AlertCircle, Check, ChevronsUpDown, Loader2, RefreshCw, X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import {
@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/shared/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useTypeWoodSelectStore } from '../stores/useTypeWoodSelectStore'
 
 interface TypeWoodSelectProps {
@@ -25,6 +26,8 @@ interface TypeWoodSelectProps {
   placeholder?: string
   disabled?: boolean
   showAll?: boolean
+  /** Muestra una X dentro del select para dejarlo vacío (campos opcionales). */
+  clearable?: boolean
 }
 
 export function TypeWoodSelect({
@@ -33,6 +36,7 @@ export function TypeWoodSelect({
   placeholder = 'Seleccionar madera...',
   disabled,
   showAll = false,
+  clearable = false,
 }: TypeWoodSelectProps) {
   const [open, setOpen] = useState(false)
   const { options, isLoading, isError, load, setForceReload } = useTypeWoodSelectStore()
@@ -81,7 +85,24 @@ export function TypeWoodSelect({
               {label}
             </span>
           )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <span className="ml-2 flex shrink-0 items-center gap-1">
+            {clearable && selected && !disabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    role="button"
+                    aria-label="Quitar madera"
+                    onClick={(e) => { e.stopPropagation(); onValueChange(null) }}
+                    className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Quitar madera</TooltipContent>
+              </Tooltip>
+            )}
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">

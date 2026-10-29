@@ -1,60 +1,41 @@
-// SOLO carrusel «Muebles a medida» (category_coverflow) y «Restauración» (restoration_compare).
-// "Fotos automáticas": las que la WEB usa cuando un item no tiene fotos propias visibles.
+// SOLO carrusel «Muebles a medida» (category_coverflow).
+// "Fotos automáticas": las que la WEB usa cuando una tarjeta (categoría) no tiene fotos propias visibles.
+// Salen de los trabajos de la Galería (web_works) publicados de esa categoría.
 // Funciones PURAS (sin React ni API): reciben datos y devuelven datos.
-// Copian EXACTO la regla de la web (solo lectura en el proyecto web):
-//   - features/service/lib/categoryCard.ts         (sortWorksByRecent, pickWorkPhotos, MAX_AUTO_PHOTOS)
-//   - features/service/lib/buildItemCategoryCards.ts (categoría: trabajos de la categoría)
-//   - features/service/lib/buildRestorationCards.ts  (restauración: foto Antes/Después del trabajo)
-//   - shared/services/site_service/lib/workPhotos.ts (fotos de un trabajo: portada + galería)
+// Copian la regla de la web (ver contrato de la Galería web, "category_coverflow"):
+//   - trabajos publicados (webwork_state 1) con category.id_category = la categoría de la tarjeta
+//     (clave 'category-<id>'; si la clave no trae id, se compara el nombre sin tildes),
+//   - del más reciente al más antiguo (webwork_delivered_at desc, sin fecha al final; empate = webwork_order),
+//   - primero la portada de cada trabajo (cover o, si no tiene, su 1ª foto visible) y luego sus demás
+//     fotos visibles. Máximo 4.
 // Ver grouped/README.md → "Fotos automáticas".
 
-import { buildImageUrl } from '@/shared/lib/images'
-import type { FurnitureJoinApiItem } from '@/features/furnitures/model/furniture-api-item.dto'
 import type { SectionItemApiItem } from '@/features/section-items/model/sectionitemget.dto'
 import type { SectionImage } from '../../data/schema'
 import { getCategoryIdFromKey } from '../coverflow/coverflow-links'
-import { getFurnitureIdFromRestorationKey, type RestorationPhotoVariant } from '../restoration/restoration-links'
-
-/** Qué regla de fotos automáticas usa la sección (se configura en GROUPED_SECTION_CONFIG). */
-export type AutoPhotosMode = 'restoration' | 'category'
+import type { GroupedWebWork } from './use-web-work-list'
 
 /** Máximo de fotos automáticas en una tarjeta de categoría (igual que la web: MAX_AUTO_PHOTOS). */
 export const MAX_AUTO_PHOTOS = 4
 
-/** Una foto automática (sale de un mueble, no de sections_images). */
+/** Una foto automática (sale de un trabajo, no de sections_images). */
 export type AutoPhoto = {
   /** Clave única dentro del item (para el `key` de React). */
   key: string
   imageId: number
   url: string
   name: string
-  /** Mueble del que sale la foto (para el enlace '/gallery/<id>' al personalizar). */
-  idFurniture: number
-  /** Título del mueble (furniture_title o, si no tiene, furniture_name). */
-  furnitureTitle: string
-  /** Restauración: 'before' / 'after'. Categoría: null. */
-  variant: RestorationPhotoVariant | null
+  /** Trabajo del que sale la foto (para el enlace '/gallery/<id>' al personalizar). */
+  idWebWork: number
+  /** Título del trabajo. */
+  workTitle: string
 }
 
-/** Resultado para un item: sus fotos automáticas y el mueble (restauración) si se encontró. */
-export type AutoPhotosResult = {
-  photos: AutoPhoto[]
-  /** Restauración: el mueble del item (por su clave 'furniture-<id>'). Categoría: null. */
-  furniture: FurnitureJoinApiItem | null
-  /** Restauración: id del mueble (de la clave), aunque no esté en la lista. Categoría: null. */
-  idFurniture: number | null
-}
+// ─────────────────────────── Helpers de un trabajo ───────────────────────────
 
-// ─────────────────────────── Helpers de un mueble ───────────────────────────
-
-/** Título a mostrar del mueble (igual que getFurnitureDisplayTitle; se repite para no importar un hook). */
-function furnitureTitle(f: FurnitureJoinApiItem): string {
-  return f.furniture_title?.trim() || f.furniture_name
-}
-
-/** ¿El mueble está publicado en la galería web? (= es un "trabajo" para la web) */
-export function isPublishedWork(f: FurnitureJoinApiItem): boolean {
-  return f.web?.furnitureweb_state === 1
+/** ¿El trabajo está publicado en la web? */
+export function isPublishedWork(w: GroupedWebWork): boolean {
+  return w.webwork_state === 1
 }
 
 /** Ordena por un número de orden: menor primero y los null al final (sort estable). */
@@ -65,115 +46,45 @@ function byOrderNullLast(a: number | null | undefined, b: number | null | undefi
   return a - b
 }
 
-/** Fotos visibles de la galería del mueble, por furnitureimage_order (null al final). */
-function visibleGallery(f: FurnitureJoinApiItem) {
-  return (f.gallery_images ?? [])
-    .filter((g) => g.furnitureimage_state === 1 && g.image?.id_image)
-    .sort((a, b) => byOrderNullLast(a.furnitureimage_order, b.furnitureimage_order))
+/** Fotos visibles de la galería del trabajo, por webworkimage_order (null al final). */
+export function visibleWorkImages(w: GroupedWebWork) {
+  return (w.images ?? [])
+    .filter((img) => img.webworkimage_state === 1 && img.id_image && img.url)
+    .sort((a, b) => byOrderNullLast(a.webworkimage_order, b.webworkimage_order))
 }
 
 /**
- * Fotos del trabajo como las arma la web (workPhotos.ts → getWorkPhotos):
- * primero la portada (furnitures.id_image) y luego las fotos visibles de su galería, en orden.
- * Se descartan las que no tienen URL y no se repite la misma imagen.
+ * Fotos del trabajo como las arma la web: primero la portada (cover o, si no tiene, la 1ª foto
+ * visible) y luego las demás fotos visibles, en orden. No se repite la misma imagen.
  */
-export function getWorkPhotos(f: FurnitureJoinApiItem): AutoPhoto[] {
+export function getWorkPhotos(w: GroupedWebWork): AutoPhoto[] {
   const photos: AutoPhoto[] = []
-  const title = furnitureTitle(f)
+  const title = w.webwork_title
 
-  const cover = f.images
-  const coverUrl = cover?.id_image ? buildImageUrl(cover.image_patch) : null
-  if (cover?.id_image && coverUrl) {
+  if (w.cover?.id_image && w.cover.url) {
     photos.push({
-      key: `f${f.id_furniture}-cover`,
-      imageId: cover.id_image,
-      url: coverUrl,
-      name: cover.image_name,
-      idFurniture: f.id_furniture,
-      furnitureTitle: title,
-      variant: null,
+      key: `w${w.id_web_work}-cover`,
+      imageId: w.cover.id_image,
+      url: w.cover.url,
+      name: w.cover.name,
+      idWebWork: w.id_web_work,
+      workTitle: title,
     })
   }
 
-  for (const g of visibleGallery(f)) {
-    const image = g.image!
-    const url = buildImageUrl(image.image_patch)
-    if (!url) continue
-    if (photos.some((p) => p.imageId === image.id_image)) continue
+  for (const img of visibleWorkImages(w)) {
+    if (photos.some((p) => p.imageId === img.id_image)) continue
     photos.push({
-      key: `f${f.id_furniture}-g${g.id_furniture_image}`,
-      imageId: image.id_image,
-      url,
-      name: image.image_name ?? `Imagen #${image.id_image}`,
-      idFurniture: f.id_furniture,
-      furnitureTitle: title,
-      variant: g.web?.furnitureimageweb_variant ?? null,
+      key: `w${w.id_web_work}-i${img.id_web_work_image}`,
+      imageId: img.id_image,
+      url: img.url,
+      name: img.name || `Imagen #${img.id_image}`,
+      idWebWork: w.id_web_work,
+      workTitle: title,
     })
   }
 
   return photos
-}
-
-// ─────────────────────────── Restauración ───────────────────────────
-
-/**
- * 1ª foto visible de la galería del mueble con esa variante, por furnitureimage_order
- * (como findWorkPhotoByVariant de la web; la portada no tiene variante).
- */
-function findPhotoByVariant(f: FurnitureJoinApiItem, variant: RestorationPhotoVariant): AutoPhoto | null {
-  for (const g of visibleGallery(f)) {
-    if (g.web?.furnitureimageweb_variant !== variant) continue
-    const image = g.image!
-    const url = buildImageUrl(image.image_patch)
-    if (!url) continue
-    return {
-      key: `f${f.id_furniture}-${variant}`,
-      imageId: image.id_image,
-      url,
-      name: image.image_name ?? `Imagen #${image.id_image}`,
-      idFurniture: f.id_furniture,
-      furnitureTitle: furnitureTitle(f),
-      variant,
-    }
-  }
-  return null
-}
-
-/**
- * Restauración: por cada tipo (Antes / Después) que el item NO tenga como foto propia visible,
- * la foto del mueble marcada con ese tipo. Como en la web, el mueble tiene que estar publicado
- * (si no, la web no lo tiene en `works` y no usa sus fotos).
- * Trabajo SIN mueble (clave null): no tiene fotos automáticas, solo las propias.
- */
-export function getRestorationAutoPhotos(
-  item: SectionItemApiItem, ownPhotos: SectionImage[], furnitures: FurnitureJoinApiItem[],
-): AutoPhotosResult {
-  const idFurniture = getFurnitureIdFromRestorationKey(item.sectionitem_key)
-  // Sin mueble relacionado → no hay de dónde sacar fotos automáticas
-  if (idFurniture == null) return { photos: [], furniture: null, idFurniture: null }
-  const furniture = idFurniture != null ? furnitures.find((f) => f.id_furniture === idFurniture) ?? null : null
-  if (!furniture || !isPublishedWork(furniture)) return { photos: [], furniture, idFurniture }
-
-  const ownVisible = ownPhotos.filter((p) => p.stateValue === 1)
-  const photos: AutoPhoto[] = []
-  for (const variant of ['before', 'after'] as const) {
-    const hasOwn = ownVisible.some((p) => p.variant === variant)
-    if (hasOwn) continue
-    const photo = findPhotoByVariant(furniture, variant)
-    if (photo) photos.push(photo)
-  }
-  return { photos, furniture, idFurniture }
-}
-
-/**
- * Restauración: tipos (Antes / Después) que el trabajo NO tiene ni como foto propia visible ni como
- * automática. Si falta alguno, la web no muestra la tarjeta (necesita las dos).
- */
-export function getMissingRestorationVariants(ownPhotos: SectionImage[], autoPhotos: AutoPhoto[]): RestorationPhotoVariant[] {
-  const ownVisible = ownPhotos.filter((p) => p.stateValue === 1)
-  return (['before', 'after'] as const).filter((variant) =>
-    !ownVisible.some((p) => p.variant === variant) && !autoPhotos.some((p) => p.variant === variant),
-  )
 }
 
 // ─────────────────────────── Categoría ───────────────────────────
@@ -183,28 +94,29 @@ function normalizeName(name?: string | null): string {
   return (name ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
-/** Trabajos publicados de la categoría del item (por id de la clave; si no trae id, por nombre). */
-function findWorksOfItem(item: SectionItemApiItem, furnitures: FurnitureJoinApiItem[]): FurnitureJoinApiItem[] {
-  const works = furnitures.filter(isPublishedWork)
+/** Trabajos de la categoría de la tarjeta (por id de la clave; si no trae id, por nombre). Sin filtrar estado. */
+export function findWorksOfCategory(
+  item: Pick<SectionItemApiItem, 'sectionitem_key' | 'sectionitem_title'>, works: GroupedWebWork[],
+): GroupedWebWork[] {
   const idCategory = getCategoryIdFromKey(item.sectionitem_key)
-  if (idCategory != null) return works.filter((f) => f.category?.id_category === idCategory)
+  if (idCategory != null) return works.filter((w) => w.category?.id_category === idCategory)
 
   const name = normalizeName(item.sectionitem_title)
   if (!name) return []
-  return works.filter((f) => normalizeName(f.category?.category_name) === name)
+  return works.filter((w) => normalizeName(w.category?.category_name) === name)
 }
 
 /**
- * Del más reciente al más antiguo según furnitureweb_delivered_at ("2026-05-10"); los que no
- * tienen fecha van al final. Antes se ordenan por furnitureweb_order (como llegan los trabajos a
- * la web), así un empate respeta ese orden (sort estable).
+ * Del más reciente al más antiguo según webwork_delivered_at ("2026-05-10"); los que no tienen
+ * fecha van al final. Antes se ordenan por webwork_order (como llegan los trabajos a la web),
+ * así un empate respeta ese orden (sort estable).
  */
-export function sortWorksByRecent(works: FurnitureJoinApiItem[]): FurnitureJoinApiItem[] {
+export function sortWorksByRecent(works: GroupedWebWork[]): GroupedWebWork[] {
   return [...works]
-    .sort((a, b) => byOrderNullLast(a.web?.furnitureweb_order, b.web?.furnitureweb_order))
+    .sort((a, b) => byOrderNullLast(a.webwork_order, b.webwork_order))
     .sort((a, b) => {
-      const da = a.web?.furnitureweb_delivered_at ?? null
-      const db = b.web?.furnitureweb_delivered_at ?? null
+      const da = a.webwork_delivered_at ?? null
+      const db = b.webwork_delivered_at ?? null
       if (da === db) return 0
       if (!da) return 1
       if (!db) return -1
@@ -214,34 +126,24 @@ export function sortWorksByRecent(works: FurnitureJoinApiItem[]): FurnitureJoinA
 }
 
 /** Hasta 4 fotos: primero la portada de cada trabajo y luego sus demás fotos (pickWorkPhotos de la web). */
-function pickWorkPhotos(works: FurnitureJoinApiItem[]): AutoPhoto[] {
+function pickWorkPhotos(works: GroupedWebWork[]): AutoPhoto[] {
   const all = works.map(getWorkPhotos)
   const covers = all.map((photos) => photos[0]).filter((p): p is AutoPhoto => p != null)
   const others = all.flatMap((photos) => photos.slice(1))
   return [...covers, ...others].slice(0, MAX_AUTO_PHOTOS)
 }
 
-/** Categoría: si el item NO tiene fotos propias visibles, las de sus trabajos publicados (máx. 4). */
+/** Si la tarjeta NO tiene fotos propias visibles, las de sus trabajos publicados (máx. 4). Si tiene, []. */
 export function getCategoryAutoPhotos(
-  item: SectionItemApiItem, ownPhotos: SectionImage[], furnitures: FurnitureJoinApiItem[],
-): AutoPhotosResult {
+  item: SectionItemApiItem, ownPhotos: SectionImage[], works: GroupedWebWork[],
+): AutoPhoto[] {
   const hasOwnVisible = ownPhotos.some((p) => p.stateValue === 1)
-  if (hasOwnVisible) return { photos: [], furniture: null, idFurniture: null }
-  return { photos: pickWorkPhotos(sortWorksByRecent(findWorksOfItem(item, furnitures))), furniture: null, idFurniture: null }
-}
-
-// ─────────────────────────── Entrada única ───────────────────────────
-
-/** Fotos automáticas de un item según la regla de la sección. */
-export function getAutoPhotos(
-  mode: AutoPhotosMode, item: SectionItemApiItem, ownPhotos: SectionImage[], furnitures: FurnitureJoinApiItem[],
-): AutoPhotosResult {
-  return mode === 'restoration'
-    ? getRestorationAutoPhotos(item, ownPhotos, furnitures)
-    : getCategoryAutoPhotos(item, ownPhotos, furnitures)
+  if (hasOwnVisible) return []
+  const published = works.filter(isPublishedWork)
+  return pickWorkPhotos(sortWorksByRecent(findWorksOfCategory(item, published)))
 }
 
 /** Fotos automáticas → fotos del visor en grande (mismo visor que las demás). */
 export function autoPhotosToSlides(photos: AutoPhoto[]): { src: string; alt?: string }[] {
-  return photos.map((p) => ({ src: p.url, alt: p.furnitureTitle }))
+  return photos.map((p) => ({ src: p.url, alt: p.workTitle }))
 }

@@ -7,7 +7,6 @@ import type {
 } from '../model/furnitureget.dto'
 import type { FurniturePostRequestDto, FurniturePostResponseDto } from '../model/furniturepost.dto'
 import type { FurniturePutRequestDto, FurniturePutResponseDto } from '../model/furnitureput.dto'
-import type { FurnitureWebStylesResponseDto } from '../model/furniture-web.dto'
 
 export const furnituresService = {
   getList: async (param: FurnitureListRequestDto): Promise<FurnitureJoinListResponseDto> => {
@@ -43,12 +42,6 @@ export const furnituresService = {
 
   patch: async (id: number, param: Partial<FurniturePutRequestDto>): Promise<FurniturePutResponseDto> => {
     const { data } = await apiClient.patch<FurniturePutResponseDto>(FURNITURES_ENDPOINTS.v1.patch(id), param)
-    return data
-  },
-
-  /** Estilos distintos ya usados en la galería web — alimenta el <datalist> del formulario. */
-  getWebStyles: async (): Promise<FurnitureWebStylesResponseDto> => {
-    const { data } = await apiClient.get<FurnitureWebStylesResponseDto>(FURNITURES_ENDPOINTS.v1.webStyles)
     return data
   },
 

@@ -2,6 +2,7 @@
 import {
   AudioWaveform,
   Bell,
+  BriefcaseBusiness,
   Bug,
   Building2,
   Command,
@@ -14,6 +15,7 @@ import {
   Folder,
   FolderOpen,
   GalleryVerticalEnd,
+  Hammer,
   HardDrive,
   HelpCircle,
   ImageIcon,
@@ -21,6 +23,7 @@ import {
   LayoutGrid,
   Layers,
   LayoutList,
+  Megaphone,
   ListTodo,
   Lock,
   MessagesSquare,
@@ -38,6 +41,7 @@ import {
   ServerOff,
   Settings,
   Settings2,
+  Shapes,
   Share2,
   ShieldCheck,
   Smartphone,
@@ -184,6 +188,7 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'Navegaciones',       url: '/navigations',      icon: Navigation2 },
         { title: 'Footer del Sitio',   url: '/footer',           icon: PanelBottom },
+        { title: 'Alertas del sitio',  url: '/web-alerts',       icon: Megaphone },
         { title: 'Mensajes de Contacto', url: '/contact-messages', icon: MessagesSquare },
         {
           title: 'Secciones',
@@ -195,6 +200,14 @@ export const sidebarData: SidebarData = {
             { title: 'Items de Sección',   url: '/section-items',   icon: LayoutList },
             { title: 'Testimonios',        url: '/testimony',   icon: Quote },
             { title: 'Tipos de Sección',    url: '/typesections', icon: LayoutGrid },
+          ],
+        },
+        {
+          title: 'Galería',
+          icon: BriefcaseBusiness,
+          items: [
+            { title: 'Trabajos',         url: '/web-works', icon: Hammer },
+            { title: 'Tipos de trabajo', url: '/typeworks', icon: Shapes },
           ],
         },
       ],

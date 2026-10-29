@@ -8,6 +8,7 @@ export const saleDocumentTypeSchema = z.object({
   name: z.string(),
   code: z.string().nullable(),
   series: z.string(),
+  description: z.string().nullable(),
   status: saleDocumentTypeStatusSchema,
   statusLabel: z.string(),
   stateValue: z.number(),

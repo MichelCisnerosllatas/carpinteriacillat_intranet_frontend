@@ -1,6 +1,5 @@
 // SOLO para el carrusel «Muebles a medida» (category_coverflow).
-// Funciones puras para "enlazar" una tarjeta con su categoría y una foto con su mueble.
-// (El enlace foto → mueble '/gallery/<id>' lo usa también «Restauración».)
+// Funciones puras para "enlazar" una tarjeta con su categoría y una foto con su trabajo de la Galería.
 // Ver grouped/README.md → "Carrusel de categorías".
 
 /** `sectionitem_type` de cada tarjeta del carrusel. */
@@ -9,8 +8,8 @@ export const CATEGORY_ITEM_TYPE = 'category'
 /** Prefijo del `sectionitem_key` de una tarjeta: 'category-<id_category>'. */
 const CATEGORY_KEY_PREFIX = 'category-'
 
-/** Prefijo del `sectionimage_link` de una foto que viene de un mueble: '/gallery/<id_furniture>'. */
-const FURNITURE_LINK_PREFIX = '/gallery/'
+/** Prefijo del `sectionimage_link` de una foto que viene de un trabajo: '/gallery/<id_web_work>'. */
+const WORK_LINK_PREFIX = '/gallery/'
 
 /** Clave de la tarjeta de una categoría (ej. 12 → 'category-12'). */
 export function buildCategoryItemKey(idCategory: number): string {
@@ -24,14 +23,14 @@ export function getCategoryIdFromKey(key?: string | null): number | null {
   return Number.isInteger(id) && id > 0 ? id : null
 }
 
-/** Enlace de una foto que viene de un mueble (ej. 7 → '/gallery/7'). */
-export function buildFurnitureGalleryLink(idFurniture: number): string {
-  return `${FURNITURE_LINK_PREFIX}${idFurniture}`
+/** Enlace de una foto que viene de un trabajo (ej. 7 → '/gallery/7'). */
+export function buildWorkGalleryLink(idWebWork: number): string {
+  return `${WORK_LINK_PREFIX}${idWebWork}`
 }
 
-/** id del mueble guardado en el enlace ('/gallery/7' → 7). null si el enlace no es de un mueble. */
-export function getFurnitureIdFromLink(link?: string | null): number | null {
-  if (!link || !link.startsWith(FURNITURE_LINK_PREFIX)) return null
-  const id = Number(link.slice(FURNITURE_LINK_PREFIX.length))
+/** id del trabajo guardado en el enlace ('/gallery/7' → 7). null si el enlace no es de un trabajo. */
+export function getWorkIdFromLink(link?: string | null): number | null {
+  if (!link || !link.startsWith(WORK_LINK_PREFIX)) return null
+  const id = Number(link.slice(WORK_LINK_PREFIX.length))
   return Number.isInteger(id) && id > 0 ? id : null
 }

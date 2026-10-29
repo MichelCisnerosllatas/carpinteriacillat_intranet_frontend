@@ -17,12 +17,14 @@ import { applyApiErrors } from '@/shared/lib/api-errors'
 import { AlertError } from '@/widgets/alerts_components'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionFormStore } from '../../stores/useSectionFormStore'
+import { getSectionWorksConfig } from '../detail/tabs/works/section-works.config'
 
 const schema = z.object({
   tab_info:        z.boolean(),
   tab_images:      z.boolean(),
   tab_buttons:     z.boolean(),
   tab_items:       z.boolean(),
+  tab_works:       z.boolean(),
   images_add:      z.boolean(),
   images_reorder:  z.boolean(),
   images_delete:   z.boolean(),
@@ -88,7 +90,7 @@ function ActionsPreviewRow({ label, add, reorder, del, tabVisible }: { label: st
 /**
  * Config técnica de UNA sección puntual (`section_web_setting`) — pantalla propia, separada
  * del form de contenido de la Sección (`section-form.tsx`): "Guardar" acá manda un PATCH que
- * SOLO toca estos 13 campos (`sectionsService.patch` es parcial), nunca el título/descripción/
+ * SOLO toca estos 14 campos (`sectionsService.patch` es parcial), nunca el título/descripción/
  * etc. de la sección. Se llega acá desde el botón "Configuración" del detalle de la sección.
  */
 export function SectionSettingsForm({ id }: { id: string }) {
@@ -100,7 +102,7 @@ export function SectionSettingsForm({ id }: { id: string }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      tab_info: true, tab_images: true, tab_buttons: true, tab_items: true,
+      tab_info: true, tab_images: true, tab_buttons: true, tab_items: true, tab_works: false,
       images_add: true, images_reorder: true, images_delete: true,
       buttons_add: true, buttons_reorder: true, buttons_delete: true,
       items_add: true, items_reorder: true, items_delete: true,
@@ -116,6 +118,7 @@ export function SectionSettingsForm({ id }: { id: string }) {
         tab_images:      resolved.tabImages,
         tab_buttons:     resolved.tabButtons,
         tab_items:       resolved.tabItems,
+        tab_works:       resolved.tabWorks,
         images_add:      resolved.imagesAdd,
         images_reorder:  resolved.imagesReorder,
         images_delete:   resolved.imagesDelete,
@@ -154,6 +157,9 @@ export function SectionSettingsForm({ id }: { id: string }) {
 
   if (!resolved) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
+  // "Trabajos" solo existe en las secciones que muestran trabajos (Galería / Restauración)
+  const supportsWorks = getSectionWorksConfig(resolved.typesectionKey) !== null
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -162,6 +168,7 @@ export function SectionSettingsForm({ id }: { id: string }) {
             <CardHeader><CardTitle className="text-base">Pestañas visibles</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-3">
               <SwitchRow control={form.control} name="tab_info" label="Info general" />
+              {supportsWorks && <SwitchRow control={form.control} name="tab_works" label="Trabajos" />}
               <SwitchRow control={form.control} name="tab_images" label="Imágenes" />
               <SwitchRow control={form.control} name="tab_buttons" label="Botones" />
               <SwitchRow control={form.control} name="tab_items" label="Items" />
@@ -203,6 +210,7 @@ export function SectionSettingsForm({ id }: { id: string }) {
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <TabPreviewChip label="Info general" visible={watched.tab_info} />
+              {supportsWorks && <TabPreviewChip label="Trabajos" visible={watched.tab_works} />}
               <TabPreviewChip label="Imágenes" visible={watched.tab_images} />
               <TabPreviewChip label="Botones" visible={watched.tab_buttons} />
               <TabPreviewChip label="Items" visible={watched.tab_items} />

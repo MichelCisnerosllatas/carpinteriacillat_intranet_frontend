@@ -25,7 +25,7 @@ import type { SectionImage } from '../../data/schema'
 import { getImageRoles, sortByOrder } from '../../lib/image-roles'
 import { usePhotoLightbox } from '../../lib/use-photo-lightbox'
 import { SectionImageLightbox } from '../../ui/list/section-image-lightbox'
-import { getGroupItemName, getPhotoVariantLabel, type GroupedSectionConfig } from '../grouped-section.config'
+import { getGroupItemName, type GroupedSectionConfig } from '../grouped-section.config'
 import { useGroupItems } from '../lib/use-group-items'
 import { useGroupItemActions } from '../lib/use-group-item-actions'
 import {
@@ -89,7 +89,7 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
   // Ocultar / Mostrar (una o varias) + guardar el orden "ocultas al final"
   const { changeState, isSaving } = useGroupedPhotoVisibility(config, idSection, loadPhotos)
 
-  // Carrusel / Restauración: fotos que la web usa sola si el item no tiene propias (config.autoPhotos)
+  // Carrusel: fotos que la web usa sola si la tarjeta no tiene propias (config.autoPhotos)
   const autoPhotos = useGroupedAutoPhotos({ config, idSection, onOpenSlides: lightbox.openSlides, onReload: loadPhotos })
 
   // La primera vez que llegan los items, todos quedan abiertos
@@ -126,24 +126,8 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
     return { changes, extra: describeServiceChanges(changes, getName) }
   }
 
-  // ── "Editar" del menú ⋮ de un item (ver config.itemMenuEdit) ──
-  //  - 'item'   → formulario del item (hero: descripción y botón; carrusel: categoría).
-  //  - 'photos' → formulario de FOTOS del item (Restauración: par Antes/Después).
-  //    Si ya tiene fotos se abre el editar (carga el par desde cualquiera de ellas);
-  //    si no tiene, se abre el agregar con la sección y el trabajo ya elegidos.
-  const handleEditItem = (item: SectionItemApiItem, itemPhotos: SectionImage[]) => {
-    if (config.itemMenuEdit === 'item') {
-      goTo(`/section-items/edit/${item.id_section_item}`)
-      return
-    }
-    const firstPhoto = itemPhotos[0]
-    if (firstPhoto) {
-      setCurrentItem(firstPhoto)
-      goTo(`/section-images/edit/${firstPhoto.id}`)
-    } else {
-      goTo(`/section-images/create?id_section=${idSection}&id_section_item=${item.id_section_item}`)
-    }
-  }
+  // ── "Editar" del menú ⋮ de un item: formulario del item (hero: descripción y botón; carrusel: categoría) ──
+  const handleEditItem = (item: SectionItemApiItem) => goTo(`/section-items/edit/${item.id_section_item}`)
 
   // Abre el formulario de una foto (editar)
   const editPhoto = (image: SectionImage) => { setCurrentItem(image); goTo(`/section-images/edit/${image.id}`) }
@@ -151,8 +135,7 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
   // ── Acciones de cada foto ──
   const photoActions: GroupedPhotoActions = {
     onView: (image) => { setCurrentItem(image); goTo(`/section-images/${image.id}`) },
-    // Restauración (photoMenuEdit false): sin "Editar" por foto; se edita el par desde el menú del trabajo
-    onEdit: config.photoMenuEdit ? editPhoto : undefined,
+    onEdit: editPhoto,
     // Misma regla que la barra: al ocultar pasa al final de su item, al mostrar al final de las visibles
     // Pide confirmación antes, igual que los demás módulos (*-row-actions)
     onToggleState: async (image) => {
@@ -353,7 +336,7 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
                 onOpenPhoto={(image) => lightbox.open(itemPhotos, image)}
                 onRename={(title) => handleRename(item, title)}
                 onToggleVisible={(visible) => handleToggleVisible(item, visible)}
-                onEditDetails={() => handleEditItem(item, itemPhotos)}
+                onEditDetails={() => handleEditItem(item)}
                 onDelete={() => void handleDeleteItem(item)}
                 autoPhotos={auto.block}
                 counterOverride={auto.counter}
@@ -378,14 +361,12 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
                 // Solo se marca si está oculta; sin item no tiene rol en la web
                 role={roles[photo.id]?.kind === 'hidden' ? roles[photo.id] : null}
                 onOpen={(image) => lightbox.open(unassigned, image)}
-                // Fotos sueltas: SIEMPRE con "Editar" (es la forma de asignarlas a un item),
-                // aunque la sección no tenga "Editar" por foto (Restauración).
-                actions={{ ...photoActions, onEdit: editPhoto }}
+                // Fotos sueltas: con "Editar" (es la forma de asignarlas a un item)
+                actions={photoActions}
                 canDelete={canDelete}
                 selected={selection.isSelected(photo.id)}
                 selectionActive={selection.isActive}
                 onSelectChange={(checked) => selection.toggle(photo.id, checked)}
-                variantLabel={getPhotoVariantLabel(config, photo)}
               />
             ))}
           </GroupedPhotoRow>
