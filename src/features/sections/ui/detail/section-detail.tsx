@@ -3,7 +3,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import { Pencil, LayoutGrid, Settings } from 'lucide-react'
+import { Info, Pencil, LayoutGrid, Settings } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -231,6 +232,24 @@ export function SectionDetail({ id }: { id: string }) {
 
         {showInfo && (
           <TabsContent value="info" className="flex flex-col gap-4">
+            {/* Galería: no tiene fotos propias, avisarlo apenas se entra al detalle */}
+            {worksConfig?.mode === 'summary' && (
+              <Alert>
+                <Info />
+                <AlertTitle>Las fotos de esta sección son las de cada trabajo</AlertTitle>
+                <AlertDescription>
+                  <p>
+                    Se agregan y cambian en <strong>Galería → Trabajos</strong>. Lo que se ve en la página (tarjetas,
+                    filtros, detalle) se elige en <strong>Configuración → Apariencia</strong>.
+                  </p>
+                  {showWorks && (
+                    <Button size="sm" variant="outline" className="mt-2 w-fit" onClick={() => setActiveTab('works')}>
+                      Ver la pestaña Trabajos
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
             <SectionDetailInfoTab item={item} />
           </TabsContent>
         )}

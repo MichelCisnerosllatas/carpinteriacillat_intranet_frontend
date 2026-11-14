@@ -167,7 +167,7 @@ export function WebAlertsTable() {
         </Alert>
       )}
 
-      {noneActive && (
+      {/* {noneActive && (
         <Alert>
           <Info />
           <AlertTitle>Ninguna alerta está activada</AlertTitle>
@@ -175,7 +175,7 @@ export function WebAlertsTable() {
             Por ahora la web no muestra ningún aviso. Usa el interruptor «Activada» de una fila para mostrarla.
           </AlertDescription>
         </Alert>
-      )}
+      )} */}
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">

@@ -4,41 +4,38 @@
 // galería muestra TODOS los trabajos visibles, que se administran en Galería → Trabajos. Acá
 // solo se resume cuántos hay (total, visibles, por tipo) y se ofrecen los dos atajos: administrar
 // los trabajos y elegir qué se ve de ellos en la página (pestaña "Apariencia").
+// El resumen vive en memoria (useSectionWorksStore): al volver a la pestaña se ve al instante y
+// se actualiza por detrás, sin volver a mostrar la carga.
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import { Eye, EyeOff, Hammer, LoaderCircle, Palette, Settings2 } from 'lucide-react'
+import { Eye, EyeOff, Hammer, ImageIcon, LoaderCircle, Palette } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
-import { getTypeWorkBadge, webWorksService } from '@/features/web-works'
-import { typeworksService } from '@/features/typeworks'
+import { getTypeWorkBadge } from '@/features/web-works'
+import { useSectionWorksStore } from '../../../../stores/useSectionWorksStore'
 import type { SectionWorksConfig } from './section-works.config'
 
-type TypeCount = { key: string; name: string; total: number; visible: number }
-type Summary = { total: number; visible: number; byType: TypeCount[] }
-
-/** Cuántos trabajos cumplen el filtro (solo se pide 1 por página: alcanza con `meta.total`). */
-async function countWorks(filters: { state?: number; typework_key?: string }): Promise<number> {
-  const res = await webWorksService.getList({ page: 1, per_page: 1, ...filters })
-  if (!res.success) throw new Error(res.message)
-  return res.meta?.total ?? res.data.length
-}
-
-async function loadSummary(): Promise<Summary> {
-  const types = await typeworksService.getForSelect()
-  const [total, visible, byType] = await Promise.all([
-    countWorks({}),
-    countWorks({ state: 1 }),
-    Promise.all((types.success ? types.data : []).map(async (t) => ({
-      key: t.typework_key,
-      name: t.typework_name,
-      total: await countWorks({ typework_key: t.typework_key }),
-      visible: await countWorks({ typework_key: t.typework_key, state: 1 }),
-    }))),
-  ])
-  return { total, visible, byType }
+/** Tarjeta de ayuda: qué se administra y dónde, con su botón. */
+function GuideCard({ icon: Icon, title, text, action, primary = false, onClick }: {
+  icon: typeof Eye; title: string; text: string; action: string; primary?: boolean; onClick: () => void
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-2">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="size-4" />
+        </div>
+        <h4 className="text-sm font-semibold">{title}</h4>
+      </div>
+      <p className="flex-1 text-sm text-muted-foreground">{text}</p>
+      <Button size="sm" variant={primary ? 'default' : 'outline'} className="w-fit" onClick={onClick}>
+        {action}
+      </Button>
+    </div>
+  )
 }
 
 function StatTile({ icon: Icon, label, value, className }: { icon: typeof Eye; label: string; value: number; className?: string }) {
@@ -59,43 +56,43 @@ export function SectionWorksSummary({ config, sectionId }: { config: SectionWork
   const router = useRouter()
   const goTo = (path: string) => { NProgress.start(); router.push(path) }
 
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [isError, setIsError] = useState(false)
-  const [reloadKey, setReloadKey] = useState(0)
+  const summary = useSectionWorksStore((s) => s.summary)
+  const isError = useSectionWorksStore((s) => s.summaryError)
+  const isFetching = useSectionWorksStore((s) => s.summaryFetching)
+  const loadSummary = useSectionWorksStore((s) => s.loadSummary)
 
-  useEffect(() => {
-    let cancelled = false
-    loadSummary()
-      .then((data) => { if (!cancelled) { setSummary(data); setIsError(false) } })
-      .catch(() => { if (!cancelled) setIsError(true) })
-    return () => { cancelled = true }
-  }, [reloadKey])
+  // Al entrar a la pestaña: pide el resumen nuevo (en silencio si ya había uno guardado)
+  useEffect(() => { void loadSummary() }, [loadSummary])
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-sm font-medium">
-          <Hammer className="size-4" />{config.title}
-        </h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => goTo(`/sections/settings/${sectionId}?tab=appearance`)}>
-            <Palette className="mr-1.5 size-4" />Qué se ve en la página
-          </Button>
-          <Button size="sm" onClick={() => goTo('/web-works')}>
-            <Settings2 className="mr-1.5 size-4" />Administrar trabajos
-          </Button>
-        </div>
+      {/* Dónde se administra cada cosa: esta sección no tiene fotos propias */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <GuideCard
+          icon={ImageIcon}
+          title="Trabajos y sus fotos"
+          text="Esta sección no tiene fotos propias: muestra los trabajos de la galería. Para agregar, cambiar u ocultar trabajos y sus fotos, entra a Galería → Trabajos."
+          action="Ir a Galería → Trabajos"
+          primary
+          onClick={() => goTo('/web-works')}
+        />
+        <GuideCard
+          icon={Palette}
+          title="Qué se ve en la página"
+          text="Mostrar u ocultar partes de las tarjetas, los filtros, la paginación y lo que aparece en el detalle de cada trabajo."
+          action="Abrir Apariencia"
+          onClick={() => goTo(`/sections/settings/${sectionId}?tab=appearance`)}
+        />
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {config.description} Los trabajos se crean, editan, ocultan y ordenan en Galería → Trabajos; aquí solo
-        ve el resumen.
-      </p>
+      <h3 className="flex items-center gap-2 text-sm font-medium">
+        <Hammer className="size-4" />{config.title}
+      </h3>
 
       {isError ? (
         <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-lg border">
           <p className="text-sm text-muted-foreground">No se pudo cargar el resumen de trabajos.</p>
-          <Button size="sm" variant="outline" onClick={() => { setIsError(false); setSummary(null); setReloadKey((k) => k + 1) }}>Reintentar</Button>
+          <Button size="sm" variant="outline" disabled={isFetching} onClick={() => void loadSummary()}>Reintentar</Button>
         </div>
       ) : !summary ? (
         <div className="flex min-h-[120px] items-center justify-center">

@@ -5,10 +5,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ImageIcon, Loader2, MapPin, Plus, Type } from 'lucide-react'
+import { ImageIcon, Info, Loader2, MapPin, Plus, Type } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
@@ -39,6 +40,8 @@ import {
 import { SectionImageItemSelect } from './section-item-select'
 import { SectionImageTextFields } from './sectionimage-text-fields'
 import { FormGroupTitle } from './form-group-title'
+// Etiquetas y campos visibles según el tipo de sección (Historia, Equipo, Quiénes somos, encabezado)
+import { getImageFieldsConfig } from './image-fields-by-section'
 // Carrusel de categorías: origen de la imagen (Banco de imágenes | Foto de un trabajo de la Galería)
 import { ImageSourceTabs, type ImageSource } from './coverflow/image-source-tabs'
 import { WorkPhotoPicker, type PickedWork, type PickedWorkPhoto } from './coverflow/work-photo-picker'
@@ -166,6 +169,9 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
   const isGrouped = isServiceShowcase || isCoverflow
   // El origen "Foto de un trabajo" solo existe en el carrusel; en las demás siempre es el banco
   const effectiveSource: ImageSource = isCoverflow ? imageSource : 'bank'
+  // Otras secciones con su propio formulario (Historia, Equipo, Quiénes somos, encabezado).
+  // null = formulario de siempre. El hero y el carrusel (agrupadas) siguen con su propio modo.
+  const fieldsConfig = isGrouped ? null : getImageFieldsConfig(typeKey)
 
   // Carrusel: categoría de la tarjeta elegida, por id (clave 'category-<id>') o, si no trae id, por nombre
   const cardCategoryId = isCoverflow ? getCategoryIdFromKey(selectedSectionItem?.sectionitem_key) : null
@@ -312,6 +318,14 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
     <Form {...form}>
       {/* Ocupa todo el ancho: las tarjetas se reparten en columnas fluidas (ver FLUID_GRID) */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {/* Aviso propio del tipo de sección (ej. Equipo: solo se usa la primera foto) */}
+        {fieldsConfig?.notice && (
+          <Alert>
+            <Info className="size-4" />
+            <AlertDescription>{fieldsConfig.notice}</AlertDescription>
+          </Alert>
+        )}
+
         <div className={FLUID_GRID}>
           {/* ── Ubicación: sección, item, ajuste y visibilidad ── */}
           <Card>
@@ -340,6 +354,8 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
                 </FormItem>
               )} />
 
+              {/* Item: se oculta en las secciones que no agrupan fotos por item (ej. encabezado) */}
+              {!fieldsConfig?.hideItem && (
               <FormField control={form.control} name="id_section_item" render={({ field }) => (
                 <FormItem>
                   {/* En el hero de Servicios cada item es un servicio; en el carrusel, una categoría */}
@@ -379,6 +395,7 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
                   <FormMessage />
                 </FormItem>
               )} />
+              )}
 
               <FormField control={form.control} name="sectionimage_fix" render={({ field }) => (
                 <FormItem>
@@ -463,12 +480,12 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
             </CardContent>
           </Card>
 
-          {/* ── Textos (no se muestra en el hero de Servicios ni en el carrusel: allí la web no los usa) ── */}
-          {!isGrouped && (
+          {/* ── Textos (no se muestra en el hero de Servicios, el carrusel ni el encabezado: allí la web no los usa) ── */}
+          {!isGrouped && !fieldsConfig?.hideTexts && (
             <Card>
               <CardContent className="pt-6 flex flex-col gap-4">
                 <FormGroupTitle icon={Type} title="Textos" description="Opcionales: acompañan a la foto en el sitio web." />
-                <SectionImageTextFields control={form.control} captionOnly={false} />
+                <SectionImageTextFields control={form.control} captionOnly={false} config={fieldsConfig} />
               </CardContent>
             </Card>
           )}

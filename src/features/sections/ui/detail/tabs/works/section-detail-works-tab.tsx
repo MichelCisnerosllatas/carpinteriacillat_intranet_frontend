@@ -24,7 +24,9 @@ import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import { cn } from '@/shared/lib/utils'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
 import { getTypeWorkBadge, useWebWorkListStore, webWorksService, type WebWorkApiItem } from '@/features/web-works'
+import { useSectionWorksStore } from '../../../../stores/useSectionWorksStore'
 import type { SectionWorksConfig } from './section-works.config'
 import { SectionWorksSummary } from './section-works-summary'
 
@@ -48,33 +50,30 @@ function SectionWorksManager({ config }: { config: SectionWorksConfig }) {
   const router = useRouter()
   const goTo = (path: string) => { NProgress.start(); router.push(path) }
 
-  const [works, setWorks]         = useState<WebWorkApiItem[]>([])
-  const [total, setTotal]         = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isError, setIsError]     = useState(false)
-  const [reloadKey, setReloadKey] = useState(0)
+  // Datos en memoria (useSectionWorksStore): al volver a esta pestaña se ven al instante y se
+  // refrescan por detrás, sin volver a mostrar la carga.
+  const storeKey = config.typeworkKey ?? 'all'
+  const entry = useSectionWorksStore((s) => s.lists[storeKey])
+  const isFetching = useSectionWorksStore((s) => Boolean(s.listFetching[storeKey]))
+  const isError = useSectionWorksStore((s) => Boolean(s.listError[storeKey]))
+  const loadList = useSectionWorksStore((s) => s.loadList)
+  // Barrita de "actualizando" solo cuando el usuario cambió algo (mostrar/ocultar/eliminar).
+  const [isUserFetching, setIsUserFetching] = useState(false)
+
+  const works = entry?.works ?? []
+  const total = entry?.total ?? 0
+  const isLoading = !entry && !isError
 
   const typeQuery = config.typeworkKey ? `?typework_key=${config.typeworkKey}` : ''
 
-  useEffect(() => {
-    let cancelled = false
-    // include=media: hacen falta los pares/fotos para saber qué se ve en la web
-    webWorksService.getMediaList({ typework_key: config.typeworkKey ?? undefined })
-      .then((res) => {
-        if (cancelled) return
-        if (!res.success) { setIsError(true); return }
-        setWorks(res.data)
-        setTotal(res.meta?.total ?? res.data.length)
-      })
-      .catch(() => { if (!cancelled) setIsError(true) })
-      .finally(() => { if (!cancelled) setIsLoading(false) })
-    return () => { cancelled = true }
-  }, [config.typeworkKey, reloadKey])
+  // Al entrar a la pestaña: pide la versión nueva (en silencio si ya había datos)
+  useEffect(() => { void loadList(config.typeworkKey) }, [config.typeworkKey, loadList])
 
   const reload = () => {
     // La lista de Galería → Trabajos también debe volver a pedir al entrar
     useWebWorkListStore.getState().setForceReload(true)
-    setReloadKey((k) => k + 1)
+    setIsUserFetching(true)
+    void loadList(config.typeworkKey).finally(() => setIsUserFetching(false))
   }
 
   const handleToggle = async (work: WebWorkApiItem, visible: boolean) => {
@@ -117,7 +116,8 @@ function SectionWorksManager({ config }: { config: SectionWorksConfig }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="relative flex flex-col gap-3">
+      <TableLoadingBar active={isUserFetching && isFetching} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-sm font-medium">
           <Hammer className="size-4" />{config.title}
@@ -148,7 +148,7 @@ function SectionWorksManager({ config }: { config: SectionWorksConfig }) {
       ) : isError ? (
         <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-lg border">
           <p className="text-sm text-muted-foreground">No se pudieron cargar los trabajos.</p>
-          <Button size="sm" variant="outline" onClick={() => { setIsError(false); setIsLoading(true); setReloadKey((k) => k + 1) }}>Reintentar</Button>
+          <Button size="sm" variant="outline" disabled={isFetching} onClick={() => void loadList(config.typeworkKey)}>Reintentar</Button>
         </div>
       ) : works.length === 0 ? (
         <div className="flex min-h-[120px] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">

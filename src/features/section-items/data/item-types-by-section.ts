@@ -47,8 +47,8 @@ export const ITEM_TYPES_BY_SECTION: Record<string, string[]> = {
   // "Nuestro equipo" de Nosotros: disciplinas (ícono + nombre).
   team_grid: ['discipline'],
 
-  // Carrusel de historia de Nosotros: hitos.
-  history_carousel: ['milestone'],
+  // (El carrusel de historia de Nosotros, history_carousel, no va aquí: cada hito es una IMAGEN
+  //  de la sección, no un item. Los items 'milestone' ya no se usan.)
 
   // Secciones viejas (por si se vuelven a crear).
   service_grid: ['service'],

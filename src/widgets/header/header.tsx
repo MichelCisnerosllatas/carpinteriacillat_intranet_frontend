@@ -52,8 +52,13 @@ export function Header({ className, fixed = true, title, children, ...props }: H
         )}
       >
         {/* ── Left ───────────────────────────────────── */}
-        <SidebarTrigger variant="outline" className="max-md:scale-125" />
-        <Separator orientation="vertical" className="h-6" />
+        {/* En desktop el sidebar ya trae su propio botón de contraer/expandir: este solo se
+            muestra en mobile, o en modo offcanvas con el sidebar oculto (si no, no habría
+            cómo volver a abrirlo). */}
+        <div className="flex items-center gap-3 md:hidden md:[.peer[data-collapsible=offcanvas]~*_&]:flex">
+          <SidebarTrigger variant="outline" className="max-md:scale-125" />
+          <Separator orientation="vertical" className="h-6" />
+        </div>
         {title && <h1 className="text-base font-semibold">{title}</h1>}
         {children}
 

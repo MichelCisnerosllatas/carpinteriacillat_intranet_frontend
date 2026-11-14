@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import {
@@ -13,77 +13,126 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/shared/ui/command'
-import { ScrollArea } from '@/shared/ui/scroll-area'
 import { sidebarData } from '@/shared/config/sidebar-data'
 import { useSearchStore } from '@/shared/stores/search-store'
+import { filterNavByRole } from '@/shared/config/nav-types'
 import type { NavLink, NavCollapsible } from '@/shared/config/nav-types'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
 
+// Buscador de módulos del sidebar (solo interfaz, sin backend). Se abre con Ctrl/⌘+K
+// o desde el botón de búsqueda del sidebar. Respeta los mismos permisos por rol que el sidebar.
 export function CommandMenu() {
   const router = useRouter()
+  const pathname = usePathname()
   const { setTheme } = useTheme()
-  const { open, setOpen } = useSearchStore()
+  const { open, setOpen, toggle, setRevealActive } = useSearchStore()
+  const idRol = useAuthStore((state) => state.loginDataDTO?.user?.id_rol)
 
-  // Global keyboard shortcut
+  const groups = useMemo(
+    () => filterNavByRole(sidebarData.navGroups, idRol ? String(idRol) : undefined),
+    [idRol]
+  )
+
+  const [search, setSearch] = useState('')
+  const listRef = useRef<HTMLDivElement>(null)
+
+  // Atajo global (si cierra el buscador, también limpia la búsqueda)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setOpen(!open)
+        if (useSearchStore.getState().open) setSearch('')
+        toggle()
       }
     }
     document.addEventListener('keydown', down)
     return () => document.removeEventListener('keydown', down)
-  }, [open, setOpen])
+  }, [toggle])
+
+  // Al filtrar, el primer resultado debe quedar arriba y visible: se reinicia el scroll
+  // de la lista en cada cambio del texto.
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    if (listRef.current) listRef.current.scrollTop = 0
+  }
+
+  // Al cerrar se limpia la búsqueda para que al reabrir arranque desde cero.
+  const handleOpenChange = (value: boolean) => {
+    setOpen(value)
+    if (!value) setSearch('')
+  }
 
   const run = (fn: () => void) => {
-    setOpen(false)
+    handleOpenChange(false)
     fn()
   }
 
+  // Navega y avisa al sidebar que lleve el módulo elegido arriba de todo.
+  const goTo = (url: string) => {
+    // Si ya estás en esa ruta no hay navegación: no se marca (quedaría pendiente).
+    if (url !== pathname) setRevealActive(true)
+    router.push(url)
+  }
+
   return (
-    <CommandDialog modal open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Type a command or search..." />
-      <CommandList>
-        <ScrollArea type="hover" className="h-72 pe-1">
-          <CommandEmpty>No results found.</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
+    <CommandDialog
+      modal
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Buscar módulo"
+      description="Busca una sección del intranet para ir a ella"
+    >
+      <CommandInput placeholder="Buscar módulo..." value={search} onValueChange={handleSearch} />
+      <CommandList ref={listRef} className="max-h-80">
+          <CommandEmpty>Sin resultados.</CommandEmpty>
+          {groups.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((item, i) => {
                 const link = item as NavLink
                 const collapsible = item as NavCollapsible
-                if (link.url)
+                if (link.url) {
+                  const Icon = link.icon ?? ArrowRight
                   return (
-                    <CommandItem key={`${link.url}-${i}`} value={link.title} onSelect={() => run(() => router.push(link.url))}>
-                      <div className="flex size-4 items-center justify-center">
-                        <ArrowRight className="size-2 text-muted-foreground/80" />
-                      </div>
+                    <CommandItem
+                      key={`${link.url}-${i}`}
+                      value={`${group.title} ${link.title} ${link.url}`}
+                      onSelect={() => run(() => goTo(link.url))}
+                    >
+                      <Icon className="text-muted-foreground" />
                       {link.title}
                     </CommandItem>
                   )
-                return collapsible.items?.map((sub, j) => (
-                  <CommandItem key={`${item.title}-${sub.url}-${j}`} value={`${item.title} ${sub.title}`} onSelect={() => run(() => router.push(sub.url))}>
-                    <div className="flex size-4 items-center justify-center">
-                      <ArrowRight className="size-2 text-muted-foreground/80" />
-                    </div>
-                    {item.title} <ChevronRight className="size-3 mx-1" /> {sub.title}
-                  </CommandItem>
-                ))
+                }
+                return collapsible.items?.map((sub, j) => {
+                  const Icon = sub.icon ?? collapsible.icon ?? ArrowRight
+                  return (
+                    <CommandItem
+                      key={`${item.title}-${sub.url}-${j}`}
+                      value={`${group.title} ${item.title} ${sub.title} ${sub.url}`}
+                      onSelect={() => run(() => goTo(sub.url))}
+                    >
+                      <Icon className="text-muted-foreground" />
+                      <span className="text-muted-foreground">{item.title}</span>
+                      <ChevronRight className="size-3! text-muted-foreground" />
+                      {sub.title}
+                    </CommandItem>
+                  )
+                })
               })}
             </CommandGroup>
           ))}
           <CommandSeparator />
-          <CommandGroup heading="Theme">
-            <CommandItem onSelect={() => run(() => setTheme('light'))}>
-              <Sun className="mr-2 size-4" /> Light
+          <CommandGroup heading="Tema">
+            <CommandItem value="tema claro light" onSelect={() => run(() => setTheme('light'))}>
+              <Sun className="text-muted-foreground" /> Claro
             </CommandItem>
-            <CommandItem onSelect={() => run(() => setTheme('dark'))}>
-              <Moon className="mr-2 size-4 scale-90" /> Dark
+            <CommandItem value="tema oscuro dark" onSelect={() => run(() => setTheme('dark'))}>
+              <Moon className="scale-90 text-muted-foreground" /> Oscuro
             </CommandItem>
-            <CommandItem onSelect={() => run(() => setTheme('system'))}>
-              <Laptop className="mr-2 size-4" /> System
+            <CommandItem value="tema sistema system" onSelect={() => run(() => setTheme('system'))}>
+              <Laptop className="text-muted-foreground" /> Sistema
             </CommandItem>
           </CommandGroup>
-        </ScrollArea>
       </CommandList>
     </CommandDialog>
   )
