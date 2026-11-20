@@ -8,5 +8,9 @@ export const SALES_ENDPOINTS = {
     put: (id: number) => `${BASE}/${id}`,
     patch: (id: number) => `${BASE}/${id}`,
     delete: (id: number) => `${BASE}/${id}`,
+    // Pantalla "Realizar venta" (contrato §3 y §4).
+    formData: `${BASE}/form-data`,
+    postFull: `${BASE}/full`,
+    putFull: (id: number) => `${BASE}/${id}/full`,
   },
 }

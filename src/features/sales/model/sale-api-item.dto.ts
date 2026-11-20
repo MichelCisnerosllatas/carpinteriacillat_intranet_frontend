@@ -14,6 +14,9 @@ export type SaleDetailApiItem = {
   unit: string | null
   quantity: number
   unit_price: number
+  // Descuento en MONTO por línea (contrato §1). subtotal = round(cant × precio, 2) − discount.
+  // Opcional por compatibilidad con respuestas antiguas — el mapper lo trata como 0.
+  discount?: number | string
   subtotal: number
   tax: number | null
   total: number
@@ -57,6 +60,11 @@ export type SaleApiItem = {
   subtotal: number
   tax: number
   total: number
+  // Suma de los descuentos de las líneas (solo lectura, contrato §1).
+  discount_total?: number | string
+  // Proforma de la que salió esta venta (contrato §6) — null si se hizo desde cero.
+  proforma_id?: number | null
+  proforma_code?: string | null
   // amount_paid/balance/payment_status: solo lectura, recalculados en servidor desde sale_payments.
   amount_paid: number
   balance: number

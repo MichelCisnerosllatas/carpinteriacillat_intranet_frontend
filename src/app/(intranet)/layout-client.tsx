@@ -12,6 +12,7 @@ import { AuthSessionProvider } from '@/features/auth/ui/auth-session-provider'
 type DashboardLayoutClientProps = {
   children: React.ReactNode
   defaultSidebarOpen: boolean
+  defaultSidebarWidth?: number
   defaultSidebarVariant: SidebarVariant
   defaultSidebarCollapsible: SidebarCollapsible
 }
@@ -19,12 +20,13 @@ type DashboardLayoutClientProps = {
 export function DashboardLayoutClient({
   children,
   defaultSidebarOpen,
+  defaultSidebarWidth,
   defaultSidebarVariant,
   defaultSidebarCollapsible,
 }: DashboardLayoutClientProps) {
   return (
     <AuthSessionProvider>
-      <SidebarProvider defaultOpen={defaultSidebarOpen}>
+      <SidebarProvider defaultOpen={defaultSidebarOpen} defaultWidth={defaultSidebarWidth}>
         <AppSidebar
           defaultVariant={defaultSidebarVariant}
           defaultCollapsible={defaultSidebarCollapsible}

@@ -25,7 +25,8 @@ import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { SectionSelect } from '@/features/sections/ui/section-select'
 import { IconPicker } from '@/shared/ui/icon-picker/icon-picker'
 import { FaIcon } from '@/shared/ui/icon-picker/fa-icon'
-import { SECTION_ITEM_TYPES, SECTION_ITEM_TYPE_FIELDS, SECTION_ITEM_VARIANT_OPTIONS, SECTION_ITEM_IDENTITY_TYPES, sectionItemVariantLabel, sectionItemTitleLabel, sectionItemLabelLabel, sectionItemValueLabel, sectionItemLinkLabel, WHATSAPP_POSITION_PREVIEW_CLASS, type SectionItemField } from '../../data/data'
+import { FLOATING_ANIMATION_OPTIONS } from '@/shared/config/floating-animations'
+import { SECTION_ITEM_TYPES, SECTION_ITEM_TYPE_FIELDS, SECTION_ITEM_VARIANT_OPTIONS, SECTION_ITEM_IDENTITY_TYPES, sectionItemVariantLabel, sectionItemSuffixLabel, sectionItemTitleLabel, sectionItemLabelLabel, sectionItemValueLabel, sectionItemLinkLabel, WHATSAPP_POSITION_PREVIEW_CLASS, type SectionItemField } from '../../data/data'
 import { getAllowedItemTypes, getFixedItemType } from '../../data/item-types-by-section'
 import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
@@ -507,8 +508,20 @@ export function SectionItemForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
                         {showField('suffix') && (
                           <FormField control={form.control} name="sectionitem_suffix" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sufijo</FormLabel>
-                              <FormControl><Input placeholder="Ej: +" maxLength={30} {...field} /></FormControl>
+                              <FormLabel>{sectionItemSuffixLabel(watchedType)}</FormLabel>
+                              {watchedType === 'whatsapp' ? (
+                                // WhatsApp: el sufijo guarda la animación del botón flotante.
+                                <Select value={field.value || 'bounce'} onValueChange={field.onChange}>
+                                  <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>
+                                    {FLOATING_ANIMATION_OPTIONS.map((o) => (
+                                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <FormControl><Input placeholder="Ej: +" maxLength={30} {...field} /></FormControl>
+                              )}
                               <FormMessage />
                             </FormItem>
                           )} />

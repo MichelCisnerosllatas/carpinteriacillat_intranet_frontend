@@ -10,6 +10,7 @@ const PUBLIC_ROUTES = [
 
 const PROTECTED_PREFIXES = [
   '/dashboard',
+  '/reports',
   '/settings',
   '/users',
   '/roles',
@@ -37,6 +38,7 @@ const PROTECTED_PREFIXES = [
   '/typefonts',
   '/web-works',
   '/web-alerts',
+  '/chatbot',
   '/clients',
   '/products-services',
   '/proformas',

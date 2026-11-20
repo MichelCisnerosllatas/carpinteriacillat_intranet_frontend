@@ -21,6 +21,12 @@ export type PreviewEntity =
   | 'testimony'
   /** Singleton, como 'navigation' pero sin id — solo existe una fila de footer_settings. */
   | 'footer'
+  /**
+   * Singleton, como 'footer' — solo existe una fila de chatbot_setting. `fields` = Partial de
+   * `site.chatbot.settings` del sitio público (mismos nombres de columna: position,
+   * primary_color, header_title...). La web lo mezcla sobre sus settings y abre el panel.
+   */
+  | 'chatbot'
 
 export type PreviewPayload = {
   entity: PreviewEntity

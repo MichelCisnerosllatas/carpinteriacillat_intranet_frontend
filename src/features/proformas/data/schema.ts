@@ -75,6 +75,9 @@ export const proformaSchema = z.object({
   observation: z.string().nullable(),
   details: z.array(proformaDetailViewSchema),
   notes: z.array(proformaNoteViewSchema),
+  // Venta generada desde esta proforma — decide si se muestra "Convertir en venta" o "Ver venta".
+  saleId: z.number().nullable(),
+  saleCode: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })

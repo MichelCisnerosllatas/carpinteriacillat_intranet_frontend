@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PackagePlus, Search } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
@@ -17,26 +17,50 @@ import { ProductServiceQuickCreateDialog } from './product-service-quick-create-
 import type {
   ProductServiceApiItem,
   ProductServiceJoinApiItem,
+  ProductServiceType,
 } from '../model/product-service-api-item.dto'
+
+type TypeTab = 'all' | ProductServiceType
+
+const TYPE_TABS: { value: TypeTab; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'product', label: 'Productos' },
+  { value: 'service', label: 'Servicios' },
+]
 
 interface ProductServicePickerModalProps {
   onSelect: (productService: ProductServiceApiItem) => void
   disabled?: boolean
   triggerLabel?: string
+  /** Modo controlado (opcional): si se pasa `open`, quien lo usa decide cuándo abrirlo (ej. con
+   * un atajo de teclado) y NO se pinta el botón disparador propio. Proformas no lo usa. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** Muestra pestañas "Todos / Productos / Servicios" encima de la tabla. */
+  showTypeTabs?: boolean
 }
 
 /**
- * Botón + modal para elegir un producto/servicio del catálogo con imagen de portada — pensado
- * para el flujo "agregar al carrito" de proformas: a diferencia de <ProductServiceSelect />
- * (combobox compacto usado para editar una línea ya existente), este abre una ventana grande
- * con buscador y tarjetas con imagen, más fácil de reconocer de un vistazo.
+ * Botón + modal para elegir un producto/servicio del catálogo con imagen de portada. Lo usan
+ * proformas ("agregar al carrito") y "Realizar venta" (en modo controlado y con pestañas).
  */
 export function ProductServicePickerModal({
   onSelect,
   disabled,
   triggerLabel = 'Buscar y agregar producto',
+  open: controlledOpen,
+  onOpenChange,
+  showTypeTabs = false,
 }: ProductServicePickerModalProps) {
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next)
+    else setInternalOpen(next)
+  }
+
+  const [typeTab, setTypeTab] = useState<TypeTab>('all')
   const [previewItem, setPreviewItem] = useState<ProductServiceJoinApiItem | null>(null)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
   const { options, isLoading, isError, load, setForceReload } = useProductServiceSelectStore()
@@ -44,6 +68,12 @@ export function ProductServicePickerModal({
   useEffect(() => {
     void load()
   }, [])
+
+  // Las pestañas filtran por `type` antes de pasarle los datos al modal (que filtra por texto).
+  const data = useMemo(
+    () => (typeTab === 'all' ? options : options.filter((o) => o.type === typeTab)),
+    [options, typeTab]
+  )
 
   const handleCreateNew = () => {
     setOpen(false)
@@ -60,17 +90,19 @@ export function ProductServicePickerModal({
 
   return (
     <>
-      <Button type="button" disabled={disabled} className="gap-1.5" onClick={() => setOpen(true)}>
-        <Search className="size-4" />
-        {triggerLabel}
-      </Button>
+      {!isControlled && (
+        <Button type="button" disabled={disabled} className="gap-1.5" onClick={() => setOpen(true)}>
+          <Search className="size-4" />
+          {triggerLabel}
+        </Button>
+      )}
 
       <ModalSelect<ProductServiceJoinApiItem>
         open={open}
         onOpenChange={setOpen}
         title="Seleccionar producto o servicio"
         description="Busca por nombre — al elegir uno se agrega al carrito con cantidad 1, luego puedes ajustar todo."
-        data={options}
+        data={data}
         isLoading={isLoading}
         isError={isError}
         onRetry={() => {
@@ -78,6 +110,35 @@ export function ProductServicePickerModal({
           void load()
         }}
         getId={(productService) => productService.id}
+        // Filtro propio: la columna principal es JSX (imagen + nombre), así que el filtro por
+        // defecto del modal no la podía leer y la búsqueda por nombre no encontraba nada.
+        filterFn={(productService, search) => {
+          const term = search.trim().toLowerCase()
+          if (!term) return true
+          return [productService.name, productService.description, productService.unit]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(term))
+        }}
+        toolbar={
+          showTypeTabs ? (
+            <div className="flex gap-1" role="tablist" aria-label="Tipo">
+              {TYPE_TABS.map((tab) => (
+                <Button
+                  key={tab.value}
+                  type="button"
+                  size="sm"
+                  role="tab"
+                  aria-selected={typeTab === tab.value}
+                  variant={typeTab === tab.value ? 'default' : 'outline'}
+                  className="h-7"
+                  onClick={() => setTypeTab(tab.value)}
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+          ) : undefined
+        }
         columns={[
           {
             header: 'Producto / servicio',
@@ -100,6 +161,11 @@ export function ProductServicePickerModal({
                 </div>
               </div>
             ),
+          },
+          {
+            header: 'Unidad',
+            cell: (productService) => productService.unit ?? '—',
+            className: 'w-20',
           },
           {
             header: 'Precio',

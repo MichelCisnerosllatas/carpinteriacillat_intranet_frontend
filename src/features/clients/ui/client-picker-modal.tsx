@@ -67,6 +67,15 @@ export function ClientPickerModal({
           void load()
         }}
         getId={(client) => client.id}
+        // Filtro propio: la columna es JSX, así que el filtro por defecto del modal no podía
+        // leer el nombre ni el documento y la búsqueda no encontraba nada.
+        filterFn={(client, search) => {
+          const term = search.trim().toLowerCase()
+          if (!term) return true
+          return [client.business_name, client.document_number, client.phone]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(term))
+        }}
         columns={[
           {
             header: 'Razón social',
@@ -92,7 +101,7 @@ export function ClientPickerModal({
         selectLabel="Seleccionar"
         onSelect={onSelect}
         onCreateNew={handleCreateNew}
-        createLabel="Nuevo"
+        createLabel="Nuevo cliente"
       />
 
       <ClientQuickCreateDialog

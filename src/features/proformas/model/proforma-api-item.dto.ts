@@ -68,6 +68,10 @@ export type ProformaApiItem = {
   currency: string
   status: ProformaStatusApi
   observation: string | null
+  // Venta generada desde esta proforma (contrato §6) — null si todavía no se convirtió.
+  // Opcionales por si el backend aún no los expone: el mapper los trata como null.
+  sale_id?: number | null
+  sale_code?: string | null
   created_at: string
   updated_at: string | null
 }

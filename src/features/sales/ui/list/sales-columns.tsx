@@ -40,12 +40,19 @@ export const salesColumns: ColumnDef<Sale>[] = [
     accessorKey: 'code',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Código" />,
     cell: ({ row }) => (
-      <Link
-        href={`/sales/${row.original.id}`}
-        className="text-primary text-sm font-medium hover:underline"
-      >
-        {row.original.code}
-      </Link>
+      <div className="flex flex-col">
+        <Link
+          href={`/sales/${row.original.id}`}
+          className="text-primary text-sm font-medium hover:underline"
+        >
+          {row.original.code}
+        </Link>
+        {row.original.proformaCode && (
+          <span className="text-muted-foreground text-xs">
+            Desde proforma {row.original.proformaCode}
+          </span>
+        )}
+      </div>
     ),
     enableSorting: true,
     enableHiding: true,
@@ -109,9 +116,16 @@ export const salesColumns: ColumnDef<Sale>[] = [
     accessorKey: 'total',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Total" />,
     cell: ({ row }) => (
-      <span className="text-sm font-medium">
-        {formatCurrency(row.original.total, row.original.currency)}
-      </span>
+      <div className="flex flex-col items-end">
+        <span className="text-sm font-medium">
+          {formatCurrency(row.original.total, row.original.currency)}
+        </span>
+        {row.original.discountTotal > 0 && (
+          <span className="text-muted-foreground text-xs">
+            Desc. {formatCurrency(row.original.discountTotal, row.original.currency)}
+          </span>
+        )}
+      </div>
     ),
     enableSorting: true,
     enableHiding: true,

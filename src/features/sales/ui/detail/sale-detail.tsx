@@ -1,6 +1,7 @@
 // src/features/sales/ui/detail/sale-detail.tsx
 'use client'
 
+import Link from 'next/link'
 import { CalendarDays, FileText, Package, User } from 'lucide-react'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -69,6 +70,14 @@ export function SaleDetail({ id }: { id: string }) {
             <span className="text-muted-foreground text-xs">
               {item.isTaxed ? `Grava IGV (${item.igvRateApplied ?? 0}%)` : 'No grava IGV'}
             </span>
+            {item.proformaId && item.proformaCode && (
+              <span className="text-muted-foreground text-xs">
+                Desde proforma{' '}
+                <Link href={`/proformas/${item.proformaId}`} className="text-primary hover:underline">
+                  {item.proformaCode}
+                </Link>
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -114,6 +123,7 @@ export function SaleDetail({ id }: { id: string }) {
                     <TableHead className="w-[70px]">Unidad</TableHead>
                     <TableHead className="w-[90px] text-right">Cantidad</TableHead>
                     <TableHead className="w-[110px] text-right">P. Unitario</TableHead>
+                    <TableHead className="w-[100px] text-right">Desc.</TableHead>
                     <TableHead className="w-[110px] text-right">Subtotal</TableHead>
                     <TableHead className="w-[100px] text-right">IGV</TableHead>
                     <TableHead className="w-[110px] text-right">Total</TableHead>
@@ -128,6 +138,9 @@ export function SaleDetail({ id }: { id: string }) {
                       <TableCell className="text-right text-sm tabular-nums">{d.quantity}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatSaleCurrency(d.unitPrice, item.currency)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-right text-sm tabular-nums">
+                        {d.discount > 0 ? formatSaleCurrency(d.discount, item.currency) : '—'}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatSaleCurrency(d.subtotal, item.currency)}
@@ -146,8 +159,18 @@ export function SaleDetail({ id }: { id: string }) {
           )}
 
           <div className="mt-3 ml-auto flex w-full max-w-xs flex-col gap-1 rounded-lg border p-3 text-sm">
+            {item.discountTotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Descuentos</span>
+                <span className="font-medium">
+                  − {formatSaleCurrency(item.discountTotal, item.currency)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">
+                {item.discountTotal > 0 ? 'Subtotal (con descuento)' : 'Subtotal'}
+              </span>
               <span className="font-medium">{formatSaleCurrency(item.subtotal, item.currency)}</span>
             </div>
             <div className="flex justify-between">

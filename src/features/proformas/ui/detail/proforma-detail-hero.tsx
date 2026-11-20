@@ -2,12 +2,25 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Ban, CheckCircle2, Clock, FilePlus, FileText, Pencil, RefreshCw, Repeat, XCircle } from 'lucide-react'
+import {
+  Ban,
+  CheckCircle2,
+  Clock,
+  FilePlus,
+  FileText,
+  Pencil,
+  Receipt,
+  RefreshCw,
+  Repeat,
+  ShoppingCart,
+  XCircle,
+} from 'lucide-react'
 import NProgress from 'nprogress'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { IconButton } from '@/shared/ui/icon-button'
 import { cn } from '@/shared/lib/utils'
 import { getProformaStatusOption } from '../../data/data'
 import type { Proforma, ProformaStatus } from '../../data/schema'
@@ -78,6 +91,25 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
             </TooltipTrigger>
             <TooltipContent>Crear una proforma nueva</TooltipContent>
           </Tooltip>
+          {/* Convertir en venta: solo ACEPTADA y sin venta todavía (contrato §6). Si ya se
+           * convirtió, se ofrece ir directo a la venta generada. */}
+          {item.status === 'ACEPTADA' && !item.saleId && (
+            <IconButton
+              label="Convertir en venta"
+              variant="default"
+              className="size-9"
+              onClick={() => goTo(`/sales/create?proforma=${item.id}`)}
+              icon={<ShoppingCart />}
+            />
+          )}
+          {item.saleId && (
+            <IconButton
+              label={`Ver venta ${item.saleCode ?? ''}`.trim()}
+              className="size-9"
+              onClick={() => goTo(`/sales/${item.saleId}`)}
+              icon={<Receipt />}
+            />
+          )}
           {item.status === 'PENDIENTE' && (
             <Tooltip>
               <TooltipTrigger asChild>

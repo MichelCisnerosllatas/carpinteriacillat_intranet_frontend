@@ -1,3 +1,3 @@
-export { useSaleForm } from './useSaleForm'
-export { useSaleCart } from './useSaleCart'
+export { useSalePos } from './useSalePos'
+export { useSalePosShortcuts } from './useSalePosShortcuts'
 export { useSaleDetailPage } from './useSaleDetailPage'

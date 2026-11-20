@@ -2,13 +2,19 @@
 import {
   AudioWaveform,
   Bell,
+  Bot,
   BriefcaseBusiness,
   Bug,
   Building2,
   Command,
   Construction,
   CreditCard,
+  FileChartColumn,
+  FileCheck,
   FileStack,
+  KeyRound,
+  MessageSquareQuote,
+  TrendingUp,
   FileText,
   FileType,
   FileX,
@@ -25,6 +31,7 @@ import {
   LayoutList,
   Megaphone,
   ListTodo,
+  ListOrdered,
   Lock,
   MessagesSquare,
   Monitor,
@@ -51,6 +58,7 @@ import {
   UserCog,
   Users2,
   UserX,
+  UserRound,
 } from 'lucide-react'
 import type { SidebarData } from './nav-types'
 
@@ -145,9 +153,16 @@ export const sidebarData: SidebarData = {
       title: 'General',
       items: [
         {
+          // Dashboards de gestión (contrato API §7). Todos comparten los mismos filtros de fecha/moneda.
           title: 'Dashboard',
-          url: '/dashboard',
           icon: LayoutDashboard,
+          items: [
+            { title: 'Resumen general',          url: '/dashboard',                   icon: LayoutDashboard },
+            { title: 'Rendimiento de ventas',    url: '/dashboard/sales-performance', icon: TrendingUp },
+            { title: 'Seguimiento de proformas', url: '/dashboard/proformas',         icon: FileCheck },
+            { title: 'Mensajes y opiniones',     url: '/dashboard/messages',          icon: MessageSquareQuote },
+            { title: 'Accesos del personal',     url: '/dashboard/staff-access',      icon: KeyRound },
+          ],
         },
         {
           title: 'Tasks',
@@ -200,6 +215,18 @@ export const sidebarData: SidebarData = {
             { title: 'Items de Sección',   url: '/section-items',   icon: LayoutList },
             { title: 'Testimonios',        url: '/testimony',   icon: Quote },
             { title: 'Tipos de Sección',    url: '/typesections', icon: LayoutGrid },
+          ],
+        },
+        {
+          // ChatBot del sitio público: DISEÑO (Configuración, Opciones de inicio) separado de la
+          // DATA que generan los clientes (Conversaciones, Visitantes).
+          title: 'ChatBot',
+          icon: Bot,
+          items: [
+            { title: 'Configuración',      url: '/chatbot/settings',      icon: Settings2 },
+            { title: 'Opciones de inicio', url: '/chatbot/options',       icon: ListOrdered },
+            { title: 'Conversaciones',     url: '/chatbot/conversations', icon: MessagesSquare },
+            { title: 'Visitantes',         url: '/chatbot/visitors',      icon: UserRound },
           ],
         },
         {
@@ -322,6 +349,12 @@ export const sidebarData: SidebarData = {
           icon: Package,
         },
       ],
+    },
+    {
+      // Reportes (contrato API §10): una sola página /reports con pestañas por tema.
+      // Va al final para no mezclarse con los dashboards del grupo "General".
+      title: 'Reportes',
+      items: [{ title: 'Reportes', url: '/reports', icon: FileChartColumn }],
     },
   ],
 }

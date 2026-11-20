@@ -13,6 +13,7 @@ const ENTITY_LABELS: Record<PreviewEntity, string> = {
   section_item_detail: 'Detalle',
   testimony: 'Testimonio',
   footer: 'Footer',
+  chatbot: 'ChatBot',
 }
 
 export function guessPreviewLabel(payload: PreviewPayload | null): string {

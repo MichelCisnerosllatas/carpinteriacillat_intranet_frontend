@@ -12,6 +12,7 @@ import { formatDisplayDate } from '@/shared/lib/utils'
 import { useSalePaymentListStore } from '../stores/useSalePaymentListStore'
 import { useSalePaymentDeleteStore } from '../stores/useSalePaymentDeleteStore'
 import { SalePaymentFormDialog } from './sale-payment-form-dialog'
+import { getSalePaymentMethodLabel } from '../data/data'
 import type { SalePayment } from '../data/schema'
 
 interface SalePaymentsSectionProps {
@@ -108,7 +109,7 @@ export function SalePaymentsSection({ saleId, readOnly, amountPaid, balance, cur
             {items.map((p) => (
               <div key={p.id} className="flex items-start justify-between gap-3 py-2">
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium leading-tight">{p.paymentMethod ?? 'Pago'}</span>
+                  <span className="text-sm font-medium leading-tight">{getSalePaymentMethodLabel(p.paymentMethod)}</span>
                   <span className="text-muted-foreground text-xs">{formatDisplayDate(p.paymentDate)}</span>
                   {p.observation && <span className="text-muted-foreground text-xs">{p.observation}</span>}
                 </div>

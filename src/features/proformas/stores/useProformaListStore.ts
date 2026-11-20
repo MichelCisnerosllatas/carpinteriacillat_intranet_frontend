@@ -97,6 +97,8 @@ export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
     text: n.text,
     order: n.order,
   })),
+  saleId: item.sale_id ?? null,
+  saleCode: item.sale_code ?? null,
   createdAt: item.created_at,
   updatedAt: item.updated_at ?? '',
 })

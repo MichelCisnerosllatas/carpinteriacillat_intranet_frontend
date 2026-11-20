@@ -14,6 +14,7 @@ import type { PreviewFocus } from './landing-preview.types'
 export const LANDING_PREVIEW_ROUTE_PATTERNS: RegExp[] = [
   /^\/navigations(\/|$)/,
   /^\/footer(\/|$)/,
+  /^\/chatbot(\/|$)/,
   /^\/web-alerts(\/|$)/,
   /^\/contact-messages(\/|$)/,
   /^\/sections(\/|$)/,
@@ -41,6 +42,9 @@ const LANDING_PREVIEW_ROUTE_FOCUS: { pattern: RegExp; focus: PreviewFocus }[] = 
   { pattern: /^\/contact-messages(\/|$)/, focus: { navigationUrl: '/', anchorId: 'contacto', label: 'Contacto' } },
   // Alertas del sitio: las barras salen arriba de todo en cualquier página → se muestra el inicio, arriba.
   { pattern: /^\/web-alerts(\/|$)/, focus: { navigationUrl: '/', label: 'Alertas del sitio' } },
+  // ChatBot: el botón flotante sale en cualquier página → se muestra el inicio. /chatbot/settings
+  // NO va acá: su formulario ya manda su propio payload (entity 'chatbot').
+  { pattern: /^\/chatbot\/(options|conversations|visitors)(\/|$)/, focus: { navigationUrl: '/', label: 'ChatBot' } },
 ]
 
 export function getLandingPreviewRouteFocus(pathname: string): PreviewFocus | null {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { Download, Eye, Loader2, Pencil, Repeat, Trash2 } from 'lucide-react'
+import { Download, Eye, Loader2, Pencil, Receipt, Repeat, ShoppingCart, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
@@ -45,6 +45,15 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
     setCurrentItem(row.original)
     NProgress.start()
     router.push(`/proformas/edit/${row.original.id}`)
+  }
+
+  // Solo una proforma ACEPTADA y sin venta se puede convertir (contrato §6). La pantalla de venta
+  // se precarga sola con `?proforma={id}`.
+  const canConvert = row.original.status === 'ACEPTADA' && !row.original.saleId
+
+  const goTo = (path: string) => {
+    NProgress.start()
+    router.push(path)
   }
 
   const handleDownloadPdf = async () => {
@@ -127,6 +136,22 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
             Editar{' '}
             <DropdownMenuShortcut>
               <Pencil size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canConvert && (
+          <DropdownMenuItem onClick={() => goTo(`/sales/create?proforma=${row.original.id}`)}>
+            Convertir en venta{' '}
+            <DropdownMenuShortcut>
+              <ShoppingCart size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {row.original.saleId && (
+          <DropdownMenuItem onClick={() => goTo(`/sales/${row.original.saleId}`)}>
+            Ver venta {row.original.saleCode ?? ''}{' '}
+            <DropdownMenuShortcut>
+              <Receipt size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         )}

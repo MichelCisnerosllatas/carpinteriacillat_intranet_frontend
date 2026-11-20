@@ -99,7 +99,8 @@ export const SECTION_ITEM_TYPE_FIELDS: Record<string, SectionItemField[]> = {
   statement:  ['title', 'subtitle', 'label', 'description', 'rating'],
   step:       ['label', 'title', 'description', 'icon'],       // SectionProcess.tsx: label = número del paso
   phone:      ['value'],                                       // SectionContact.tsx: solo el número
-  whatsapp:   ['value', 'variant'],                            // findFloatingWhatsapp.ts: número + posición
+  // findFloatingWhatsapp.ts: número + posición (variant) + animación (suffix, ver sectionItemSuffixLabel)
+  whatsapp:   ['value', 'suffix', 'variant'],
   email:      ['value'],                                       // SectionContact.tsx: solo el correo
   branch:     ['label', 'value', 'location'],                  // SectionContact.tsx: horario, dirección y mapa
   showcase:   ['title', 'description', 'label', 'link'],
@@ -134,6 +135,17 @@ export function sectionItemVariantLabel(type: string | undefined): string {
   if (type === 'whatsapp') return 'Posición del botón flotante'
   if (type === 'value' || type === 'mission' || type === 'vision') return 'Color de acento'
   return 'Variante'
+}
+
+/**
+ * Etiqueta del campo "Sufijo" en el form. En 'whatsapp' el sufijo NO es texto: se reutilizó
+ * (igual que `variant` para la posición) para guardar la ANIMACIÓN del botón flotante — ver
+ * FLOATING_ANIMATION_OPTIONS (shared/config/floating-animations.ts) y findFloatingWhatsapp.ts
+ * en la web. Vacío = 'bounce' (la animación de siempre).
+ */
+export function sectionItemSuffixLabel(type: string | undefined): string {
+  if (type === 'whatsapp') return 'Animación del botón flotante'
+  return 'Sufijo'
 }
 
 /** Etiqueta del campo "Título" en el form, según lo que ese tipo realmente representa. */

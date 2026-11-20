@@ -63,6 +63,7 @@ export function SaleDetailHero({ item, isRefreshing, onRefresh }: SaleDetailHero
             <p className="text-muted-foreground text-xs">
               {item.clientBusinessName ?? '—'} · Emitida el {item.issueDateFormatted ?? item.issueDate}
               {item.dueDate && <> · Vence el {item.dueDateFormatted ?? item.dueDate}</>}
+              {item.proformaCode && <> · Desde proforma {item.proformaCode}</>}
             </p>
           </div>
         </div>

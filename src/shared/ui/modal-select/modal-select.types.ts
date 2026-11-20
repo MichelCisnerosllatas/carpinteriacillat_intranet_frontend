@@ -70,6 +70,12 @@ export interface ModalSelectProps<T> {
   createLabel?: string
 
   /**
+   * Contenido opcional entre el buscador y la tabla (ej. pestañas de filtro "Todos / Productos /
+   * Servicios"). Quien lo use filtra `data` por su cuenta; el modal solo lo pinta.
+   */
+  toolbar?: React.ReactNode
+
+  /**
    * Contenido del footer. Si se omite, el footer no se renderiza
    * (este modal es de selección directa, no necesita botones de confirmar/cancelar).
    */
