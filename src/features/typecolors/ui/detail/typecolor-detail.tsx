@@ -11,18 +11,13 @@ import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
 import { useTypeColorListStore } from '../../stores/useTypeColorListStore'
 import NProgress from 'nprogress'
-
-function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-0.5">
-      <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium">{value ?? '—'}</span>
-    </div>
-  )
-}
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { DetailRow } from './detail-row'
 
 export function TypeColorDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Solo si tiene permiso de editar (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('type_colors.update')
   const { currentItem, items, setCurrentItem } = useTypeColorListStore()
 
   useEffect(() => {
@@ -67,14 +62,16 @@ export function TypeColorDetail({ id }: { id: string }) {
                 <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
               )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={() => { NProgress.start(); router.push(`/typecolors/edit/${item.id}`) }}
-            >
-              <Pencil className="mr-1 size-4" />Editar
-            </Button>
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => { NProgress.start(); router.push(`/typecolors/edit/${item.id}`) }}
+              >
+                <Pencil className="mr-1 size-4" />Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

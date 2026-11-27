@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -34,6 +34,7 @@ import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { AlertError } from '@/widgets/alerts_components'
 
 import { useSaleSettingStore } from '../../stores/useSaleSettingStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 const schema = z.object({
   igv_rate: z
@@ -54,6 +55,8 @@ const DEFAULT_VALUES: FormValues = {
 
 export function SaleSettingForm() {
   const { data, isLoading, message, update } = useSaleSettingStore()
+  // Sin permiso de editar, el formulario queda en solo lectura (ver ROLES_Y_PERMISOS.md)
+  const canUpdate = useCan('sale_settings.update')
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -71,6 +74,8 @@ export function SaleSettingForm() {
   }, [data, form])
 
   const isSubmitting = isLoading
+  // Campos bloqueados mientras guarda o si no puede editar
+  const isLocked = isSubmitting || !canUpdate
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({
@@ -104,6 +109,12 @@ export function SaleSettingForm() {
         <Card className="overflow-hidden transition-shadow duration-300 hover:shadow-md">
           <CardHeader className="border-b">
             <CardTitle className="text-base font-semibold">Configuración de Ventas</CardTitle>
+            {!canUpdate && (
+              <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                <Lock className="size-3.5" />
+                Solo lectura: no tienes permiso para editar
+              </p>
+            )}
           </CardHeader>
 
           <CardContent className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
@@ -123,7 +134,7 @@ export function SaleSettingForm() {
                       min="0"
                       max="100"
                       placeholder="18.00"
-                      disabled={isSubmitting}
+                      disabled={isLocked}
                       value={field.value ?? ''}
                       onChange={(e) => field.onChange(e.target.value === '' ? 0 : parseFloat(e.target.value))}
                     />
@@ -142,7 +153,7 @@ export function SaleSettingForm() {
                   <Select
                     value={String(field.value)}
                     onValueChange={(value) => field.onChange(Number(value))}
-                    disabled={isSubmitting}
+                    disabled={isLocked}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -177,7 +188,7 @@ export function SaleSettingForm() {
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      disabled={isSubmitting}
+                      disabled={isLocked}
                     />
                   </FormControl>
                 </FormItem>
@@ -192,6 +203,7 @@ export function SaleSettingForm() {
           </div>
         )}
 
+        {canUpdate && (
         <div
           className="
             sticky bottom-4 z-20
@@ -216,6 +228,7 @@ export function SaleSettingForm() {
             )}
           </Button>
         </div>
+        )}
       </form>
     </Form>
   )

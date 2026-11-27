@@ -12,6 +12,8 @@ import { getInitials } from '@/shared/lib/get-initials'
 import { callTypes, roles } from '@/features/users/data/data'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { DetailRow } from './detail-row'
 
 interface UserDetailProps {
   id: string
@@ -19,6 +21,8 @@ interface UserDetailProps {
 
 export function UserDetail({ id }: UserDetailProps) {
   const router = useRouter()
+  // Solo si tiene permiso de editar (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('users.update')
   const { currentUser, users, setCurrentUser } = useUserListStore()
 
   useEffect(() => {
@@ -74,10 +78,12 @@ export function UserDetail({ id }: UserDetailProps) {
                 </Badge>
               </div>
             </div>
-            <Button onClick={handleEdit} variant="outline" size="sm" className="shrink-0">
-              <UserPen className="size-4 mr-2" />
-              Editar
-            </Button>
+            {canEdit && (
+              <Button onClick={handleEdit} variant="outline" size="sm" className="shrink-0">
+                <UserPen className="size-4 mr-2" />
+                Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -116,6 +122,17 @@ export function UserDetail({ id }: UserDetailProps) {
             <DetailRow label="Rol" value={user.roleLabel} />
             <Separator />
             <DetailRow label="Estado" value={user.statusLabel} />
+            <Separator />
+            <DetailRow
+              label="Sucursales"
+              value={
+                user.allBranches
+                  ? 'Todas las sucursales'
+                  : user.branches.length
+                    ? user.branches.map((b) => (b.isDefault ? `${b.name} (principal)` : b.name)).join(', ')
+                    : 'Sin sucursal asignada'
+              }
+            />
           </CardContent>
         </Card>
 
@@ -140,21 +157,6 @@ export function UserDetail({ id }: UserDetailProps) {
           </CardContent>
         </Card>
       </div>
-    </div>
-  )
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  label: React.ReactNode
-  value: string
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-muted-foreground shrink-0">{label}</span>
-      <span className="font-medium text-right">{value}</span>
     </div>
   )
 }

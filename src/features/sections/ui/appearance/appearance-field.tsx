@@ -6,46 +6,19 @@
 // vista previa.
 
 import { useEffect, useId, useRef, type ReactNode } from 'react'
-import { LocateFixed, RotateCcw, type LucideIcon } from 'lucide-react'
+import { LocateFixed, RotateCcw } from 'lucide-react'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import type { SectionDisplaySchemaField } from '../../model/sectionget.dto'
 import { AppearanceListField } from './appearance-list-field'
+import { AppearanceIconButton } from './appearance-icon-button'
 
 // Espera antes de resaltar al pasar el mouse: evita una lluvia de resaltados al recorrer la lista.
 const HOVER_HIGHLIGHT_MS = 400
-
-/** Botón chico, solo ícono, con tooltip (⌖ ubicar / ↺ restablecer de cada fila). */
-export function AppearanceIconButton({
-  icon: Icon, label, onClick, disabled,
-}: {
-  icon: LucideIcon
-  label: string
-  onClick: () => void
-  disabled?: boolean
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          onClick={onClick}
-          disabled={disabled}
-          aria-label={label}
-          className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40 pointer-coarse:size-9"
-        >
-          <Icon className="size-4" />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  )
-}
 
 type Props = {
   field: SectionDisplaySchemaField

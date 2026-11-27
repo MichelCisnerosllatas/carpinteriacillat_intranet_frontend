@@ -11,6 +11,7 @@ import {
 } from '@/shared/ui/dropdown-menu'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import type { FurnitureImage } from '../../data/schema'
 
 interface FurnitureImageCardProps {
@@ -36,6 +37,12 @@ export function FurnitureImageCard({
 }: FurnitureImageCardProps) {
   const stateOpt = getStateOption(item.stateValue)
   const isActive = item.stateValue === 1
+  // Las imágenes de muebles usan los permisos de muebles (ver ROLES_Y_PERMISOS.md)
+  const canView   = useCan('furnitures.view')
+  const canUpdate = useCan('furnitures.update')
+  const canState  = useCan('furnitures.state')
+  const canDelete = useCan('furnitures.delete')
+  const canBulk   = canState || canDelete
 
   return (
     <div
@@ -74,14 +81,17 @@ export function FurnitureImageCard({
           </Badge>
         </div>
 
-        <div className="absolute left-2 top-2">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onToggleSelect}
-            className="border-background/80 bg-background/85 backdrop-blur-sm"
-            aria-label="Seleccionar"
-          />
-        </div>
+        {/* La selección solo sirve para acciones masivas */}
+        {canBulk && (
+          <div className="absolute left-2 top-2">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onToggleSelect}
+              className="border-background/80 bg-background/85 backdrop-blur-sm"
+              aria-label="Seleccionar"
+            />
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -99,43 +109,53 @@ export function FurnitureImageCard({
 
       {/* Footer */}
       <div className="flex items-center justify-between border-t px-3 py-2">
-        <Button size="sm" variant="ghost" className="h-7 gap-1.5 px-2 text-xs" onClick={onView}>
-          <Eye className="size-3.5" /> Detalle
-        </Button>
+        {canView ? (
+          <Button size="sm" variant="ghost" className="h-7 gap-1.5 px-2 text-xs" onClick={onView}>
+            <Eye className="size-3.5" /> Detalle
+          </Button>
+        ) : <span />}
         <div className="flex items-center gap-0.5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className="size-7" onClick={onEdit}>
-                <Pencil className="size-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Editar</TooltipContent>
-          </Tooltip>
-          <DropdownMenu modal={false}>
+          {canUpdate && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" className="size-7">
-                      <MoreHorizontal className="size-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </span>
+                <Button size="icon" variant="ghost" className="size-7" onClick={onEdit}>
+                  <Pencil className="size-3.5" />
+                </Button>
               </TooltipTrigger>
-              <TooltipContent>Más acciones</TooltipContent>
+              <TooltipContent>Editar</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={onToggleState}>
-                {isActive
-                  ? <><XCircle className="mr-2 size-4 text-orange-500" />Desactivar</>
-                  : <><CheckCircle2 className="mr-2 size-4 text-teal-500" />Activar</>}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-red-500!">
-                <Trash2 className="mr-2 size-4" />Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          )}
+          {canBulk && (
+            <DropdownMenu modal={false}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="size-7">
+                        <MoreHorizontal className="size-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Más acciones</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" className="w-40">
+                {canState && (
+                  <DropdownMenuItem onClick={onToggleState}>
+                    {isActive
+                      ? <><XCircle className="mr-2 size-4 text-orange-500" />Desactivar</>
+                      : <><CheckCircle2 className="mr-2 size-4 text-teal-500" />Activar</>}
+                  </DropdownMenuItem>
+                )}
+                {canState && canDelete && <DropdownMenuSeparator />}
+                {canDelete && (
+                  <DropdownMenuItem onClick={onDelete} className="text-red-500!">
+                    <Trash2 className="mr-2 size-4" />Eliminar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </div>

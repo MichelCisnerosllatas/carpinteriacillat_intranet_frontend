@@ -6,6 +6,7 @@ import { Button } from '@/shared/ui/button'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { signInWithGoogle, signInWithGoogleAndGetIdToken } from '@/features/auth/services/google-auth.service'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
+import { getHomeUrl } from '@/features/auth/lib/home-url'
 import { GoogleAccessPendingAlert } from './GoogleAccessPendingAlert'
 
 interface GoogleLoginButtonProps {
@@ -56,9 +57,9 @@ export function GoogleLoginButton({ redirectTo }: GoogleLoginButtonProps) {
         return
       }
 
-      const user = useAuthStore.getState().loginDataDTO
-      toastSuccess('Bienvenido a la intranet', `Has iniciado sesión exitosamente ${user?.person?.person_name ?? ''}`)
-      window.location.replace(redirectTo ?? '/dashboard')
+      const user = useAuthStore.getState().session
+      toastSuccess('Bienvenido a la intranet', `Has iniciado sesión exitosamente ${user?.user.person?.person_name ?? ''}`)
+      window.location.replace(redirectTo ?? getHomeUrl(user)) // inicio según el rol
     } catch (error: any) {
       // El usuario cerró el popup de Google, o Firebase no está configurado — no es un error de credenciales.
       if (error?.code !== 'auth/popup-closed-by-user') {

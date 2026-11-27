@@ -24,6 +24,7 @@ import { useSaleListStore } from '../../stores/useSaleListStore'
 import { useSaleDeleteStore } from '../../stores/useSaleDeleteStore'
 import { getSaleStatusOption, getValidStatusTransitions, formatSaleCurrency } from '../../data/data'
 import type { Sale, SaleStatus } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function SalesRowActions({ row }: { row: Row<Sale> }) {
   const router = useRouter()
@@ -32,6 +33,14 @@ export function SalesRowActions({ row }: { row: Row<Sale> }) {
   // payment_status NUNCA se cambia desde acá — solo `status` (ciclo de vida del documento) tiene
   // transiciones editables, ver «Conceptos clave» punto 5-6 en sales.md.
   const transitions = getValidStatusTransitions(row.original.status)
+
+  // Permisos del usuario (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('sales.view')
+  const canUpdate = useCan('sales.update')
+  const canChangeState = useCan('sales.state')
+  const canDelete = useCan('sales.delete')
+  const showEdit = row.original.status === 'GUARDADA' && canUpdate
+  const showChangeState = transitions.length > 0 && canChangeState
 
   const handleView = () => {
     setCurrentItem(row.original)
@@ -92,6 +101,9 @@ export function SalesRowActions({ row }: { row: Row<Sale> }) {
     )
   }
 
+  // Si no queda ninguna acción, no mostramos el botón "..."
+  if (!canView && !showEdit && !showChangeState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -108,13 +120,15 @@ export function SalesRowActions({ row }: { row: Row<Sale> }) {
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle{' '}
-          <DropdownMenuShortcut>
-            <Eye size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-        {row.original.status === 'GUARDADA' && (
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle{' '}
+            <DropdownMenuShortcut>
+              <Eye size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {showEdit && (
           <DropdownMenuItem onClick={handleEdit}>
             Editar{' '}
             <DropdownMenuShortcut>
@@ -122,7 +136,7 @@ export function SalesRowActions({ row }: { row: Row<Sale> }) {
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         )}
-        {transitions.length > 0 && (
+        {showChangeState && (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               Cambiar estado{' '}
@@ -139,13 +153,17 @@ export function SalesRowActions({ row }: { row: Row<Sale> }) {
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar{' '}
-          <DropdownMenuShortcut>
-            <Trash2 size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canDelete && (
+          <>
+            {(canView || showEdit || showChangeState) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar{' '}
+              <DropdownMenuShortcut>
+                <Trash2 size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

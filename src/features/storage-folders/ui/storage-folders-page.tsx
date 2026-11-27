@@ -10,7 +10,7 @@ import { useStorageFolderActionStore } from '../stores/useStorageFolderActionSto
 import { useStorageFileListStore } from '@/features/storage-files/stores/useStorageFileListStore'
 import { useStorageFileActionStore } from '@/features/storage-files/stores/useStorageFileActionStore'
 import { toastSuccess, toastError } from '@/shared/lib/toast'
-import { FolderTree } from './tree/folder-tree'
+import { FolderTree } from './tree/folder-tree/folder-tree'
 import { StorageExplorer } from './explorer/storage-explorer'
 import { FolderNewModal } from './modals/folder-new-modal'
 import { FolderRenameModal } from './modals/folder-rename-modal'

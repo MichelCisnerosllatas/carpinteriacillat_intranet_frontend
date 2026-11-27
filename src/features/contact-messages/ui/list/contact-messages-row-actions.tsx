@@ -18,12 +18,17 @@ import { useContactMessageStatusStore } from '../../stores/useContactMessageStat
 import { useContactMessageDeleteStore } from '../../stores/useContactMessageDeleteStore'
 import { getContactMessageStatusOption } from '../../data/data'
 import type { ContactMessage, ContactMessageStatus } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ContactMessagesRowActions({ row }: { row: Row<ContactMessage> }) {
   const router = useRouter()
   const { setCurrentItem } = useContactMessageListStore()
   const { updateStatus } = useContactMessageStatusStore()
   const { deleteItem } = useContactMessageDeleteStore()
+  // Cada acción se muestra solo si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('contact_messages.view')
+  const canState = useCan('contact_messages.state')
+  const canDelete = useCan('contact_messages.delete')
 
   const handleView = () => {
     setCurrentItem(row.original)
@@ -77,6 +82,9 @@ export function ContactMessagesRowActions({ row }: { row: Row<ContactMessage> })
     descartado: <XCircle size={16} />,
   }
 
+  // Sin ninguna acción permitida no mostramos el menú
+  if (!canView && !canState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -93,20 +101,30 @@ export function ContactMessagesRowActions({ row }: { row: Row<ContactMessage> })
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {otherStatuses.map((status) => (
-          <DropdownMenuItem key={status} onClick={() => void handleChangeStatus(status)}>
-            Marcar como {getContactMessageStatusOption(status).label}
-            <DropdownMenuShortcut>{statusIcon[status]}</DropdownMenuShortcut>
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
           </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        )}
+        {canState && (
+          <>
+            {canView && <DropdownMenuSeparator />}
+            {otherStatuses.map((status) => (
+              <DropdownMenuItem key={status} onClick={() => void handleChangeStatus(status)}>
+                Marcar como {getContactMessageStatusOption(status).label}
+                <DropdownMenuShortcut>{statusIcon[status]}</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
+        {canDelete && (
+          <>
+            {(canView || canState) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

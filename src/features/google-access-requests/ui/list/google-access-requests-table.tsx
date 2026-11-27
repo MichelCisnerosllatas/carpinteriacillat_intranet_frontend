@@ -6,13 +6,13 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { GOOGLE_ACCESS_REQUEST_STATUSES } from '../../data/data'
 import { useGoogleAccessRequestListStore } from '../../stores/useGoogleAccessRequestListStore'
 import { googleAccessRequestsColumns } from './google-access-requests-columns'
@@ -82,6 +82,14 @@ export function GoogleAccessRequestsTable() {
     void load({ search: '', status: 'pending', page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || status !== 'pending'
+
   if (!hasLoaded && !isInitialLoading) {
     return <CircleProgressIndicatorPage />
   }
@@ -119,7 +127,12 @@ export function GoogleAccessRequestsTable() {
             </Select>
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />

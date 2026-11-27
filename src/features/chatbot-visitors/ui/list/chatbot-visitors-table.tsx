@@ -5,12 +5,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { flexRender, getCoreRowModel, useReactTable, type PaginationState } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
 import { ErrorState } from '@/widgets/error/error-state'
@@ -18,6 +18,7 @@ import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPa
 import { useChatbotVisitorListStore } from '../../stores/useChatbotVisitorListStore'
 import { useChatbotVisitorDeleteStore } from '../../stores/useChatbotVisitorDeleteStore'
 import { chatbotVisitorsColumns } from './chatbot-visitors-columns'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ChatbotVisitorsTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } = useChatbotVisitorListStore()
@@ -52,13 +53,30 @@ export function ChatbotVisitorsTable() {
     void load({ search: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== ''
+
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canDelete = useCan('chatbot_visitors.delete')
+  const canBulk = canDelete
+  // Sin acciones masivas permitidas no mostramos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? chatbotVisitorsColumns : chatbotVisitorsColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
+
   const table = useReactTable({
     data: items,
-    columns: chatbotVisitorsColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { pagination, rowSelection },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
@@ -112,7 +130,12 @@ export function ChatbotVisitorsTable() {
           <span className="text-xs text-muted-foreground">Buscar</span>
           <Input placeholder="Nombre, teléfono, correo o IP..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[280px]" />
         </div>
-        <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+        <DataTableFilterActions
+          onClear={resetFilters}
+          onRefresh={handleRefresh}
+          hasActiveFilters={hasActiveFilters}
+          isFetching={isFetching}
+        />
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -156,7 +179,7 @@ export function ChatbotVisitorsTable() {
 
       <DataTableBulkActions
         selectedCount={selectedCount}
-        onDelete={handleBulkDelete}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

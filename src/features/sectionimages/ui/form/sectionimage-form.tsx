@@ -47,6 +47,7 @@ import { ImageSourceTabs, type ImageSource } from './coverflow/image-source-tabs
 import { WorkPhotoPicker, type PickedWork, type PickedWorkPhoto } from './coverflow/work-photo-picker'
 // Carrusel: botón "+ Nuevo" junto al select de la categoría
 import { NewSectionItemDialog } from './new-section-item/new-section-item-dialog'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 const schema = z.object({
   id_section:         z.number({ error: 'Seleccione la sección.' }),
@@ -120,6 +121,10 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
   // Botón "+ Nuevo" del select del item: diálogo abierto y "recargar items" al crear uno
   const [showNewItem, setShowNewItem] = useState(false)
   const [itemsReloadKey, setItemsReloadKey] = useState(0)
+
+  // Los "+ Nuevo" crean registros de OTROS módulos: piden el permiso de crear de ese módulo (ver ROLES_Y_PERMISOS.md)
+  const canCreateItem = useCan('section_items.create')
+  const canCreateImage = useCan('images.create')
 
   // Siempre trae el registro fresco del backend al editar — no depende de que `currentItem`/`items`
   // ya tengan este id en memoria (ej. entrar por URL directa, recarga de página, o pestaña nueva).
@@ -364,7 +369,7 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
                       {isServiceShowcase ? 'Servicio' : isCoverflow ? 'Categoría' : 'Item de la sección (opcional)'}
                     </FormLabel>
                     {/* Carrusel: crear la tarjeta sin salir del formulario */}
-                    {isCoverflow && watchedIdSection && (
+                    {isCoverflow && watchedIdSection && canCreateItem && (
                       <button
                         type="button"
                         onClick={() => setShowNewItem(true)}
@@ -454,13 +459,15 @@ export function SectionImageForm({ mode, id }: { mode: 'create' | 'edit'; id?: s
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Imagen <span className="text-destructive">*</span></FormLabel>
-                      <button
-                        type="button"
-                        onClick={() => setShowImageUpload(true)}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Plus className="size-3.5" />Nuevo
-                      </button>
+                      {canCreateImage && (
+                        <button
+                          type="button"
+                          onClick={() => setShowImageUpload(true)}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Plus className="size-3.5" />Nuevo
+                        </button>
+                      )}
                     </div>
                     <FormControl>
                       <ImageSelect

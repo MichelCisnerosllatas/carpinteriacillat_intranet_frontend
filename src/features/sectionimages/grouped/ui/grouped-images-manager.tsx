@@ -38,6 +38,7 @@ import { GroupedItemAccordion } from './grouped-item-accordion'
 import { GroupedPhotoRow } from './grouped-photo-row'
 import { GroupedAddItem } from './grouped-add-item'
 import { useGroupedAutoPhotos } from './auto-photos/use-grouped-auto-photos'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface GroupedImagesManagerProps {
   /** Textos y reglas de la sección (GROUPED_SECTION_CONFIG[typesectionKey]). */
@@ -59,6 +60,11 @@ const PER_PAGE = 100
 export function GroupedImagesManager({ config, idSection, canDelete = true }: GroupedImagesManagerProps) {
   const router = useRouter()
   const goTo = (path: string) => { NProgress.start(); router.push(path) }
+
+  // Permisos (ver ROLES_Y_PERMISOS.md): fotos = section_images, items = section_items
+  const canStatePhotos = useCan('section_images.state')
+  const canDeletePhotos = useCan('section_images.delete')
+  const canCreateItem = useCan('section_items.create')
 
   // Fotos (store compartido con /section-images y la vista de siempre)
   const { items, hasLoaded, isFetching, isError, message, load, reset, setCurrentItem } = useSectionImageListStore()
@@ -306,9 +312,9 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
       <DataTableBulkActions
         selectedCount={selectedPhotos.length}
         isLoading={isSaving || isBulkDeleting}
-        onActivate={canShowSelected ? () => handleBulkState(1) : undefined}
-        onDeactivate={canHideSelected ? () => handleBulkState(0) : undefined}
-        onDelete={canDelete ? handleBulkDelete : undefined}
+        onActivate={canStatePhotos && canShowSelected ? () => handleBulkState(1) : undefined}
+        onDeactivate={canStatePhotos && canHideSelected ? () => handleBulkState(0) : undefined}
+        onDelete={canDelete && canDeletePhotos ? handleBulkDelete : undefined}
         onClear={selection.clear}
       />
 
@@ -373,12 +379,15 @@ export function GroupedImagesManager({ config, idSection, canDelete = true }: Gr
         </div>
       )}
 
-      <GroupedAddItem
-        config={config}
-        onCreate={handleCreateItem}
-        // Modo 'form' (carrusel): el formulario de item con la sección ya elegida
-        onOpenForm={() => goTo(`/section-items/create?id_section=${idSection}`)}
-      />
+      {/* Solo si tiene permiso de crear items de sección */}
+      {canCreateItem && (
+        <GroupedAddItem
+          config={config}
+          onCreate={handleCreateItem}
+          // Modo 'form' (carrusel): el formulario de item con la sección ya elegida
+          onOpenForm={() => goTo(`/section-items/create?id_section=${idSection}`)}
+        />
+      )}
 
       <SectionImageLightbox slides={lightbox.slides} index={lightbox.index} onClose={lightbox.close} />
     </div>

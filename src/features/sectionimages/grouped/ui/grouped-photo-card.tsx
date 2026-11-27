@@ -15,6 +15,7 @@ import { cn } from '@/shared/lib/utils'
 import type { SectionImage } from '../../data/schema'
 import type { ImageRole } from '../../lib/image-roles'
 import { SectionImageRoleBadge } from '../../ui/list/sectionimage-role-badge'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 /** Acciones del menú de cada foto (las decide el contenedor). */
 export type GroupedPhotoActions = {
@@ -52,6 +53,15 @@ export function GroupedPhotoCard({
 }: GroupedPhotoCardProps) {
   const isActive = image.stateValue === 1
 
+  // Cada acción solo se muestra si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('section_images.view')
+  const canEdit = useCan('section_images.update')
+  const canState = useCan('section_images.state')
+  const canDeletePerm = useCan('section_images.delete') && canDelete
+  const hasActions = canView || (canEdit && !!actions?.onEdit) || canState || canDeletePerm
+  // El checkbox solo sirve para acciones masivas (ocultar/mostrar o eliminar)
+  const canSelect = canState || canDeletePerm
+
   return (
     <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-lg border bg-muted/40">
       {/* Foto: al tocarla se abre en grande (las ocultas se ven más tenues) */}
@@ -76,7 +86,7 @@ export function GroupedPhotoCard({
 
       {/* Arriba a la izquierda: checkbox (si se pasa onSelectChange) + rol (Principal ★ / Oculta) */}
       <div className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1">
-        {onSelectChange && (
+        {onSelectChange && canSelect && (
           // Va FUERA del botón de la foto: tocar el checkbox no abre el visor.
           // Celular (pantalla chica o táctil): siempre visible. Desktop: al pasar el mouse o si ya hay selección.
           <label
@@ -99,7 +109,7 @@ export function GroupedPhotoCard({
       </div>
 
       {/* Menú de acciones */}
-      {actions && (
+      {actions && hasActions && (
         <div className="absolute right-1.5 top-1.5">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -109,23 +119,29 @@ export function GroupedPhotoCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => actions.onView(image)}>
-                <Eye className="mr-2 size-4" />Ver detalle
-              </DropdownMenuItem>
-              {actions.onEdit && (
+              {canView && (
+                <DropdownMenuItem onClick={() => actions.onView(image)}>
+                  <Eye className="mr-2 size-4" />Ver detalle
+                </DropdownMenuItem>
+              )}
+              {actions.onEdit && canEdit && (
                 <DropdownMenuItem onClick={() => actions.onEdit?.(image)}>
                   <Pencil className="mr-2 size-4" />Editar
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => actions.onToggleState(image)}>
-                {isActive
-                  ? <><XCircle className="mr-2 size-4" />Ocultar</>
-                  : <><CheckCircle2 className="mr-2 size-4" />Mostrar</>}
-              </DropdownMenuItem>
-              {canDelete && (
+              {canState && (
                 <>
-                  <DropdownMenuSeparator />
+                  {(canView || canEdit) && <DropdownMenuSeparator />}
+                  <DropdownMenuItem onClick={() => actions.onToggleState(image)}>
+                    {isActive
+                      ? <><XCircle className="mr-2 size-4" />Ocultar</>
+                      : <><CheckCircle2 className="mr-2 size-4" />Mostrar</>}
+                  </DropdownMenuItem>
+                </>
+              )}
+              {canDeletePerm && (
+                <>
+                  {(canView || canEdit || canState) && <DropdownMenuSeparator />}
                   <DropdownMenuItem onClick={() => actions.onDelete(image)} className="text-red-500!">
                     <Trash2 className="mr-2 size-4" />Eliminar
                   </DropdownMenuItem>

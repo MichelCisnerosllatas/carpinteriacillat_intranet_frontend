@@ -11,6 +11,7 @@ export type ReportKey =
   | 'payments'
   | 'proformas'
   | 'contact-messages'
+  | 'sales-by-seller'
 
 export type ReportFormat = 'json' | 'xlsx' | 'pdf'
 
@@ -25,6 +26,10 @@ export type ReportRequestDto = {
   currency: Currency
   client_id?: number | null
   status?: string | null
+  /** Vendedor (§11). Solo lo respeta el backend con `sales.view_all`; sin el permiso usa el propio. */
+  user_id?: number | null
+  /** Sucursales (múltiple). Sin `company_branches.view_all` el backend recorta a las propias. */
+  branch_ids?: number[] | null
   format?: ReportFormat
 }
 
@@ -62,7 +67,7 @@ export type ReportChartDto = {
 }
 
 /** A qué módulo pertenece la fila, para el botón "Ver" (👁). */
-export type ReportLinkType = 'sale' | 'proforma' | 'contact_message' | 'client'
+export type ReportLinkType = 'sale' | 'proforma' | 'contact_message' | 'client' | 'user'
 
 export type ReportRowLinkDto = { type: ReportLinkType; id: number } | null
 
@@ -84,8 +89,9 @@ export type ReportDataDto = {
   columns: ReportColumnDto[]
   rows: ReportRowDto[]
   // Solo trae las columnas money/number que tiene sentido sumar.
-  totals: Record<string, number | string>
-  /** true = cada fila se puede expandir para ver su detalle. */
+  // null si el rol no tiene report_<slug>.table (también llegan columns/rows vacíos).
+  totals: Record<string, number | string> | null
+  /** true = cada fila se puede expandir para ver su detalle (false sin report_<slug>.detail). */
   has_detail: boolean
 }
 

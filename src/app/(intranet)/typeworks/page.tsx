@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Shapes } from 'lucide-react'
 import { TypeWorksTable } from '@/features/typeworks/ui/list/typeworks-table'
 
@@ -17,9 +18,12 @@ export default function TypeWorksPage() {
             <h2 className="text-2xl font-bold tracking-tight">Tipos de trabajo</h2>
             <p className="text-muted-foreground">Clasifican los trabajos de la galería web (Fabricación, Restauración)</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/typeworks/create"><Shapes size={18} /><span>Nuevo Tipo</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="type_works.create">
+            <Button asChild className="space-x-1">
+              <Link href="/typeworks/create"><Shapes size={18} /><span>Nuevo Tipo</span></Link>
+            </Button>
+          </Can>
         </div>
         <TypeWorksTable />
       </main>

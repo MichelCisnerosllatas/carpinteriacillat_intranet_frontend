@@ -29,7 +29,7 @@ export function UsersBreadcrumb({
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Inicio</Link>
+              <Link href="/">Inicio</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
 

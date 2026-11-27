@@ -7,6 +7,9 @@ import { proformasService } from '@/features/proformas'
 import { swalConfirm } from '@/shared/lib/swal'
 import { toast, toastError, toastSuccess, toastWarning } from '@/shared/lib/toast'
 import { SALE_PAYMENT_METHODS } from '@/features/sale-payments'
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { useSellerSelectStore } from '@/features/sellers'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
 import { salesService } from '../services/sales.service'
 import { mapSaleFromApi } from '../stores/useSaleListStore'
 import { useSaleFormStore } from '../stores/useSaleFormStore'
@@ -44,6 +47,12 @@ export function useSalePos({ mode, id, proformaId }: Options) {
   const router = useRouter()
   const isEdit = mode === 'edit'
   const pos = useSalePosStore()
+  // Con `sales.view_all` se puede registrar la venta a nombre de otro vendedor (contrato §11.1).
+  // Por defecto es el usuario de la sesión; sin el permiso no se manda nada y el backend usa
+  // siempre al usuario autenticado.
+  const canChooseSeller = useCan('sales.view_all')
+  const currentUserId = useAuthStore((state) => state.session?.user.id ?? null)
+  const sellerId = canChooseSeller ? (pos.sellerId ?? currentUserId) : null
   const formData = useSaleFormDataStore()
   const { isSubmitting, error, fieldErrors, createFull, updateFull, reset: resetForm } =
     useSaleFormStore()
@@ -210,6 +219,11 @@ export function useSalePos({ mode, id, proformaId }: Options) {
       `Comprobante: ${documentType?.name ?? '—'}`,
       `Total: ${formatMoney(totals.total, pos.currency)}`,
     ]
+    // Si se puede elegir vendedor, se confirma a nombre de quién queda la venta.
+    if (canChooseSeller && sellerId) {
+      const seller = useSellerSelectStore.getState().options.find((o) => o.id === sellerId)
+      if (seller) parts.splice(1, 0, `Vendedor: ${seller.name}`)
+    }
     // En edición el pago no se toca desde aquí (va por la sección de pagos).
     if (!isEdit) {
       const methodLabel =
@@ -270,6 +284,7 @@ export function useSalePos({ mode, id, proformaId }: Options) {
       paymentMode: pos.paymentMode,
       paymentAmount: pos.paymentAmount,
       paymentMethod: pos.paymentMethod,
+      sellerId,
       total: totals.total,
     }
 
@@ -330,5 +345,7 @@ export function useSalePos({ mode, id, proformaId }: Options) {
     isSubmitting,
     serverError: error,
     lastSale,
+    canChooseSeller,
+    sellerId,
   }
 }

@@ -247,7 +247,7 @@ Rutas (acordeón **Dashboard** del sidebar):
 | `/dashboard/messages` | Mensajes y opiniones | `GET /v1/intranet/dashboard/messages` |
 | `/dashboard/staff-access` | Accesos del personal | `GET /v1/intranet/dashboard/staff-access` |
 
-Parámetros comunes: `date_from`, `date_to` (Y-m-d) y `currency` (`PEN` | `USD`).
+Parámetros comunes: `date_from`, `date_to` (Y-m-d), `currency` (`PEN` | `USD`) y `user_id` opcional (vendedor, §11).
 
 ```
 features/dashboard/
@@ -266,8 +266,23 @@ features/dashboard/
     ├── sales-performance/
     ├── proformas/
     ├── messages/
+    ├── sellers/           # Sección "Vendedores" de Rendimiento de ventas (ranking, meta vs logrado, top 5)
     └── staff-access/
 ```
+
+### Vendedores y permisos (§11)
+
+- **Filtro "Vendedor"** (`SellerSelect` de `features/sellers`) en los dashboards de Resumen, Rendimiento de ventas y
+  Proformas, y en Reportes. Solo aparece con `sales.view_all`; se guarda en `useDashboardFiltersStore.sellerId` /
+  `useReportStore.sellerId` y se envía como `user_id`. Sin ese permiso el backend devuelve solo lo propio.
+- Bajo los filtros se indica de quién son las cifras: **"Mostrando: Juan Pérez"**, "Mostrando: todos los
+  vendedores" o **"Mis ventas"** (sin `sales.view_all`). El nombre sale de `period.seller_name` (o de la lista del
+  selector mientras carga).
+- **Rendimiento de ventas › Vendedores** (`by_seller`, solo con `sales.view_all`): ranking por monto (se oculta si
+  hay un vendedor filtrado), meta vs logrado (el tooltip muestra el % de avance) y tabla top 5 con ventas, ticket
+  promedio y conversión de proformas.
+- **Resumen**: KPI "Vendedores activos" (solo con `sales.view_all`). La tarjeta de meta (y "Meta del mes" de
+  Rendimiento) tiene un botón ⚙ "Configurar metas" → `/sale-goals`, visible solo con `sale_goals.update`.
 
 ### Kit reutilizable `shared/ui/dashboard`
 
@@ -292,7 +307,7 @@ El dashboard es una **vista rápida**: no repite lo que hay en Reportes.
 
 - Las tablas muestran como máximo el **top 5** (y los rankings en gráfico, también top 5).
 - Cada `ChartCard` con un reporte relacionado tiene un botón-ícono **↗ "Ver en reportes"** (`href`), que abre
-  `/reports?tab=…` con el **mismo periodo y moneda** (`lib/use-report-href.ts` los pasa por la URL).
+  `/reports?tab=…` con el **mismo periodo, moneda y vendedor** (`lib/use-report-href.ts` los pasa por la URL).
 - `ChartCard` **no se pinta** si `isEmpty` es true (prop `hideWhenEmpty`, por defecto `true`), así no quedan
   tarjetas vacías grandes. "Meta del mes" usa `hideWhenEmpty={false}` para recordar registrar la meta.
 
@@ -320,14 +335,18 @@ Una sola página **`/reports`** (grupo **Reportes**, al final del sidebar) con p
 | `pagos` | `payments` (toggle **Pagos recibidos**, `&vista=recibidos`) o `receivables` (**Saldos pendientes**, `&vista=saldos`) |
 | `proformas` | `proformas` |
 | `mensajes` | `contact-messages` |
+| `vendedores` | `sales-by-seller` (solo con `sales.view_all`) |
 
-La URL también acepta `preset`, `date_from`, `date_to` y `currency` (los usa el botón ↗ del dashboard).
+La URL también acepta `preset`, `date_from`, `date_to`, `currency` y `user_id` (los usa el botón ↗ del dashboard;
+`user_id` solo se aplica con `sales.view_all`). Cada pestaña además exige el permiso de su reporte
+(`report_<reporte>.view`, ver `ROLES_Y_PERMISOS.md`); la pestaña Vendedores pide también `sales.view_all`.
 
 - Endpoints (contrato §10):
-  - `GET /v1/intranet/reports/{report}?date_from&date_to&currency&client_id&status&format=json|xlsx|pdf`
+  - `GET /v1/intranet/reports/{report}?date_from&date_to&currency&client_id&status&user_id&format=json|xlsx|pdf`
     → `kpis`, `charts`, `columns`, `rows` (con `id` y `link`), `totals`, `has_detail`.
   - `GET /v1/intranet/reports/{report}/detail/{id}` → `title`, `subtitle`, `fields`, `sections`.
-- `data/reports.config.ts`: por reporte, título, descripción, si usa moneda/cliente y qué estados filtra; además
+- `data/reports.config.ts`: por reporte, título, descripción, si usa moneda/cliente/vendedor (`usesSeller`) y qué
+  estados filtra; además
   `REPORT_TABS`, `PAYMENTS_VIEWS` y `getTabReport()`. **Agregar un reporte = sumar una entrada aquí** (y su
   implementación en el backend).
 - Pantalla (`ui/reports-view.tsx`): filtros compartidos arriba → **KPIs** (`report-kpis.tsx`) → **gráficos**
@@ -340,7 +359,7 @@ La URL también acepta `preset`, `date_from`, `date_to` y `currency` (los usa el
 - **Tabla**: si `has_detail`, cada fila tiene ▸/▾ que carga el detalle **al expandir**
   (`useReportDetailStore`, cacheado por `reporte:id`) y muestra `fields` en grilla y `sections` como mini tablas
   con totales. El botón 👁 abre el registro según `row.link` (`lib/report-links.ts`: venta → `/sales/{id}`,
-  proforma → `/proformas/{id}`, mensaje → `/contact-messages/{id}`, cliente → `/clients/{id}`). En el celular
+  proforma → `/proformas/{id}`, mensaje → `/contact-messages/{id}`, cliente → `/clients/{id}`, usuario/vendedor → `/users/{id}`). La columna "Vendedor" llega sola en `columns`. En el celular
   la tabla se muestra como **tarjetas apiladas** y las pestañas se desplazan horizontalmente. Se pintan 100
   filas por vez (botón "Mostrar más").
 - **Exportar Excel / PDF** descarga el archivo con `responseType: 'blob'`. El nombre sale de la cabecera
@@ -350,7 +369,49 @@ La URL también acepta `preset`, `date_from`, `date_to` y `currency` (los usa el
 
 ---
 
-## 11. Convenciones
+## 11. Ventas, vendedores y metas
+
+### Realizar venta (`/sales/create`, `/sales/edit/[id]`)
+
+Pantalla tipo caja (`features/sales/ui/pos/*`). Todo el borrador vive en **un solo store**
+(`stores/useSalePosStore.ts`) y se envía en **una sola petición**: `POST /v1/intranet/sales/full`
+(crear y emitir) o `PUT /v1/intranet/sales/{id}/full` (editar una venta GUARDADA). Los cálculos (descuento por
+línea, IGV, redondeo a 2 decimales por línea) están en `lib/sale-pos/calculate.ts` y replican al backend.
+
+- Atajos: **F2** producto, **F3** cliente, **F4** importar proforma, **Ctrl+Enter** emitir, **Supr** quitar línea.
+- "Emitir venta" siempre pide confirmación (resumen de cliente, comprobante, total y pago) y al terminar muestra un
+  toast con la acción "Ver" y deja la pantalla limpia para la siguiente venta.
+- Proforma → venta: desde la proforma ACEPTADA ("Convertir en venta") se abre `/sales/create?proforma={id}`, que usa
+  `GET /v1/intranet/proformas/{id}/sale-draft`.
+- Métodos de pago: lista fija `SALE_PAYMENT_METHODS` en `features/sale-payments/data/data.ts`.
+
+### Vendedores (`features/sellers`)
+
+Cada venta y proforma guarda su vendedor (`user_id`, y el API devuelve `seller_name`).
+
+| Permiso | Qué habilita |
+|---|---|
+| `sales.view_all` | Ver ventas de todos, columna + filtro "Vendedor" en el listado, y en el POS el selector "Vendedor" (por defecto el usuario de la sesión; se envía `user_id`) |
+| `proformas.view_all` | Igual para proformas (filtro por vendedor) |
+
+Sin `*.view_all` el backend solo devuelve los registros propios. El selector reutilizable es
+`<SellerSelect value onValueChange showAll? />` de `@/features/sellers` (datos: `GET /v1/intranet/sellers`, cacheados
+en `useSellerSelectStore`). Muéstralo solo con `useCan('sales.view_all')`, porque ese endpoint exige el permiso.
+
+### Metas de venta (`/sale-goals`, `features/sale-goals`)
+
+Página propia en el grupo **Ventas** del sidebar (ya no está dentro de Configuración de Ventas). Se elige año y
+moneda; la card **Meta general del negocio** edita los 12 meses de `user_id = null` y **Metas por vendedor** permite
+elegir un vendedor y editar su grilla. Cada card guarda con `PUT /v1/intranet/sale-goals` (`user_id` null o el del
+vendedor); un mes vacío o en 0 borra la meta de ese mes. Se cargan todas con
+`GET /v1/intranet/sale-goals?year=&currency=&user_id=all`.
+
+Permisos: `sale_goals.view` (entrar; lo pide el guard por la URL del sidebar) y `sale_goals.update` (guardar; sin él
+la página queda en solo lectura). Las metas por vendedor además necesitan `sales.view_all` (lista de vendedores).
+
+---
+
+## 12. Convenciones
 
 - Componentes de feature con `'use client'`; páginas de `app/` como Server Components.
 - Textos de UI en español; identificadores de código en inglés.

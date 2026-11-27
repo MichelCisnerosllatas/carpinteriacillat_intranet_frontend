@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { WebWorksBreadcrumb } from '@/features/web-works/ui/web-works-breadcrumb'
-import { WebWorksReorderList } from '@/features/web-works/ui/reorder/web-works-reorder-list'
+import {
+  WebWorksReorderList,
+} from '@/features/web-works/ui/reorder/web-works-reorder-list/web-works-reorder-list'
 
 export const metadata: Metadata = { title: 'Ordenar Trabajos' }
 

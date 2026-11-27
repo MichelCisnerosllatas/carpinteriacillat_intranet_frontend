@@ -19,6 +19,7 @@ import { SaleHeaderCard } from './sale-header-card'
 import { SaleNoteField } from './sale-note-field'
 import { ShortcutsHint } from './shortcuts-hint'
 import { SummaryPanel } from './summary-panel'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SalePosPageProps {
   mode: 'create' | 'edit'
@@ -42,6 +43,8 @@ export function SalePosPage({ mode, id, proformaId }: SalePosPageProps) {
   const [clientModalOpen, setClientModalOpen] = useState(false)
   const [productModalOpen, setProductModalOpen] = useState(false)
   const [proformaModalOpen, setProformaModalOpen] = useState(false)
+  // Importar una proforma requiere poder ver proformas (ver ROLES_Y_PERMISOS.md)
+  const canViewProformas = useCan('proformas.view')
 
   const focusClient = () => clientInputRef.current?.focus()
   const focusProductSearch = () => productInputRef.current?.focus()
@@ -64,7 +67,7 @@ export function SalePosPage({ mode, id, proformaId }: SalePosPageProps) {
     enabled: !anyModalOpen,
     onProduct: focusProductSearch,
     onClient: focusClient,
-    onProforma: sale.isEdit ? undefined : () => setProformaModalOpen(true),
+    onProforma: sale.isEdit || !canViewProformas ? undefined : () => setProformaModalOpen(true),
     onSubmit: () => void sale.submit(true),
   })
 
@@ -92,7 +95,7 @@ export function SalePosPage({ mode, id, proformaId }: SalePosPageProps) {
   }
 
   // Solo ícono: el tooltip (y el aria-label) explican qué hace y su atajo.
-  const proformaButton = !sale.isEdit && (
+  const proformaButton = !sale.isEdit && canViewProformas && (
     <IconButton
       label="Importar proforma aceptada (F4)"
       className="shrink-0"
@@ -182,6 +185,8 @@ export function SalePosPage({ mode, id, proformaId }: SalePosPageProps) {
       <div className="lg:sticky lg:top-20">
         <SummaryPanel
           isEdit={sale.isEdit}
+          canChooseSeller={sale.canChooseSeller}
+          sellerId={sale.sellerId}
           documentTypeName={sale.documentType?.name ?? null}
           documentNumber={sale.documentNumber}
           totals={sale.totals}

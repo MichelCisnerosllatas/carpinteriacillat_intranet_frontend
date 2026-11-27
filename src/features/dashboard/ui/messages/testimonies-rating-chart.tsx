@@ -9,9 +9,16 @@ type Props = {
 }
 
 // Distribución de estrellas (barras) + promedio general (medidor sobre 5 estrellas).
-export function TestimoniesRatingChart({ data, average }: Props) {
+export function TestimoniesRatingChart({ data, average: averageFromKpis }: Props) {
   const rows = [...(data ?? [])].sort((a, b) => a.rating - b.rating)
   const total = rows.reduce((sum, r) => sum + r.count, 0)
+  // Si el rol no tiene el widget de KPIs, el promedio no llega (undefined): se calcula con las barras.
+  const average =
+    averageFromKpis !== undefined
+      ? averageFromKpis
+      : total > 0
+        ? rows.reduce((sum, r) => sum + r.rating * r.count, 0) / total
+        : null
   // El medidor trabaja en %: 4.5 estrellas de 5 = 90 %.
   const averagePct = average != null ? (average / 5) * 100 : null
 

@@ -6,14 +6,15 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -43,7 +44,16 @@ export function SectionItemsTable({ idSection, canDelete = true, canReorder = tr
   } = useSectionItemListStore()
   const { bulkToggleState, bulkDeleteItems } = useSectionItemDeleteStore()
 
-  const columns = useMemo(() => getSectionItemsColumns({ hideDelete: !canDelete, hideOrder: !canReorder }), [canDelete, canReorder])
+  // Acciones masivas solo si tiene permiso (ver ROLES_Y_PERMISOS.md)
+  const canStatePerm = useCan('section_items.state')
+  const canDeletePerm = useCan('section_items.delete')
+  const canBulk = canStatePerm || (canDelete && canDeletePerm)
+
+  const columns = useMemo(() => {
+    const cols = getSectionItemsColumns({ hideDelete: !canDelete, hideOrder: !canReorder })
+    // Sin acciones masivas no tiene sentido la columna de selección
+    return canBulk ? cols : cols.filter((c) => c.id !== 'select')
+  }, [canDelete, canReorder, canBulk])
 
   const [rowSelection, setRowSelection]         = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -95,7 +105,7 @@ export function SectionItemsTable({ idSection, canDelete = true, canReorder = tr
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -117,6 +127,14 @@ export function SectionItemsTable({ idSection, canDelete = true, canReorder = tr
     setIsUserFetching(true)
     void load({ id_section: idSection, search: '', type: undefined, state: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || type !== 'all' || state !== 'all'
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -208,7 +226,12 @@ export function SectionItemsTable({ idSection, canDelete = true, canReorder = tr
             </Select>
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -260,9 +283,9 @@ export function SectionItemsTable({ idSection, canDelete = true, canReorder = tr
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={canDelete ? handleBulkDelete : undefined}
+        onActivate={canStatePerm ? handleBulkActivate : undefined}
+        onDeactivate={canStatePerm ? handleBulkDeactivate : undefined}
+        onDelete={canDelete && canDeletePerm ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

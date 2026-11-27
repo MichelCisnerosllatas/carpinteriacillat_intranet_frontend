@@ -6,6 +6,7 @@ import { ArrowUpDown, Image as ImageIcon, Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { SectionImagesTable } from '@/features/sectionimages/ui/list/sectionimages-table'
 import { GroupedImagesManager, getGroupedSectionConfig } from '@/features/sectionimages/grouped'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SectionDetailImagesTabProps {
   sectionId: number
@@ -23,18 +24,21 @@ interface SectionDetailImagesTabProps {
 export function SectionDetailImagesTab({ sectionId, typesectionKey, canAdd = true, canReorder = true, canDelete = true }: SectionDetailImagesTabProps) {
   const router = useRouter()
   const goTo = (path: string) => { NProgress.start(); router.push(path) }
+  // Además de la configuración del tipo de sección, se pide el permiso del módulo imágenes (ver ROLES_Y_PERMISOS.md)
+  const canCreatePerm = useCan('section_images.create')
+  const canReorderPerm = useCan('section_images.reorder')
 
   // Botones de arriba (iguales para todas las secciones): "Reordenar" y "Agregar imagen".
   // "Agregar imagen" abre el formulario con la sección ya elegida; ahí se elige el item/servicio.
   // Al guardar, el formulario vuelve a esta pestaña (goBackOrFallback).
   const actionButtons = (
     <div className="flex items-center gap-2">
-      {canReorder && (
+      {canReorder && canReorderPerm && (
         <Button size="sm" variant="outline" onClick={() => goTo(`/section-images/reorder?id_section=${sectionId}`)}>
           <ArrowUpDown className="mr-1.5 size-4" />Reordenar
         </Button>
       )}
-      {canAdd && (
+      {canAdd && canCreatePerm && (
         <Button size="sm" onClick={() => goTo(`/section-images/create?id_section=${sectionId}`)}>
           <Plus className="mr-1.5 size-4" />Agregar imagen
         </Button>

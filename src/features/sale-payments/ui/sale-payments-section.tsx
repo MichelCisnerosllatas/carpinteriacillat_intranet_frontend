@@ -14,6 +14,7 @@ import { useSalePaymentDeleteStore } from '../stores/useSalePaymentDeleteStore'
 import { SalePaymentFormDialog } from './sale-payment-form-dialog'
 import { getSalePaymentMethodLabel } from '../data/data'
 import type { SalePayment } from '../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SalePaymentsSectionProps {
   saleId: number
@@ -32,6 +33,10 @@ const formatCurrency = (value: number, currency: string) => `${currency} ${value
 export function SalePaymentsSection({ saleId, readOnly, amountPaid, balance, currency }: SalePaymentsSectionProps) {
   const { items, isFetching, loadBySale } = useSalePaymentListStore()
   const { deleteItem } = useSalePaymentDeleteStore()
+
+  // Agregar/editar/eliminar pagos solo con permiso 'sales.payments' (ver ROLES_Y_PERMISOS.md).
+  // La lista de pagos se sigue viendo.
+  const canManagePayments = useCan('sales.payments')
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingPayment, setEditingPayment] = useState<SalePayment | null>(null)
@@ -78,7 +83,7 @@ export function SalePaymentsSection({ saleId, readOnly, amountPaid, balance, cur
           <span className="text-muted-foreground text-xs">
             Pagado {formatCurrency(amountPaid, currency)} · Saldo {formatCurrency(balance, currency)}
           </span>
-          {!readOnly && (
+          {!readOnly && canManagePayments && (
             <Button size="sm" variant="outline" onClick={handleAdd}>
               <Plus className="mr-1 size-3.5" />
               Agregar pago
@@ -115,7 +120,7 @@ export function SalePaymentsSection({ saleId, readOnly, amountPaid, balance, cur
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-sm font-medium tabular-nums">{formatCurrency(p.amount, currency)}</span>
-                  {!readOnly && (
+                  {!readOnly && canManagePayments && (
                     <>
                       <Tooltip>
                         <TooltipTrigger asChild>

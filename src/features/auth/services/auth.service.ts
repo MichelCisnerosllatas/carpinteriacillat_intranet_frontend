@@ -1,8 +1,9 @@
 // src/features/auth/auth.service.ts
 import apiClient from '@/shared/api/apiClient';
-import { LoginRequestDTO, LoginResponseDTO, LoginWithGoogleRequestDTO, LoginWithGoogleResponseDTO } from '@/features/auth/model/logindto/login.dto'
+import type { LoginRequestDTO, LoginResponseDTO } from '@/features/auth/model/login.dto'
+import type { LoginWithGoogleRequestDTO, LoginWithGoogleResponseDTO } from '@/features/auth/model/login-google.dto'
 import { AUTH_ENDPOINTS } from './auth.endpoints';
-import { VerifyResponseDTO } from '@/features/auth/model/verifydto/verify.dto'
+import type { VerifyResponseDTO } from '@/features/auth/model/verify.dto'
 
 export const authService = {
   login: async (credentials: LoginRequestDTO): Promise<LoginResponseDTO> => {

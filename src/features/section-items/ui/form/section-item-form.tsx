@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -20,7 +19,7 @@ import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime, cn } from '@/shared/lib/utils'
-import { AlertError } from '@/widgets/alerts_components'
+import { AlertError } from '@/widgets/alerts_components/alert-error'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { SectionSelect } from '@/features/sections/ui/section-select'
 import { IconPicker } from '@/shared/ui/icon-picker/icon-picker'
@@ -38,6 +37,7 @@ import { ShowcaseItemFields } from './showcase/showcase-item-fields'
 import { useShowcaseItemMode, SHOWCASE_ITEM_TYPE } from './showcase/use-showcase-item-mode'
 import { CategoryItemFields } from './category/category-item-fields'
 import { CATEGORY_ITEM_TYPE, getCategoryIdFromKey } from '@/features/sectionimages/grouped'
+import { LocationPicker } from './location-picker'
 
 /** Sentinel para "sin tipo" — Radix <Select> no admite value="" en <SelectItem>. */
 const NO_TYPE = '__none__'
@@ -45,13 +45,6 @@ const NO_TYPE = '__none__'
 /** Etiqueta en español de un tipo de item (ej. 'word' → "Palabra de la cinta"). */
 const typeLabelOf = (value: string | null | undefined) =>
   SECTION_ITEM_TYPES.find((t) => t.value === value)?.label ?? value ?? ''
-
-// `leaflet` toca `window`/`document` apenas se importa — solo puede cargar en el cliente, nunca
-// durante el render en el servidor de Next. `ssr: false` es obligatorio acá, no una optimización.
-const LocationPicker = dynamic(
-  () => import('@/shared/ui/location-picker/location-picker').then((m) => m.LocationPicker),
-  { ssr: false, loading: () => <div className="flex h-64 w-full items-center justify-center rounded-lg border bg-muted/40 text-sm text-muted-foreground">Cargando mapa...</div> }
-)
 
 const schema = z.object({
   id_section:              z.number({ error: 'Seleccione la sección.' }),
@@ -73,6 +66,7 @@ const schema = z.object({
 })
 
 type FormValues = z.infer<typeof schema>
+
 /** Valores del formulario (los usan también showcase/showcase-item-fields.tsx y category/category-item-fields.tsx). */
 export type SectionItemFormValues = FormValues
 

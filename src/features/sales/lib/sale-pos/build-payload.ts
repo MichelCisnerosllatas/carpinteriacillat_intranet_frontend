@@ -19,6 +19,8 @@ type PayloadInput = {
   paymentMode: PaymentMode
   paymentAmount: number
   paymentMethod: string | null
+  /** Vendedor a asignar — null = no se manda y el backend usa al usuario autenticado. */
+  sellerId: number | null
   /** Total calculado en pantalla — en "Completo" se paga exactamente esto. */
   total: number
 }
@@ -54,6 +56,7 @@ export function buildCreatePayload(input: PayloadInput): SaleFullPostRequestDto 
     sale_document_type_id: input.documentTypeId,
     issue_date: input.issueDate,
     currency: input.currency,
+    ...(input.sellerId ? { user_id: input.sellerId } : {}),
     observation: input.observation.trim() || undefined,
     ...(input.proformaId ? { proforma_id: input.proformaId } : {}),
     status: 'EMITIDA',
@@ -69,6 +72,7 @@ export function buildUpdatePayload(input: PayloadInput, emit: boolean): SaleFull
     sale_document_type_id: input.documentTypeId,
     issue_date: input.issueDate,
     currency: input.currency,
+    ...(input.sellerId ? { user_id: input.sellerId } : {}),
     observation: input.observation.trim() || undefined,
     ...(emit ? { status: 'EMITIDA' as const } : {}),
     details: buildDetails(input.lines, true),

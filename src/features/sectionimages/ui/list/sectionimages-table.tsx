@@ -10,6 +10,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
@@ -28,6 +29,7 @@ import { groupSectionImages, type ImageItemGroup } from '../../lib/group-section
 import { useSectionItemsMap } from '../../lib/use-section-items-map'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SectionImagesTableProps {
   /** Cuando se pasa, la vista queda filtrada a las imágenes de esa sección (uso embebido en el tab "Imágenes" del detalle de Section) y oculta el badge de sección en cada tarjeta. Sin esta prop, carga todas las imágenes (uso en la página standalone `/section-images`). */
@@ -54,6 +56,12 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
   const { toggleState, deleteItem, bulkToggleState, bulkDeleteItems } = useSectionImageDeleteStore()
   const { isSubmitting: isReordering, confirm: confirmReorder } = useSectionImageReorderStore()
   const perPage = idSection != null ? PER_PAGE_EMBEDDED : PER_PAGE_STANDALONE
+
+  // Permisos de imágenes de sección (ver ROLES_Y_PERMISOS.md)
+  const canCreatePerm = useCan('section_images.create')
+  const canStatePerm = useCan('section_images.state')
+  const canDeletePerm = useCan('section_images.delete')
+  const canReorderPerm = useCan('section_images.reorder')
 
   const [selected, setSelected]         = useState<Set<number>>(new Set())
   const [lightboxIdx, setLightboxIdx]   = useState(-1)
@@ -130,6 +138,15 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
     void load({ search: '', state: undefined, date_from: '', date_to: '', id_section: idSection ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  // Incluye el filtro de sección (a diferencia de hasActiveFilters, que se usa para el reordenamiento)
+  const hasFiltersToClear = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== '' || sectionFilter !== null
+
   // ── Agrupación por sección / item y rol de cada foto ──
   const sectionIds = useMemo(
     () => [...(idSection != null ? [idSection] : []), ...items.map((i) => i.idSection)],
@@ -161,7 +178,7 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
   // Arrastrar solo si están TODAS las fotos de la sección cargadas (sin filtros):
   // el backend reordena la sección completa y necesita la lista entera de ids.
   const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
-  const canMoveInGroup = idSection != null && canReorder && !hasActiveFilters && (meta?.total ?? 0) === items.length
+  const canMoveInGroup = idSection != null && canReorder && canReorderPerm && !hasActiveFilters && (meta?.total ?? 0) === items.length
   // Mientras se guarda (o se recarga la lista) no se puede arrastrar
   const isSavingOrder = isReordering || isFetching || localOrder != null
 
@@ -399,7 +416,12 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
           <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
         <div className="flex flex-col justify-end">
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          <DataTableFilterActions
+            onClear={resetFilters}
+            onRefresh={handleRefresh}
+            hasActiveFilters={hasFiltersToClear}
+            isFetching={isFetching}
+          />
         </div>
       </div>
 
@@ -410,7 +432,7 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
           La foto Principal se calcula con las fotos de esta página.
         </p>
       )}
-      {idSection != null && canReorder && !canMoveInGroup && items.length > 1 && (
+      {idSection != null && canReorder && canReorderPerm && !canMoveInGroup && items.length > 1 && (
         <p className="text-xs text-muted-foreground">
           Para ordenar las fotos arrastrándolas, limpia los filtros. También puedes usar &quot;Reordenar&quot;.
         </p>
@@ -432,7 +454,7 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
           groups={groups}
           showSectionHeader={idSection == null}
           renderCard={renderCard}
-          onAddToItem={idSection != null && canAdd ? handleAddToItem : undefined}
+          onAddToItem={idSection != null && canAdd && canCreatePerm ? handleAddToItem : undefined}
           onMoveInGroup={canMoveInGroup ? (activeId, overId) => void handleMoveInGroup(activeId, overId) : undefined}
         />
       )}
@@ -465,9 +487,9 @@ export function SectionImagesTable({ idSection, canDelete = true, canAdd = false
       <DataTableBulkActions
         selectedCount={selected.size}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={canDelete ? handleBulkDelete : undefined}
+        onActivate={canStatePerm ? handleBulkActivate : undefined}
+        onDeactivate={canStatePerm ? handleBulkDeactivate : undefined}
+        onDelete={canDelete && canDeletePerm ? handleBulkDelete : undefined}
         onClear={() => setSelected(new Set())}
       />
 

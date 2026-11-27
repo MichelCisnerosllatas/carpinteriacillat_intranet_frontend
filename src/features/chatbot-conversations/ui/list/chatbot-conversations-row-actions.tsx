@@ -17,6 +17,7 @@ import { useChatbotConversationDeleteStore } from '../../stores/useChatbotConver
 import { CHATBOT_CONVERSATION_STATUSES, getChatbotConversationStatus, visitorDisplayName } from '../../data/data'
 import type { ChatbotConversation } from '../../data/schema'
 import type { ChatbotConversationStatus } from '../../model/chatbotconversationget.dto'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export const CHATBOT_STATUS_ICONS: Record<ChatbotConversationStatus, React.ReactNode> = {
   open: <RotateCcw size={16} />,
@@ -28,6 +29,11 @@ export function ChatbotConversationsRowActions({ row }: { row: Row<ChatbotConver
   const router = useRouter()
   const { updateStatus } = useChatbotConversationStatusStore()
   const { deleteItem } = useChatbotConversationDeleteStore()
+  // Cada acción se muestra solo si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('chatbot_conversations.view')
+  const canViewVisitor = useCan('chatbot_visitors.view')
+  const canState = useCan('chatbot_conversations.state')
+  const canDelete = useCan('chatbot_conversations.delete')
   const name = visitorDisplayName(row.original.visitor)
 
   const go = (url: string) => { NProgress.start(); router.push(url) }
@@ -62,6 +68,9 @@ export function ChatbotConversationsRowActions({ row }: { row: Row<ChatbotConver
 
   const otherStatuses = CHATBOT_CONVERSATION_STATUSES.filter((s) => s.value !== row.original.status)
 
+  // Sin ninguna acción permitida no mostramos el menú
+  if (!canView && !canViewVisitor && !canState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -71,22 +80,34 @@ export function ChatbotConversationsRowActions({ row }: { row: Row<ChatbotConver
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem onClick={() => go(`/chatbot/conversations/${row.original.id}`)}>
-          Ver conversación <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => go(`/chatbot/visitors/${row.original.visitor.id}`)}>
-          Ver visitante <DropdownMenuShortcut><UserRound size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {otherStatuses.map((s) => (
-          <DropdownMenuItem key={s.value} onClick={() => void handleChangeStatus(s.value)}>
-            Marcar como {s.label} <DropdownMenuShortcut>{CHATBOT_STATUS_ICONS[s.value]}</DropdownMenuShortcut>
+        {canView && (
+          <DropdownMenuItem onClick={() => go(`/chatbot/conversations/${row.original.id}`)}>
+            Ver conversación <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
           </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        )}
+        {canViewVisitor && (
+          <DropdownMenuItem onClick={() => go(`/chatbot/visitors/${row.original.visitor.id}`)}>
+            Ver visitante <DropdownMenuShortcut><UserRound size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canState && (
+          <>
+            {(canView || canViewVisitor) && <DropdownMenuSeparator />}
+            {otherStatuses.map((s) => (
+              <DropdownMenuItem key={s.value} onClick={() => void handleChangeStatus(s.value)}>
+                Marcar como {s.label} <DropdownMenuShortcut>{CHATBOT_STATUS_ICONS[s.value]}</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
+        {canDelete && (
+          <>
+            {(canView || canViewVisitor || canState) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

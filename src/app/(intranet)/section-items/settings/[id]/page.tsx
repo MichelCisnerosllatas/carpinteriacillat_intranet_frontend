@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { SectionItemsBreadcrumb } from '@/features/section-items/ui/section-items-breadcrumb'
-import { SectionItemSettingsForm } from '@/features/section-items/ui/form/section-item-settings-form'
+import {
+  SectionItemSettingsForm,
+} from '@/features/section-items/ui/form/section-item-settings-form/section-item-settings-form'
 
 export const metadata: Metadata = { title: 'Configuración de Item de Sección' }
 

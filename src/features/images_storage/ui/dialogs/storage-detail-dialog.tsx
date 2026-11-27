@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Badge } from '@/shared/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Separator } from '@/shared/ui/separator'
@@ -21,6 +22,7 @@ import { formatBytes } from '@/features/images/lib/image-url'
 import { StorageActionDialog } from './storage-action-dialog'
 import { StorageMoveDialog } from './storage-move-dialog'
 import type { EnrichedStorageFile } from '../../data/schema'
+import { Row } from './row'
 
 interface StorageDetailDialogProps {
   file: EnrichedStorageFile | null
@@ -182,24 +184,30 @@ export function StorageDetailDialog({ file, open, onClose }: StorageDetailDialog
                     Abrir en nueva pestaña
                   </a>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="justify-start gap-2"
-                  onClick={() => setMoveOpen(true)}
-                >
-                  <FolderInput className="size-4" />
-                  Mover / Renombrar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="justify-start gap-2 text-destructive hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
-                  onClick={() => setActionOpen(true)}
-                >
-                  <Trash2 className="size-4" />
-                  Eliminar
-                </Button>
+                {/* Solo si tiene permiso de editar (mover / renombrar) */}
+                <Can permission="storage_images.update">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start gap-2"
+                    onClick={() => setMoveOpen(true)}
+                  >
+                    <FolderInput className="size-4" />
+                    Mover / Renombrar
+                  </Button>
+                </Can>
+                {/* Solo si tiene permiso de eliminar */}
+                <Can permission="storage_images.delete">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start gap-2 text-destructive hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
+                    onClick={() => setActionOpen(true)}
+                  >
+                    <Trash2 className="size-4" />
+                    Eliminar
+                  </Button>
+                </Can>
               </div>
             </div>
           </div>
@@ -232,16 +240,5 @@ export function StorageDetailDialog({ file, open, onClose }: StorageDetailDialog
         onClose={() => setMoveOpen(false)}
       />
     </>
-  )
-}
-
-function Row({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
-      <span className="flex items-center gap-1 text-right text-xs font-medium break-all">
-        {icon}{value}
-      </span>
-    </div>
   )
 }

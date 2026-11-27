@@ -24,6 +24,7 @@ import { IconButton } from '@/shared/ui/icon-button'
 import { cn } from '@/shared/lib/utils'
 import { getProformaStatusOption } from '../../data/data'
 import type { Proforma, ProformaStatus } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export const PROFORMA_STATUS_ICON: Record<ProformaStatus, typeof CheckCircle2> = {
   PENDIENTE: Clock,
@@ -54,6 +55,12 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
   const statusOpt = getProformaStatusOption(item.status)
   const StatusIcon = PROFORMA_STATUS_ICON[item.status]
 
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canCreate = useCan('proformas.create')
+  const canUpdate = useCan('proformas.update')
+  const canCreateSale = useCan('sales.create')
+  const canViewSale = useCan('sales.view')
+
   const goTo = (path: string) => {
     NProgress.start()
     router.push(path)
@@ -78,22 +85,26 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
             <p className="text-muted-foreground text-xs">
               {item.clientName ?? item.clientBusinessName ?? '—'} · Emitida el {item.issueDateFormatted ?? item.issueDate}
               {item.dueDate && <> · Vence el {item.dueDateFormatted ?? item.dueDate}</>}
+              {item.sellerName && <> · Vendedor: {item.sellerName}</>}
+              {item.branchName && <> · Sucursal: {item.branchName}</>}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => goTo('/proformas/create')}>
-                <FilePlus className="mr-1 size-4" />
-                Nueva
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Crear una proforma nueva</TooltipContent>
-          </Tooltip>
+          {canCreate && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => goTo('/proformas/create')}>
+                  <FilePlus className="mr-1 size-4" />
+                  Nueva
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Crear una proforma nueva</TooltipContent>
+            </Tooltip>
+          )}
           {/* Convertir en venta: solo ACEPTADA y sin venta todavía (contrato §6). Si ya se
            * convirtió, se ofrece ir directo a la venta generada. */}
-          {item.status === 'ACEPTADA' && !item.saleId && (
+          {item.status === 'ACEPTADA' && !item.saleId && canCreateSale && (
             <IconButton
               label="Convertir en venta"
               variant="default"
@@ -102,7 +113,7 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
               icon={<ShoppingCart />}
             />
           )}
-          {item.saleId && (
+          {item.saleId && canViewSale && (
             <IconButton
               label={`Ver venta ${item.saleCode ?? ''}`.trim()}
               className="size-9"
@@ -110,7 +121,7 @@ export function ProformaDetailHero({ item, isRefreshing, onRefresh }: ProformaDe
               icon={<Receipt />}
             />
           )}
-          {item.status === 'PENDIENTE' && (
+          {item.status === 'PENDIENTE' && canUpdate && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => goTo(`/proformas/edit/${item.id}`)}>

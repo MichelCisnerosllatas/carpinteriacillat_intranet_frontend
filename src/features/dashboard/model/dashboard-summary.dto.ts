@@ -1,4 +1,5 @@
 import type { DashboardPeriodDto } from './dashboard-common.dto'
+import type { SalesGoalDto } from './dashboard-sales-performance.dto'
 
 // GET /v1/intranet/dashboard/summary — contrato §7.1 (Resumen general)
 
@@ -16,8 +17,11 @@ export type SummaryKpisDto = {
   proformas_pending_total: number
   contact_messages_new_count: number
   chatbot_open_count: number
-  goal_amount: number | null
-  goal_progress_pct: number | null
+  // goal_* solo llegan con el widget dashboard_summary.goal
+  goal_amount?: number | null
+  goal_progress_pct?: number | null
+  /** §11: vendedores con al menos una venta en el periodo. */
+  sellers_active?: number
 }
 
 export type SummaryMonthlyDto = {
@@ -54,9 +58,12 @@ export type SummaryTopDebtorDto = {
 
 export type DashboardSummaryDto = {
   period: DashboardPeriodDto
-  kpis: SummaryKpisDto
-  monthly: SummaryMonthlyDto[]
-  payment_status: SummaryPaymentStatusDto[]
-  latest_sales: SummaryLatestSaleDto[]
-  top_debtors: SummaryTopDebtorDto[]
+  // Bloques (widgets) opcionales: el backend OMITE los que el rol no tiene permitidos.
+  kpis?: SummaryKpisDto
+  // Meta del mes (widget dashboard_summary.goal). Viene aunque el rol no tenga 'kpis'.
+  goal?: SalesGoalDto
+  monthly?: SummaryMonthlyDto[]
+  payment_status?: SummaryPaymentStatusDto[]
+  latest_sales?: SummaryLatestSaleDto[]
+  top_debtors?: SummaryTopDebtorDto[]
 }

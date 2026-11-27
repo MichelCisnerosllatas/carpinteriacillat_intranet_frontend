@@ -9,6 +9,8 @@ import { IconLinkButton } from '@/shared/ui/icon-link-button'
 import { formatNumber, type Currency } from '@/shared/ui/dashboard'
 import { formatReportCell, isNumericColumn } from '../lib/format-cell'
 import { getRowHref, getRowLinkLabel } from '../lib/report-links'
+import { reportPermission } from '../lib/report-permission'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import type { ReportDataDto, ReportKey, ReportRequestDto, ReportRowDto } from '../model/report.dto'
 import { ReportRowDetail } from './report-row-detail'
 
@@ -31,8 +33,13 @@ const rowKey = (row: ReportRowDto, index: number) => `${row.id ?? 'x'}-${index}`
 // - En pantallas medianas o grandes: <table> con encabezado y totales fijos (sticky).
 // - En el celular: tarjetas apiladas (una por fila), porque una tabla ancha no se puede leer.
 export function ReportTable({ data, report, params, currency }: Props) {
-  const { columns, rows, totals, has_detail: hasDetail } = data
-  const hasTotals = Object.keys(totals ?? {}).length > 0
+  const { columns, rows } = data
+  // totals llega null si el rol no tiene la tabla: se trata como "sin totales".
+  const totals = data.totals ?? {}
+  const hasTotals = Object.keys(totals).length > 0
+  // Expandir el detalle de una fila: lo manda el backend (has_detail) y además pide report_<slug>.detail.
+  const canDetail = useCan(reportPermission(report, 'detail'))
+  const hasDetail = data.has_detail && canDetail
   const hasLinks = rows.some((row) => getRowHref(row.link) !== null)
   const showActions = hasDetail || hasLinks
 

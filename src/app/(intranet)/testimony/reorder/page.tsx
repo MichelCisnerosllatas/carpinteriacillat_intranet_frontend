@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TestimonyWebBreadcrumb } from '@/features/testimony-web/ui/testimony-web-breadcrumb'
-import { TestimonyReorderList } from '@/features/testimony-web/ui/reorder/testimony-reorder-list'
+import {
+  TestimonyReorderList,
+} from '@/features/testimony-web/ui/reorder/testimony-reorder-list/testimony-reorder-list'
 
 export const metadata: Metadata = { title: 'Reordenar Testimonios' }
 

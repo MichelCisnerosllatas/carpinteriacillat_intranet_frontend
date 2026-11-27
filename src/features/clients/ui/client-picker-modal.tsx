@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { ModalSelect } from '@/shared/ui/modal-select'
 import { useClientModalSelectStore } from '../stores/useClientModalSelectStore'
 import { ClientQuickCreateDialog } from './client-quick-create-dialog'
@@ -29,6 +30,8 @@ export function ClientPickerModal({
   initialSearch,
 }: ClientPickerModalProps) {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+  // Solo si tiene permiso de crear clientes (ver ROLES_Y_PERMISOS.md)
+  const canCreate = useCan('clients.create')
   const { options, isLoading, isError, load, setForceReload } = useClientModalSelectStore()
 
   // Se carga al montar (no recién al abrir): así, para cuando el usuario efectivamente toca la
@@ -93,14 +96,14 @@ export function ClientPickerModal({
         searchPlaceholder="Buscar cliente..."
         emptyMessage="No se encontraron clientes."
         emptyAction={
-          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleCreateNew}>
+          canCreate && <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleCreateNew}>
             <UserPlus className="size-4" />
             Crear cliente
           </Button>
         }
         selectLabel="Seleccionar"
         onSelect={onSelect}
-        onCreateNew={handleCreateNew}
+        onCreateNew={canCreate ? handleCreateNew : undefined}
         createLabel="Nuevo cliente"
       />
 

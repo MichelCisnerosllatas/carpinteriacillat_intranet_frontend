@@ -15,22 +15,29 @@ import {
 } from '@/shared/ui/command'
 import { sidebarData } from '@/shared/config/sidebar-data'
 import { useSearchStore } from '@/shared/stores/search-store'
-import { filterNavByRole } from '@/shared/config/nav-types'
+import { filterNavByPermission } from '@/shared/config/nav-types'
 import type { NavLink, NavCollapsible } from '@/shared/config/nav-types'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
+import { hasPermission, isSuperAdminSession } from '@/features/auth/hooks/usePermission'
 
 // Buscador de módulos del sidebar (solo interfaz, sin backend). Se abre con Ctrl/⌘+K
-// o desde el botón de búsqueda del sidebar. Respeta los mismos permisos por rol que el sidebar.
+// o desde el botón de búsqueda del sidebar. Respeta los mismos permisos que el sidebar.
 export function CommandMenu() {
   const router = useRouter()
   const pathname = usePathname()
   const { setTheme } = useTheme()
   const { open, setOpen, toggle, setRevealActive } = useSearchStore()
-  const idRol = useAuthStore((state) => state.loginDataDTO?.user?.id_rol)
+  const session = useAuthStore((state) => state.session)
 
+  // Mismo filtro que el sidebar: solo módulos con permiso.
   const groups = useMemo(
-    () => filterNavByRole(sidebarData.navGroups, idRol ? String(idRol) : undefined),
-    [idRol]
+    () =>
+      filterNavByPermission(
+        sidebarData.navGroups,
+        (perm) => hasPermission(session, perm),
+        isSuperAdminSession(session)
+      ),
+    [session]
   )
 
   const [search, setSearch] = useState('')
@@ -39,7 +46,8 @@ export function CommandMenu() {
   // Atajo global (si cierra el buscador, también limpia la búsqueda)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
+      // El autocompletado de Chrome dispara keydown sin `key`; el `?.` evita romper la página.
+      if (e.key?.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         if (useSearchStore.getState().open) setSearch('')
         toggle()

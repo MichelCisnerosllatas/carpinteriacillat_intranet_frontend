@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { SectionButtonsBreadcrumb } from '@/features/section-buttons/ui/section-buttons-breadcrumb'
-import { SectionButtonsReorderList } from '@/features/section-buttons/ui/reorder/section-buttons-reorder-list'
+import {
+  SectionButtonsReorderList,
+} from '@/features/section-buttons/ui/reorder/section-buttons-reorder-list/section-buttons-reorder-list'
 import { SectionButtonsReorderPicker } from '@/features/section-buttons/ui/reorder/section-buttons-reorder-picker'
 
 export const metadata: Metadata = { title: 'Reordenar Botones de Sección' }

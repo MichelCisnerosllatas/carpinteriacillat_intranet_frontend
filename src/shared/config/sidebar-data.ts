@@ -1,13 +1,8 @@
 // src/shared/config/sidebar-data.ts
 import {
-  AudioWaveform,
-  Bell,
   Bot,
   BriefcaseBusiness,
-  Bug,
   Building2,
-  Command,
-  Construction,
   CreditCard,
   FileChartColumn,
   FileCheck,
@@ -17,24 +12,18 @@ import {
   TrendingUp,
   FileText,
   FileType,
-  FileX,
   Folder,
   FolderOpen,
-  GalleryVerticalEnd,
   Hammer,
   HardDrive,
-  HelpCircle,
   ImageIcon,
   LayoutDashboard,
   LayoutGrid,
   Layers,
   LayoutList,
   Megaphone,
-  ListTodo,
   ListOrdered,
-  Lock,
   MessagesSquare,
-  Monitor,
   MousePointerClick,
   Navigation2,
   Package,
@@ -45,8 +34,6 @@ import {
   Quote,
   Receipt,
   Rows3,
-  ServerOff,
-  Settings,
   Settings2,
   Shapes,
   Share2,
@@ -54,10 +41,10 @@ import {
   Smartphone,
   Sofa,
   Tag,
+  Target,
   Type,
   UserCog,
   Users2,
-  UserX,
   UserRound,
 } from 'lucide-react'
 import type { SidebarData } from './nav-types'
@@ -105,14 +92,15 @@ import type { SidebarData } from './nav-types'
 //      ],
 //    }
 //
-// 4. ROLE-BASED VISIBILITY
-//    Add a `roles` array to any item, sub-item, or group:
-//    { title: 'Admin Panel', url: '/admin', icon: Shield, roles: ['admin'] }
-//    { title: 'Reports', icon: BarChart, roles: ['admin', 'editor'], items: [...] }
+// 4. VISIBILIDAD POR PERMISOS (ver ROLES_Y_PERMISOS.md)
+//    Agrega `permission` con la key '<modulo>.view' del backend (config/permissions.php):
+//    { title: 'Clientes', url: '/clients', permission: 'clients.view', icon: Users2 }
+//    Páginas solo para el superadmin (demos): superadminOnly: true
+//    Sin permission ni superadminOnly → lo ve cualquier usuario logueado.
 //
-//    Then pass the current user role to filterNavByRole() in the sidebar:
-//    import { filterNavByRole } from '@/shared/config/nav-types'
-//    const filtered = filterNavByRole(sidebarData.navGroups, user.role)
+//    El sidebar y el buscador filtran con filterNavByPermission() (nav-types.ts).
+//    El guard de rutas también usa este archivo: la url de cada item define qué permiso
+//    pide la página ('/x/create' → x.create, '/x/edit/...' → x.update, resto → x.view).
 //
 // 5. ICONS
 //    All icons come from lucide-react (https://lucide.dev/icons).
@@ -121,7 +109,7 @@ import type { SidebarData } from './nav-types'
 //
 // 6. BADGE
 //    Add badge?: string to show a count chip next to the title.
-//    { title: 'Chats', url: '/chats', icon: MessagesSquare, badge: '3' }
+//    { title: 'Mensajes', url: '/contact-messages', icon: MessagesSquare, badge: '3' }
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -131,23 +119,6 @@ export const sidebarData: SidebarData = {
     email: 'admin@example.com',
     avatar: '',
   },
-  teams: [
-    {
-      name: 'My App',
-      logo: Command,
-      plan: 'Next.js + shadcn/ui',
-    },
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-  ],
   navGroups: [
     {
       title: 'General',
@@ -157,29 +128,13 @@ export const sidebarData: SidebarData = {
           title: 'Dashboard',
           icon: LayoutDashboard,
           items: [
-            { title: 'Resumen general',          url: '/dashboard',                   icon: LayoutDashboard },
-            { title: 'Rendimiento de ventas',    url: '/dashboard/sales-performance', icon: TrendingUp },
-            { title: 'Seguimiento de proformas', url: '/dashboard/proformas',         icon: FileCheck },
-            { title: 'Mensajes y opiniones',     url: '/dashboard/messages',          icon: MessageSquareQuote },
-            { title: 'Accesos del personal',     url: '/dashboard/staff-access',      icon: KeyRound },
+            { title: 'Resumen general',          url: '/dashboard', permission: 'dashboard_summary.view', icon: LayoutDashboard },
+            { title: 'Rendimiento de ventas',    url: '/dashboard/sales-performance', permission: 'dashboard_sales.view', icon: TrendingUp },
+            { title: 'Seguimiento de proformas', url: '/dashboard/proformas', permission: 'dashboard_proformas.view', icon: FileCheck },
+            { title: 'Mensajes y opiniones',     url: '/dashboard/messages', permission: 'dashboard_messages.view', icon: MessageSquareQuote },
+            { title: 'Accesos del personal',     url: '/dashboard/staff-access', permission: 'dashboard_staff.view', icon: KeyRound },
           ],
         },
-        {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: ListTodo,
-        },
-        {
-          title: 'Apps',
-          url: '/apps',
-          icon: Package,
-        },
-        {
-          title: 'Chats',
-          url: '/chats',
-          badge: '3',
-          icon: MessagesSquare,
-        }        
       ],
     },
     {
@@ -189,11 +144,11 @@ export const sidebarData: SidebarData = {
           title: 'Catálogo de Tipos',
           icon: FolderOpen,
           items: [
-            { title: 'Colores',      url: '/typecolors',   icon: Palette },
-            { title: 'Documentos',   url: '/typedocs',     icon: FileText },
+            { title: 'Colores',      url: '/typecolors', permission: 'type_colors.view', icon: Palette },
+            { title: 'Documentos',   url: '/typedocs', permission: 'type_docs.view', icon: FileText },
             
-            { title: 'Maderas',      url: '/typewoods',    icon: Layers },
-            { title: 'Tipografías',  url: '/typefonts',    icon: Type },
+            { title: 'Maderas',      url: '/typewoods', permission: 'type_woods.view', icon: Layers },
+            { title: 'Tipografías',  url: '/typefonts', permission: 'type_fonts.view', icon: Type },
           ],
         },
       ],
@@ -201,20 +156,20 @@ export const sidebarData: SidebarData = {
     {
       title: 'Sitio Web',
       items: [
-        { title: 'Navegaciones',       url: '/navigations',      icon: Navigation2 },
-        { title: 'Footer del Sitio',   url: '/footer',           icon: PanelBottom },
-        { title: 'Alertas del sitio',  url: '/web-alerts',       icon: Megaphone },
-        { title: 'Mensajes de Contacto', url: '/contact-messages', icon: MessagesSquare },
+        { title: 'Navegaciones',       url: '/navigations', permission: 'navigations.view', icon: Navigation2 },
+        { title: 'Footer del Sitio',   url: '/footer', permission: 'footer.view', icon: PanelBottom },
+        { title: 'Alertas del sitio',  url: '/web-alerts', permission: 'web_alerts.view', icon: Megaphone },
+        { title: 'Mensajes de Contacto', url: '/contact-messages', permission: 'contact_messages.view', icon: MessagesSquare },
         {
           title: 'Secciones',
           icon: Sofa,
           items: [
-            { title: 'Secciones', url: '/sections', icon: Rows3 },
-            { title: 'Sec. Imágenes',   url: '/section-images',   icon: ImageIcon },
-            { title: 'Botones de Sección', url: '/section-buttons', icon: MousePointerClick },
-            { title: 'Items de Sección',   url: '/section-items',   icon: LayoutList },
-            { title: 'Testimonios',        url: '/testimony',   icon: Quote },
-            { title: 'Tipos de Sección',    url: '/typesections', icon: LayoutGrid },
+            { title: 'Secciones', url: '/sections', permission: 'sections.view', icon: Rows3 },
+            { title: 'Sec. Imágenes',   url: '/section-images', permission: 'section_images.view', icon: ImageIcon },
+            { title: 'Botones de Sección', url: '/section-buttons', permission: 'section_buttons.view', icon: MousePointerClick },
+            { title: 'Items de Sección',   url: '/section-items', permission: 'section_items.view', icon: LayoutList },
+            { title: 'Testimonios',        url: '/testimony', permission: 'testimonies.view', icon: Quote },
+            { title: 'Tipos de Sección',    url: '/typesections', permission: 'type_sections.view', icon: LayoutGrid },
           ],
         },
         {
@@ -223,18 +178,18 @@ export const sidebarData: SidebarData = {
           title: 'ChatBot',
           icon: Bot,
           items: [
-            { title: 'Configuración',      url: '/chatbot/settings',      icon: Settings2 },
-            { title: 'Opciones de inicio', url: '/chatbot/options',       icon: ListOrdered },
-            { title: 'Conversaciones',     url: '/chatbot/conversations', icon: MessagesSquare },
-            { title: 'Visitantes',         url: '/chatbot/visitors',      icon: UserRound },
+            { title: 'Configuración',      url: '/chatbot/settings', permission: 'chatbot_settings.view', icon: Settings2 },
+            { title: 'Opciones de inicio', url: '/chatbot/options', permission: 'chatbot_options.view', icon: ListOrdered },
+            { title: 'Conversaciones',     url: '/chatbot/conversations', permission: 'chatbot_conversations.view', icon: MessagesSquare },
+            { title: 'Visitantes',         url: '/chatbot/visitors', permission: 'chatbot_visitors.view', icon: UserRound },
           ],
         },
         {
           title: 'Galería',
           icon: BriefcaseBusiness,
           items: [
-            { title: 'Trabajos',         url: '/web-works', icon: Hammer },
-            { title: 'Tipos de trabajo', url: '/typeworks', icon: Shapes },
+            { title: 'Trabajos',         url: '/web-works', permission: 'web_works.view', icon: Hammer },
+            { title: 'Tipos de trabajo', url: '/typeworks', permission: 'type_works.view', icon: Shapes },
           ],
         },
       ],
@@ -246,32 +201,32 @@ export const sidebarData: SidebarData = {
           title: 'Comercial',
           icon: Users2,
           items: [
-            { title: 'Clientes',              url: '/clients',           icon: Users2 },
-            { title: 'Productos y Servicios', url: '/products-services', icon: Package },
-            { title: 'Muebles',               url: '/furnitures',        icon: Sofa },
-            { title: 'Categorías',            url: '/categories',        icon: Tag },
-            { title: 'Imágenes',              url: '/images',            icon: ImageIcon },
+            { title: 'Clientes',              url: '/clients', permission: 'clients.view', icon: Users2 },
+            { title: 'Productos y Servicios', url: '/products-services', permission: 'products_services.view', icon: Package },
+            { title: 'Muebles',               url: '/furnitures', permission: 'furnitures.view', icon: Sofa },
+            { title: 'Categorías',            url: '/categories', permission: 'categories.view', icon: Tag },
+            { title: 'Imágenes',              url: '/images', permission: 'images.view', icon: ImageIcon },
           ],
         },
         {
           title: 'Proformas',
           icon: FileStack,
           items: [
-            { title: 'Proformas',           url: '/proformas',           icon: FileStack },
-            { title: 'Plantillas',          url: '/proforma-templates',  icon: FileText },
-            { title: 'Tipos de Proforma',   url: '/proforma-types',      icon: FileType },
+            { title: 'Proformas',           url: '/proformas', permission: 'proformas.view', icon: FileStack },
+            { title: 'Plantillas',          url: '/proforma-templates', permission: 'proforma_templates.view', icon: FileText },
+            { title: 'Tipos de Proforma',   url: '/proforma-types', permission: 'proforma_types.view', icon: FileType },
           ],
         },
         {
           title: 'Datos de la Empresa',
           icon: Building2,
           items: [
-            { title: 'Configuración',    url: '/company-settings',           icon: Settings2 },
-            { title: 'Sucursales',       url: '/company-branches',           icon: Building2 },
-            { title: 'Cuentas Bancarias', url: '/company-bank-accounts',     icon: CreditCard },
-            { title: 'Firmas',           url: '/company-signatures',         icon: PenTool },
-            { title: 'Contactos',        url: '/company-contacts',           icon: Phone },
-            { title: 'Redes Sociales',   url: '/company-social-networks',    icon: Share2 },
+            { title: 'Configuración',    url: '/company-settings', permission: 'company_settings.view', icon: Settings2 },
+            { title: 'Sucursales',       url: '/company-branches', permission: 'company_branches.view', icon: Building2 },
+            { title: 'Cuentas Bancarias', url: '/company-bank-accounts', permission: 'company_bank_accounts.view', icon: CreditCard },
+            { title: 'Firmas',           url: '/company-signatures', permission: 'company_signatures.view', icon: PenTool },
+            { title: 'Contactos',        url: '/company-contacts', permission: 'company_contacts.view', icon: Phone },
+            { title: 'Redes Sociales',   url: '/company-social-networks', permission: 'company_social_networks.view', icon: Share2 },
           ],
         },
       ],
@@ -279,9 +234,10 @@ export const sidebarData: SidebarData = {
     {
       title: 'Ventas',
       items: [
-        { title: 'Ventas',                  url: '/sales',                icon: Receipt },
-        { title: 'Tipos de Comprobante',    url: '/sale-document-types', icon: FileType },
-        { title: 'Configuración de Ventas', url: '/sale-settings',        icon: Settings2 },
+        { title: 'Ventas',                  url: '/sales', permission: 'sales.view', icon: Receipt },
+        { title: 'Tipos de Comprobante',    url: '/sale-document-types', permission: 'sale_document_types.view', icon: FileType },
+        { title: 'Metas de venta',          url: '/sale-goals', permission: 'sale_goals.view', icon: Target },
+        { title: 'Configuración de Ventas', url: '/sale-settings', permission: 'sale_settings.view', icon: Settings2 },
       ],
     },
     {
@@ -291,18 +247,18 @@ export const sidebarData: SidebarData = {
           title: 'Gestion Usuario',
           icon: ShieldCheck,
           items: [
-            { title: 'Usuarios',     url: '/users',         icon: UserCog },
-            { title: 'Roles',        url: '/roles',         icon: ShieldCheck },
-            { title: 'Dispositivos', url: '/user-devices',  icon: Smartphone },
-            { title: 'Accesos Google', url: '/google-access-requests', icon: ShieldCheck },
+            { title: 'Usuarios',     url: '/users', permission: 'users.view', icon: UserCog },
+            { title: 'Roles',        url: '/roles', permission: 'roles.view', icon: ShieldCheck },
+            { title: 'Dispositivos', url: '/user-devices', permission: 'user_devices.view', icon: Smartphone },
+            { title: 'Accesos Google', url: '/google-access-requests', permission: 'google_access.view', icon: ShieldCheck },
           ],
         },
         {
           title: 'Servidor',
           icon: HardDrive,
           items: [
-            { title: 'Imágenes',  url: '/images/storage',  icon: ImageIcon },
-            { title: 'Carpetas',  url: '/storage/folders', icon: Folder },
+            { title: 'Imágenes',  url: '/images/storage', permission: 'storage_images.view', icon: ImageIcon },
+            { title: 'Carpetas',  url: '/storage/folders', permission: 'storage_folders.view', icon: Folder },
           ],
         },
         // {
@@ -327,25 +283,13 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
+      // Herramientas del equipo técnico: solo las ve el superadmin.
       title: 'Otros',
       items: [
         {
-          title: 'Ajustes',
-          icon: Settings,
-          items: [
-            { title: 'Apariencia',     url: '/settings/appearance',    icon: Palette },
-            { title: 'Notificaciones', url: '/settings/notifications', icon: Bell },
-            { title: 'Pantalla',       url: '/settings/display',       icon: Monitor },
-          ],
-        },
-        // {
-        //   title: 'Help Center',
-        //   url: '/help-center',
-        //   icon: HelpCircle,
-        // },
-        {
           title: 'UI Components',
           url: '/ui-components',
+          superadminOnly: true, // página de demo
           icon: Package,
         },
       ],
@@ -354,7 +298,7 @@ export const sidebarData: SidebarData = {
       // Reportes (contrato API §10): una sola página /reports con pestañas por tema.
       // Va al final para no mezclarse con los dashboards del grupo "General".
       title: 'Reportes',
-      items: [{ title: 'Reportes', url: '/reports', icon: FileChartColumn }],
+      items: [{ title: 'Reportes', url: '/reports', permission: 'reports.view', icon: FileChartColumn }],
     },
   ],
 }

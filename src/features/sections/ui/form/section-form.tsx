@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Loader2, Plus, Globe } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
@@ -16,15 +16,17 @@ import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
-import { AlertError } from '@/widgets/alerts_components'
+import { AlertError } from '@/widgets/alerts_components/alert-error'
 import { TypeSectionSelect } from '@/features/typesections/ui/typesection-select'
 import { TypeSectionQuickCreateDialog } from '@/features/typesections/ui/typesection-quick-create-dialog'
 import { NavigationSelect } from '@/features/navigations/ui/navigation-select'
 import { NavigationQuickCreateDialog } from '@/features/navigations/ui/navigation-quick-create-dialog'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionFormStore } from '../../stores/useSectionFormStore'
+import { PublicSiteBadge } from './public-site-badge'
 
 const schema = z.object({
   section_name:        z.string().max(255).optional(),
@@ -40,16 +42,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-/** Estos campos viajan tal cual a `/v1/public/site` y los renderiza el sitio web público —
- * a diferencia de "Nombre" (uso interno del intranet, nunca sale de acá). */
-function PublicSiteBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-400">
-      <Globe className="size-3" />Se muestra en el sitio web
-    </span>
-  )
-}
-
 export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string }) {
   const router  = useRouter()
   const { currentItem, items, loadById, setCurrentItem }            = useSectionListStore()
@@ -59,6 +51,8 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
   const [showTypeSectionCreate, setShowTypeSectionCreate] = useState(false)
   const [showNavigationCreate, setShowNavigationCreate]   = useState(false)
+  const canCreateTypeSection = useCan('type_sections.create')
+  const canCreateNavigation  = useCan('navigations.create')
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -189,13 +183,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Tipo de Sección <span className="text-destructive">*</span></FormLabel>
-                  <button
-                    type="button"
-                    onClick={() => setShowTypeSectionCreate(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Plus className="size-3.5" />Nuevo
-                  </button>
+                  {/* Crea un tipo de sección: pide el permiso de ESE módulo (ver ROLES_Y_PERMISOS.md) */}
+                  {canCreateTypeSection && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTypeSectionCreate(true)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="size-3.5" />Nuevo
+                    </button>
+                  )}
                 </div>
                 <FormControl>
                   <TypeSectionSelect
@@ -212,13 +209,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Navegación <span className="text-destructive">*</span></FormLabel>
-                  <button
-                    type="button"
-                    onClick={() => setShowNavigationCreate(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Plus className="size-3.5" />Nuevo
-                  </button>
+                  {/* Crea una navegación: pide el permiso de ESE módulo (ver ROLES_Y_PERMISOS.md) */}
+                  {canCreateNavigation && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNavigationCreate(true)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="size-3.5" />Nuevo
+                    </button>
+                  )}
                 </div>
                 <FormControl>
                   <NavigationSelect

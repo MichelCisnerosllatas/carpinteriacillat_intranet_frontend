@@ -6,7 +6,6 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -14,6 +13,7 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { CONTACT_MESSAGE_STATUSES, CONTACT_MESSAGE_PROJECT_TYPES } from '../../data/data'
@@ -23,6 +23,7 @@ import { contactMessagesColumns } from './contact-messages-columns'
 import { ContactMessageStatsBar } from './contact-message-stats-bar'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ContactMessagesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
@@ -98,13 +99,22 @@ export function ContactMessagesTable() {
   const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
   const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canDelete = useCan('contact_messages.delete')
+  const canBulk = canDelete
+  // Sin acciones masivas permitidas no mostramos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? contactMessagesColumns : contactMessagesColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
+
   const table = useReactTable({
     data: items,
-    columns: contactMessagesColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -130,6 +140,14 @@ export function ContactMessagesTable() {
     setIsUserFetching(true)
     void load({ search: '', status: undefined, project_type: undefined, date_from: undefined, date_to: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || status !== 'all' || projectType !== 'all' || dateFrom !== '' || dateTo !== ''
 
   const handleBulkDelete = async () => {
     await swalDeleteConfirm(
@@ -211,7 +229,12 @@ export function ContactMessagesTable() {
             <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -263,7 +286,7 @@ export function ContactMessagesTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onDelete={async () => { setIsBulkLoading(true); try { await handleBulkDelete() } finally { setIsBulkLoading(false) } }}
+        onDelete={!canDelete ? undefined : async () => { setIsBulkLoading(true); try { await handleBulkDelete() } finally { setIsBulkLoading(false) } }}
         onClear={() => table.resetRowSelection()}
       />
     </div>

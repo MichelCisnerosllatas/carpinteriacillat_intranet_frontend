@@ -11,7 +11,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -19,9 +18,12 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { ClientSelect } from '@/features/clients'
+import { SellerSelect } from '@/features/sellers'
+import { BranchMultiSelect, useShowBranchFilter } from '@/features/company-branches'
 import { useSaleListStore } from '../../stores/useSaleListStore'
 import { useSaleDeleteStore } from '../../stores/useSaleDeleteStore'
 import { SALE_STATUS_OPTIONS, SALE_PAYMENT_STATUS_OPTIONS } from '../../data/data'
@@ -29,11 +31,24 @@ import type { SaleStatus, SalePaymentStatus } from '../../data/schema'
 import { salesColumns } from './sales-columns'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function SalesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
     useSaleListStore()
   const { bulkDeleteItems } = useSaleDeleteStore()
+
+  // La única acción masiva es eliminar (ver ROLES_Y_PERMISOS.md)
+  const canDelete = useCan('sales.delete')
+  // Solo quien ve las ventas de TODOS puede filtrar por vendedor (contrato §11).
+  const canViewAll = useCan('sales.view_all')
+  // Filtro de sucursales: solo si el usuario puede ver más de una (company_branches.view_all).
+  const showBranchFilter = useShowBranchFilter()
+  // Sin acciones masivas no tiene sentido la columna de selección
+  const columns = useMemo(
+    () => (canDelete ? salesColumns : salesColumns.filter((c) => c.id !== 'select')),
+    [canDelete]
+  )
 
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -42,6 +57,8 @@ export function SalesTable() {
   const [status, setStatus] = useState<string>(filters.status ?? 'all')
   const [paymentStatus, setPaymentStatus] = useState<string>(filters.payment_status ?? 'all')
   const [clientId, setClientId] = useState<number | null>(filters.client_id ?? null)
+  const [sellerId, setSellerId] = useState<number | null>(filters.user_id ?? null)
+  const [branchIds, setBranchIds] = useState<number[]>(filters.branch_ids ?? [])
   const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
   const [dateTo, setDateTo] = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
@@ -75,6 +92,8 @@ export function SalesTable() {
         status: status === 'all' ? undefined : (status as SaleStatus),
         payment_status: paymentStatus === 'all' ? undefined : (paymentStatus as SalePaymentStatus),
         client_id: clientId ?? undefined,
+        user_id: sellerId ?? undefined,
+        branch_ids: branchIds.length ? branchIds : undefined,
         date_from: dateFrom,
         date_to: dateTo,
         page: 1,
@@ -89,12 +108,16 @@ export function SalesTable() {
     status?: string
     paymentStatus?: string
     clientId?: number | null
+    sellerId?: number | null
+    branchIds?: number[]
     dateFrom?: string
     dateTo?: string
   }) => {
     const nextStatus = overrides.status ?? status
     const nextPaymentStatus = overrides.paymentStatus ?? paymentStatus
     const nextClientId = overrides.clientId !== undefined ? overrides.clientId : clientId
+    const nextSellerId = overrides.sellerId !== undefined ? overrides.sellerId : sellerId
+    const nextBranchIds = overrides.branchIds ?? branchIds
     const nextDateFrom = overrides.dateFrom ?? dateFrom
     const nextDateTo = overrides.dateTo ?? dateTo
     setIsUserFetching(true)
@@ -103,6 +126,8 @@ export function SalesTable() {
       status: nextStatus === 'all' ? undefined : (nextStatus as SaleStatus),
       payment_status: nextPaymentStatus === 'all' ? undefined : (nextPaymentStatus as SalePaymentStatus),
       client_id: nextClientId ?? undefined,
+      user_id: nextSellerId ?? undefined,
+      branch_ids: nextBranchIds.length ? nextBranchIds : undefined,
       date_from: nextDateFrom,
       date_to: nextDateTo,
       page: 1,
@@ -112,16 +137,18 @@ export function SalesTable() {
   const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
   const handlePaymentStatusChange = (value: string) => { setPaymentStatus(value); applyFilters({ paymentStatus: value }) }
   const handleClientIdChange = (value: number | null) => { setClientId(value); applyFilters({ clientId: value }) }
+  const handleSellerIdChange = (value: number | null) => { setSellerId(value); applyFilters({ sellerId: value }) }
+  const handleBranchIdsChange = (value: number[]) => { setBranchIds(value); applyFilters({ branchIds: value }) }
   const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
   const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: items,
-    columns: salesColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canDelete,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -143,6 +170,8 @@ export function SalesTable() {
     setStatus('all')
     setPaymentStatus('all')
     setClientId(null)
+    setSellerId(null)
+    setBranchIds([])
     setDateFrom('')
     setDateTo('')
     setIsUserFetching(true)
@@ -151,11 +180,21 @@ export function SalesTable() {
       status: undefined,
       payment_status: undefined,
       client_id: undefined,
+      user_id: undefined,
+      branch_ids: undefined,
       date_from: '',
       date_to: '',
       page: 1,
     }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || status !== 'all' || paymentStatus !== 'all' || clientId !== null || sellerId !== null || branchIds.length > 0 || dateFrom !== '' || dateTo !== ''
 
   const handleBulkDelete = async () => {
     await swalDeleteConfirm(
@@ -257,6 +296,33 @@ export function SalesTable() {
               />
             </div>
           </div>
+          {canViewAll && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-xs">Vendedor</span>
+              <div className="w-full sm:w-[180px]">
+                <SellerSelect
+                  value={sellerId}
+                  onValueChange={handleSellerIdChange}
+                  showAll
+                  allLabel="Todos"
+                  disabled={isFetching}
+                  className="h-8"
+                />
+              </div>
+            </div>
+          )}
+          {showBranchFilter && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-xs">Sucursales</span>
+              <div className="w-full sm:w-[180px]">
+                <BranchMultiSelect
+                  value={branchIds}
+                  onValueChange={handleBranchIdsChange}
+                  disabled={isFetching}
+                />
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Fecha desde</span>
             <Input
@@ -278,9 +344,12 @@ export function SalesTable() {
             />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-              Limpiar
-            </Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -338,7 +407,7 @@ export function SalesTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onDelete={handleBulkDelete}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

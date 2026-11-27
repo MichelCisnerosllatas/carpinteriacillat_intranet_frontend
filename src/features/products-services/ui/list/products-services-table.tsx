@@ -6,7 +6,6 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -14,12 +13,14 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { PRODUCT_SERVICE_TYPES } from '../../data/data'
 import { useProductServiceListStore } from '../../stores/useProductServiceListStore'
 import { useProductServiceDeleteStore } from '../../stores/useProductServiceDeleteStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { productsServicesColumns } from './products-services-columns'
 import { ProductServiceStatsBar } from './product-service-stats-bar'
 import { ErrorState } from '@/widgets/error/error-state'
@@ -29,6 +30,15 @@ export function ProductsServicesTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
     useProductServiceListStore()
   const { bulkToggleState, bulkDeleteItems } = useProductServiceDeleteStore()
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('products_services.state')
+  const canDelete = useCan('products_services.delete')
+  const canBulk = canState || canDelete
+  // Sin acciones masivas no tiene sentido la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? productsServicesColumns : productsServicesColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
 
   const [rowSelection, setRowSelection]         = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -86,11 +96,11 @@ export function ProductsServicesTable() {
 
   const table = useReactTable({
     data: items,
-    columns: productsServicesColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -116,6 +126,14 @@ export function ProductsServicesTable() {
     setIsUserFetching(true)
     void load({ search: '', type: undefined, status: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || type !== 'all' || status !== 'all'
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -207,7 +225,12 @@ export function ProductsServicesTable() {
             </Select>
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -259,9 +282,9 @@ export function ProductsServicesTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

@@ -8,13 +8,13 @@ import { flexRender, getCoreRowModel, useReactTable, type PaginationState } from
 import { Info, TriangleAlert } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
 import { ErrorState } from '@/widgets/error/error-state'
@@ -23,6 +23,7 @@ import { useWebAlertListStore } from '../../stores/useWebAlertListStore'
 import { useWebAlertDeleteStore } from '../../stores/useWebAlertDeleteStore'
 import { ALERT_STATES, MAX_ALERTS_ON_WEB } from '../../data/data'
 import { webAlertsColumns } from './web-alerts-columns'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function WebAlertsTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } = useWebAlertListStore()
@@ -68,13 +69,31 @@ export function WebAlertsTable() {
     void load({ search: '', state: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all'
+
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('web_alerts.state')
+  const canDelete = useCan('web_alerts.delete')
+  const canBulk = canState || canDelete
+  // Sin acciones masivas permitidas no mostramos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? webAlertsColumns : webAlertsColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
+
   const table = useReactTable({
     data: items,
-    columns: webAlertsColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { pagination, rowSelection },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
@@ -192,7 +211,12 @@ export function WebAlertsTable() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+        <DataTableFilterActions
+          onClear={resetFilters}
+          onRefresh={handleRefresh}
+          hasActiveFilters={hasActiveFilters}
+          isFetching={isFetching}
+        />
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -237,9 +261,9 @@ export function WebAlertsTable() {
       {/* Barra que aparece al marcar una o más alertas (la misma de los demás módulos) */}
       <DataTableBulkActions
         selectedCount={selectedCount}
-        onActivate={() => handleBulkToggle(1)}
-        onDeactivate={() => handleBulkToggle(0)}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? () => handleBulkToggle(1) : undefined}
+        onDeactivate={canState ? () => handleBulkToggle(0) : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

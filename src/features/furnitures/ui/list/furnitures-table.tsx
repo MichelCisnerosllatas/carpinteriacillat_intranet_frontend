@@ -4,12 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Sofa } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
-import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
@@ -19,6 +19,7 @@ import type { Furniture } from '../../data/schema'
 import { FurnitureStatsBar } from './furniture-stats-bar'
 import { FurnitureGridPagination } from './furniture-grid-pagination'
 import { FurnitureCard } from './furniture-card'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
@@ -29,6 +30,10 @@ export function FurnituresTable() {
     load, reset, setCurrentItem,
   } = useFurnitureListStore()
   const { toggleState, deleteItem, bulkToggleState, bulkDeleteItems } = useFurnitureDeleteStore()
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('furnitures.state')
+  const canDelete = useCan('furnitures.delete')
+  const canBulk = canState || canDelete
 
   const [selected, setSelected]         = useState<Set<number>>(new Set())
   const [search, setSearch]             = useState(filters.search ?? '')
@@ -108,6 +113,14 @@ export function FurnituresTable() {
     setIsUserFetching(true)
     void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
 
   // ── Card actions ──
   const handleView = (item: Furniture) => {
@@ -248,11 +261,16 @@ export function FurnituresTable() {
           <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
         <div className="flex flex-col justify-end">
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          <DataTableFilterActions
+            onClear={resetFilters}
+            onRefresh={handleRefresh}
+            hasActiveFilters={hasActiveFilters}
+            isFetching={isFetching}
+          />
         </div>
 
-        {/* Select all */}
-        {items.length > 0 && (
+        {/* Select all (solo si hay alguna acción masiva permitida) */}
+        {canBulk && items.length > 0 && (
           <div className="ml-auto flex items-center gap-2">
             <Checkbox
               checked={allSelected ? true : someSelected ? 'indeterminate' : false}
@@ -304,9 +322,9 @@ export function FurnituresTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => setSelected(new Set())}
       />
     </div>

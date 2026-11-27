@@ -9,7 +9,7 @@ export function GoogleAccessRequestsBreadcrumb({ currentPage }: GoogleAccessRequ
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
+        <BreadcrumbItem><BreadcrumbLink asChild><Link href="/">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem><BreadcrumbPage>{currentPage}</BreadcrumbPage></BreadcrumbItem>
       </BreadcrumbList>

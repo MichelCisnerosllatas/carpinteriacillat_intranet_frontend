@@ -4,7 +4,7 @@ export * from './ui/list/section-buttons-row-actions'
 export * from './ui/section-buttons-breadcrumb'
 export * from './ui/form/section-button-form'
 export * from './ui/detail/section-button-detail'
-export * from './ui/reorder/section-buttons-reorder-list'
+export * from './ui/reorder/section-buttons-reorder-list/section-buttons-reorder-list'
 
 export * from './stores/useSectionButtonListStore'
 export * from './stores/useSectionButtonFormStore'

@@ -57,6 +57,12 @@ export function SaleDetail({ id }: { id: string }) {
               <span className="text-muted-foreground text-xs">Forma de pago: {item.paymentMethod}</span>
             )}
             <span className="text-muted-foreground text-xs">Moneda: {item.currency}</span>
+            <span className="text-muted-foreground text-xs">
+              Vendedor: {item.sellerName ?? '—'}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              Sucursal: {item.branchName ?? '—'}
+            </span>
           </div>
 
           <div className="flex flex-col gap-1.5 p-3">

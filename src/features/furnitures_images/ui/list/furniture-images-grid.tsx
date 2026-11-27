@@ -7,14 +7,15 @@ import NProgress from 'nprogress'
 import Lightbox from 'yet-another-react-lightbox'
 import Zoom from 'yet-another-react-lightbox/plugins/zoom'
 import 'yet-another-react-lightbox/styles.css'
-import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { useFurnitureImageListStore } from '../../stores/useFurnitureImageListStore'
 import { useFurnitureImageFormStore } from '../../stores/useFurnitureImageFormStore'
 import type { FurnitureImage } from '../../data/schema'
@@ -29,6 +30,10 @@ export function FurnitureImagesGrid() {
     load, reset, setCurrentItem,
   } = useFurnitureImageListStore()
   const { toggleState, remove, bulkRemove } = useFurnitureImageFormStore()
+  // Acciones masivas según permisos de muebles (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('furnitures.state')
+  const canDelete = useCan('furnitures.delete')
+  const canBulk = canState || canDelete
 
   const [selected, setSelected]           = useState<Set<number>>(new Set())
   const [stateFilter, setStateFilter]     = useState<string>(
@@ -62,6 +67,14 @@ export function FurnitureImagesGrid() {
     setIsUserFetching(true)
     void load({ state: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = stateFilter !== 'all'
 
   const handleView = (item: FurnitureImage) => {
     setCurrentItem(item)
@@ -198,11 +211,14 @@ export function FurnitureImagesGrid() {
           </Select>
         </div>
         <div className="flex flex-col justify-end">
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-            Limpiar
-          </Button>
+          <DataTableFilterActions
+            onClear={resetFilters}
+            onRefresh={handleRefresh}
+            hasActiveFilters={hasActiveFilters}
+            isFetching={isFetching}
+          />
         </div>
-        {items.length > 0 && (
+        {canBulk && items.length > 0 && (
           <div className="ml-auto flex items-center gap-2">
             <Checkbox
               checked={allSelected ? true : someSelected ? 'indeterminate' : false}
@@ -254,9 +270,9 @@ export function FurnitureImagesGrid() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => setSelected(new Set())}
       />
 

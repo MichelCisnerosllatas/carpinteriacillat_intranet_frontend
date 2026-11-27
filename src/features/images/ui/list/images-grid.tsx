@@ -16,6 +16,7 @@ import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { cn } from '@/shared/lib/utils'
@@ -27,6 +28,7 @@ import { useImagesViewStore } from '../../stores/useImagesViewStore'
 import { getImageFolder } from '../../lib/image-url'
 import type { ImageItem } from '../../data/schema'
 import { ImageCard } from './image-card'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { ImagesFolderSidebar, useImageFolderTree } from './images-folder-sidebar'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
@@ -37,6 +39,8 @@ export function ImagesGrid() {
     load, reset,
   } = useImageListStore()
   const { deleteItem, bulkDeleteItems } = useImageDeleteStore()
+  // Eliminar en bloque solo con permiso (la descarga sigue disponible)
+  const canDelete = useCan('images.delete')
 
   const [selected,    setSelected]    = useState<Set<number>>(new Set())
   const [lightboxIdx, setLightboxIdx] = useState(-1)
@@ -62,6 +66,19 @@ export function ImagesGrid() {
     }, 500)
     return () => window.clearTimeout(t)
   }, [search])
+
+  // Limpia la búsqueda (el efecto de arriba recarga la página 1) y cierra el buscador mobile
+  const resetFilters = () => {
+    setSearch('')
+    setMobileSearchOpen(false)
+  }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    void load()
+  }
+
+  const hasActiveFilters = search !== ''
 
   // Filtro por carpeta — en el cliente, sobre la página ya cargada (ver el per_page
   // alto en useImageListStore). Incluye la carpeta elegida y todas sus subcarpetas.
@@ -270,17 +287,12 @@ export function ImagesGrid() {
               )}
             </div>
 
-            {search && (
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={isFetching}
-                onClick={() => { setSearch(''); setMobileSearchOpen(false) }}
-              >
-                <X className="size-3.5 sm:hidden" />
-                <span className="hidden sm:inline">Limpiar</span>
-              </Button>
-            )}
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
 
             {/* Mobile: botón para abrir el árbol de carpetas */}
             <Button
@@ -486,7 +498,7 @@ export function ImagesGrid() {
         selectedCount={selected.size}
         isLoading={bulkLoading}
         onDownload={handleBulkDownload}
-        onDelete={handleBulkDelete}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => setSelected(new Set())}
       />
 

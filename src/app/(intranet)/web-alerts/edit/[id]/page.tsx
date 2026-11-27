@@ -3,7 +3,7 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { WebAlertsBreadcrumb } from '@/features/web-alerts/ui/web-alerts-breadcrumb'
-import { WebAlertForm } from '@/features/web-alerts/ui/form/web-alert-form'
+import { WebAlertForm } from '@/features/web-alerts/ui/form/web-alert-form/web-alert-form'
 
 export const metadata: Metadata = { title: 'Editar alerta' }
 

@@ -6,7 +6,6 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -14,11 +13,13 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { useTypeWorkListStore } from '../../stores/useTypeWorkListStore'
 import { useTypeWorkDeleteStore } from '../../stores/useTypeWorkDeleteStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { typeworksColumns } from './typeworks-columns'
 import { TypeWorkStatsBar } from './typework-stats-bar'
 import { ErrorState } from '@/widgets/error/error-state'
@@ -28,6 +29,16 @@ export function TypeWorksTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
     useTypeWorkListStore()
   const { bulkToggleState, bulkDeleteItems } = useTypeWorkDeleteStore()
+
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('type_works.state')
+  const canDelete = useCan('type_works.delete')
+  const canBulk = canState || canDelete
+  // Sin acciones masivas permitidas, ocultamos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? typeworksColumns : typeworksColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
 
   const [rowSelection, setRowSelection]         = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -88,11 +99,11 @@ export function TypeWorksTable() {
 
   const table = useReactTable({
     data: items,
-    columns: typeworksColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -117,6 +128,14 @@ export function TypeWorksTable() {
     setIsUserFetching(true)
     void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -203,7 +222,12 @@ export function TypeWorksTable() {
             <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -239,7 +263,7 @@ export function TypeWorksTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={typeworksColumns.length} className="h-20 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={columns.length} className="h-20 text-center text-sm text-muted-foreground">
                   No hay tipos de trabajo para mostrar.
                 </TableCell>
               </TableRow>
@@ -255,9 +279,9 @@ export function TypeWorksTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

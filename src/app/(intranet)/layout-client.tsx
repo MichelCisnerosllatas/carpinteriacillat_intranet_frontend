@@ -8,6 +8,7 @@ import { CommandMenu } from '@/widgets/command-menu/command-menu'
 import { LandingPreview } from '@/widgets/landing-preview'
 import { LandingPreviewSpacer } from '@/widgets/landing-preview/landing-preview-spacer'
 import { AuthSessionProvider } from '@/features/auth/ui/auth-session-provider'
+import { RoutePermissionGuard } from '@/features/auth/ui/route-permission-guard'
 
 type DashboardLayoutClientProps = {
   children: React.ReactNode
@@ -38,7 +39,8 @@ export function DashboardLayoutClient({
             'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
           )}
         >
-          {children}
+          {/* Si el rol no tiene permiso para la ruta, muestra un aviso en vez de la página */}
+          <RoutePermissionGuard>{children}</RoutePermissionGuard>
         </SidebarInset>
         
         {/* Hermano real en el flex-row (no padding) — ver landing-preview-spacer.tsx para el

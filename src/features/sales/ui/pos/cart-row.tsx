@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { cn } from '@/shared/lib/utils'
 import { calculateLine, formatMoney, type CartLine, type TaxConfig } from '../../lib/sale-pos'
 import { FieldError } from './field-error'
+import { MobileLabel } from './mobile-label'
 
 /** Columnas del carrito en modo tabla (contenedor ≥ @xl). La cabecera usa las mismas. */
 export const CART_GRID_COLS =
@@ -30,11 +31,6 @@ const toNumber = (value: string) => {
   const n = parseFloat(value)
   return Number.isFinite(n) ? n : 0
 }
-
-/** Etiqueta que solo se ve en modo tarjeta (en modo tabla la da la cabecera). */
-const MobileLabel = ({ children }: { children: React.ReactNode }) => (
-  <span className="text-muted-foreground text-[11px] @xl:hidden">{children}</span>
-)
 
 /**
  * Una línea del carrito. Tab recorre Cant → Precio → Desc.; Supr quita la línea; Enter vuelve

@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { ImageSelect } from '@/features/images/ui/image-select'
 import { ImageQuickUploadDialog } from '@/features/images/ui/image-quick-upload-dialog'
+import { Can } from '@/features/auth/ui/can'
 import type { ImageApiItem } from '@/features/images/model/imageget.dto'
 
 interface BankImagePickerProps {
@@ -37,14 +38,17 @@ export function BankImagePicker({ onPick, placeholder = 'Agregar foto del banco.
         placeholder={placeholder}
         disabled={disabled}
       />
-      <button
-        type="button"
-        onClick={() => setShowUpload(true)}
-        disabled={disabled}
-        className="flex w-fit items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-      >
-        <Plus className="size-3.5" />Subir imagen nueva
-      </button>
+      {/* Solo si tiene permiso de crear imágenes (ver ROLES_Y_PERMISOS.md) */}
+      <Can permission="images.create">
+        <button
+          type="button"
+          onClick={() => setShowUpload(true)}
+          disabled={disabled}
+          className="flex w-fit items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        >
+          <Plus className="size-3.5" />Subir imagen nueva
+        </button>
+      </Can>
       <ImageQuickUploadDialog open={showUpload} onOpenChange={setShowUpload} onUploaded={(item) => onPick(item)} />
     </div>
   )

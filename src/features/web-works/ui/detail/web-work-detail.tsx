@@ -16,11 +16,14 @@ import { mapWebWorkFromApi } from '../../stores/useWebWorkListStore'
 import { getTypeWorkBadge, getWebWorkStateOption, RESTORATION_KEY } from '../../data/data'
 import type { WebWork } from '../../data/schema'
 import { WebWorksError } from '../web-works-error'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 const priceFormatter = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' })
 
 export function WebWorkDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('web_works.update')
   const [item, setItem]           = useState<WebWork | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError]         = useState<string | null>(null)
@@ -75,9 +78,11 @@ export function WebWorkDetail({ id }: { id: string }) {
                   <Badge variant="outline" className={cn('text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/web-works/edit/${item.id}`) }}>
-                <Pencil className="size-4 mr-1" />Editar
-              </Button>
+              {canEdit && (
+                <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/web-works/edit/${item.id}`) }}>
+                  <Pencil className="size-4 mr-1" />Editar
+                </Button>
+              )}
             </div>
             <div className="aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted">
               {item.coverUrl

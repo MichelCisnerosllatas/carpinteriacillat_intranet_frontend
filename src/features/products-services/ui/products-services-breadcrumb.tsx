@@ -12,7 +12,7 @@ export function ProductsServicesBreadcrumb({ currentPage, showHeader = true }: P
     <div className="flex flex-col gap-4">
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem><BreadcrumbLink asChild><Link href="/products-services">Productos y Servicios</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />

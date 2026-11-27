@@ -21,6 +21,8 @@ type KpiCardProps = {
   description?: ReactNode
   /** Si se envía, muestra una barra de progreso (ej. avance de meta). */
   progress?: number | null
+  /** Botón-ícono opcional junto al ícono (ej. ⚙ "Configurar metas"). */
+  action?: ReactNode
   isLoading?: boolean
   className?: string
 }
@@ -34,6 +36,7 @@ export function KpiCard({
   invertChange = false,
   description,
   progress,
+  action,
   isLoading = false,
   className,
 }: KpiCardProps) {
@@ -51,9 +54,12 @@ export function KpiCard({
     <Card className={cn('min-w-0 gap-2 p-4', className)}>
       <div className='flex items-start justify-between gap-2'>
         <p className='text-muted-foreground text-sm font-medium'>{title}</p>
-        <span className='bg-accent-warm text-accent-warm-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-lg'>
-          <Icon className='h-4 w-4' />
-        </span>
+        <div className='flex shrink-0 items-center gap-1'>
+          {action}
+          <span className='bg-accent-warm text-accent-warm-foreground flex h-8 w-8 items-center justify-center rounded-lg'>
+            <Icon className='h-4 w-4' />
+          </span>
+        </div>
       </div>
 
       <p className='truncate text-2xl font-bold tracking-tight tabular-nums' title={value}>

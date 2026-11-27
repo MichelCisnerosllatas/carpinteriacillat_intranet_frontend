@@ -3,6 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { ArrowUpDown, Plus } from 'lucide-react'
+import { Can } from '@/features/auth/ui/can'
 import { SectionButtonsTable } from '@/features/section-buttons/ui/list/section-buttons-table'
 
 export const metadata: Metadata = { title: 'Botones de Sección' }
@@ -18,12 +19,17 @@ export default function SectionButtonsPage() {
             <p className="text-muted-foreground">Gestión de botones y CTA de las secciones del catálogo</p>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline" className="space-x-1">
-              <Link href="/section-buttons/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
-            </Button>
-            <Button asChild className="space-x-1">
-              <Link href="/section-buttons/create"><Plus size={18} /><span>Nuevo Botón</span></Link>
-            </Button>
+            {/* Solo si tiene permiso de reordenar / crear botones (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="section_buttons.reorder">
+              <Button asChild variant="outline" className="space-x-1">
+                <Link href="/section-buttons/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+              </Button>
+            </Can>
+            <Can permission="section_buttons.create">
+              <Button asChild className="space-x-1">
+                <Link href="/section-buttons/create"><Plus size={18} /><span>Nuevo Botón</span></Link>
+              </Button>
+            </Can>
           </div>
         </div>
         <SectionButtonsTable />

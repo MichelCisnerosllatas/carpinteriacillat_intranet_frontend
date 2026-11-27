@@ -13,7 +13,11 @@ type ChartCardProps = {
   description?: ReactNode
   /** Botón o selector opcional en la esquina superior derecha. */
   action?: ReactNode
-  /** Si se envía, muestra un botón-ícono ↗ que lleva a esa ruta (ej. el reporte con el detalle). */
+  /**
+   * Si se envía, muestra un botón-ícono ↗ que lleva a esa ruta (ej. el reporte con el detalle).
+   * undefined = sin botón. El permiso del reporte destino lo resuelve quien llama
+   * (ej. useReportHref de features/dashboard), porque shared no conoce los permisos.
+   */
   href?: string
   /** Tooltip / aria-label del botón ↗. */
   hrefLabel?: string

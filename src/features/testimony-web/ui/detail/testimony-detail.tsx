@@ -18,9 +18,12 @@ import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { formatTestimonyRating, getTestimonyStateOption } from '../../data/data'
 import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function TestimonyDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('testimonies.update')
   const { currentItem, items, loadById, setCurrentItem } = useTestimonyListStore()
 
   // Siempre trae el registro fresco del backend — no depende de que la tabla ya esté cargada en memoria.
@@ -83,14 +86,16 @@ export function TestimonyDetail({ id }: { id: string }) {
               </div>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            onClick={() => { NProgress.start(); router.push(`/testimony/edit/${item.id}`) }}
-          >
-            <Pencil className="mr-1.5 size-4" />Editar
-          </Button>
+          {canEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => { NProgress.start(); router.push(`/testimony/edit/${item.id}`) }}
+            >
+              <Pencil className="mr-1.5 size-4" />Editar
+            </Button>
+          )}
         </div>
       </div>
 

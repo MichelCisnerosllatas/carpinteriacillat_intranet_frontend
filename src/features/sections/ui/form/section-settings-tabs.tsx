@@ -4,7 +4,7 @@ import { Palette, SlidersHorizontal } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
 import { SectionAppearanceEditor } from '../appearance/section-appearance-editor'
-import { SectionSettingsForm } from './section-settings-form'
+import { SectionSettingsForm } from './section-settings-form/section-settings-form'
 
 const TABS = ['appearance', 'structure'] as const
 

@@ -12,7 +12,7 @@ export function TypeWorksBreadcrumb({ currentPage, showHeader = true }: TypeWork
     <div className="flex flex-col gap-4">
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem><BreadcrumbLink asChild><Link href="/typeworks">Tipos de trabajo</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />

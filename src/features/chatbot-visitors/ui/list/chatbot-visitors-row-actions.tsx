@@ -15,10 +15,14 @@ import { toastSuccess } from '@/shared/lib/toast'
 import { visitorDisplayName } from '@/features/chatbot-conversations/data/data'
 import { useChatbotVisitorDeleteStore } from '../../stores/useChatbotVisitorDeleteStore'
 import type { ChatbotVisitor } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ChatbotVisitorsRowActions({ row }: { row: Row<ChatbotVisitor> }) {
   const router = useRouter()
   const { deleteItem } = useChatbotVisitorDeleteStore()
+  // Cada acción se muestra solo si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('chatbot_visitors.view')
+  const canDelete = useCan('chatbot_visitors.delete')
   const name = visitorDisplayName(row.original)
 
   const handleDelete = async () => {
@@ -33,6 +37,9 @@ export function ChatbotVisitorsRowActions({ row }: { row: Row<ChatbotVisitor> })
     )
   }
 
+  // Sin ninguna acción permitida no mostramos el menú
+  if (!canView && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -42,13 +49,19 @@ export function ChatbotVisitorsRowActions({ row }: { row: Row<ChatbotVisitor> })
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={() => { NProgress.start(); router.push(`/chatbot/visitors/${row.original.id}`) }}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canView && (
+          <DropdownMenuItem onClick={() => { NProgress.start(); router.push(`/chatbot/visitors/${row.original.id}`) }}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canDelete && (
+          <>
+            {canView && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

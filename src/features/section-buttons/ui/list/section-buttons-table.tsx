@@ -6,7 +6,6 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -14,6 +13,7 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -22,6 +22,7 @@ import { useSectionButtonDeleteStore } from '../../stores/useSectionButtonDelete
 import { getSectionButtonsColumns, getSectionButtonsScopedColumns } from './section-buttons-columns'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SectionButtonsTableProps {
   /** Opcional: sin él, la tabla carga todos los botones (uso standalone en `/section-buttons`);
@@ -49,11 +50,20 @@ export function SectionButtonsTable({ idSection, canDelete = true, canReorder = 
   } = useSectionButtonListStore()
   const { bulkToggleState, bulkDeleteItems } = useSectionButtonDeleteStore()
 
+  // Acciones masivas solo si tiene permiso (ver ROLES_Y_PERMISOS.md)
+  const canStatePerm = useCan('section_buttons.state')
+  const canDeletePerm = useCan('section_buttons.delete')
+  const canBulk = canStatePerm || (canDelete && canDeletePerm)
+
   const columns = useMemo(
-    () => (idSection !== undefined
-      ? getSectionButtonsScopedColumns({ hideDelete: !canDelete, hideOrder: !canReorder })
-      : getSectionButtonsColumns({ hideDelete: !canDelete })),
-    [idSection, canDelete, canReorder]
+    () => {
+      const cols = idSection !== undefined
+        ? getSectionButtonsScopedColumns({ hideDelete: !canDelete, hideOrder: !canReorder })
+        : getSectionButtonsColumns({ hideDelete: !canDelete })
+      // Sin acciones masivas no tiene sentido la columna de selección
+      return canBulk ? cols : cols.filter((c) => c.id !== 'select')
+    },
+    [idSection, canDelete, canReorder, canBulk]
   )
 
   const [rowSelection, setRowSelection]         = useState({})
@@ -101,7 +111,7 @@ export function SectionButtonsTable({ idSection, canDelete = true, canReorder = 
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -123,6 +133,14 @@ export function SectionButtonsTable({ idSection, canDelete = true, canReorder = 
     setIsUserFetching(true)
     void load({ id_section: idSection, search: '', state: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all'
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -204,7 +222,12 @@ export function SectionButtonsTable({ idSection, canDelete = true, canReorder = 
             </Select>
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -256,9 +279,9 @@ export function SectionButtonsTable({ idSection, canDelete = true, canReorder = 
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={canDelete ? handleBulkDelete : undefined}
+        onActivate={canStatePerm ? handleBulkActivate : undefined}
+        onDeactivate={canStatePerm ? handleBulkDeactivate : undefined}
+        onDelete={canDelete && canDeletePerm ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

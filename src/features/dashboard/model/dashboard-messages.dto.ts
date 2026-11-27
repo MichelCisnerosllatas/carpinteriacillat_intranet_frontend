@@ -24,13 +24,14 @@ export type ChatbotInputTypeDto = { type: 'text' | 'voice'; label: string; count
 
 export type DashboardMessagesDto = {
   period: DashboardPeriodDto
-  kpis: MessagesKpisDto
-  contact_by_project_type: ContactByProjectTypeDto[]
-  contact_by_status: ContactByStatusDto[]
-  contact_monthly: ContactMonthlyDto[]
-  testimonies_by_rating: TestimoniesByRatingDto[]
-  chatbot_by_option: ChatbotByOptionDto[]
-  chatbot_by_status: ChatbotByStatusDto[]
-  chatbot_daily: ChatbotDailyDto[]
-  chatbot_input_type: ChatbotInputTypeDto[]
+  // Bloques (widgets) opcionales: el backend OMITE los que el rol no tiene permitidos.
+  kpis?: MessagesKpisDto
+  contact_by_project_type?: ContactByProjectTypeDto[]
+  contact_by_status?: ContactByStatusDto[]
+  contact_monthly?: ContactMonthlyDto[]
+  testimonies_by_rating?: TestimoniesByRatingDto[]
+  chatbot_by_option?: ChatbotByOptionDto[]
+  chatbot_by_status?: ChatbotByStatusDto[]
+  chatbot_daily?: ChatbotDailyDto[]
+  chatbot_input_type?: ChatbotInputTypeDto[]
 }

@@ -3,7 +3,7 @@
 import { Compass, Eye } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { FooterGuide } from '@/features/sections/ui/footer-guide/footer-guide'
-import { FooterVisibilityForm } from './form/footer-visibility-form'
+import { FooterVisibilityForm } from './form/footer-visibility-form/footer-visibility-form'
 
 /**
  * Dos responsabilidades separadas, cada una con su propio store:

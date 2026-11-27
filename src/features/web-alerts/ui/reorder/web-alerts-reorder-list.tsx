@@ -9,66 +9,28 @@ import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core'
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, ChevronUp, GripVertical, LoaderCircle, MousePointerClick } from 'lucide-react'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { LoaderCircle, MousePointerClick } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
-import { Badge } from '@/shared/ui/badge'
-import { cn } from '@/shared/lib/utils'
 import { swalConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { webAlertsService } from '../../services/web-alerts.service'
 import { useWebAlertReorderStore } from '../../stores/useWebAlertReorderStore'
 import { mapWebAlertFromApi } from '../../stores/useWebAlertListStore'
-import { getAlertStyle, getAlertVisibilityStatus } from '../../data/data'
 import type { WebAlert } from '../../data/schema'
-
-/** Una fila que se puede arrastrar. */
-function SortableRow({ item, position, onMoveUp, onMoveDown }: {
-  item: WebAlert
-  position: number
-  onMoveUp?: () => void
-  onMoveDown?: () => void
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
-  const style = getAlertStyle(item.style)
-  const status = getAlertVisibilityStatus(item.visibilityStatus)
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn('flex items-center gap-3 rounded-lg border bg-card px-3 py-2 shadow-sm', isDragging && 'z-50 opacity-75 shadow-md')}
-    >
-      {/* Agarradera para arrastrar */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="flex size-7 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing pointer-coarse:size-9"
-      >
-        <GripVertical className="size-4 pointer-coarse:size-5" />
-      </div>
-      <span className="w-6 shrink-0 text-center text-xs tabular-nums text-muted-foreground">{position}</span>
-      <span className={cn('size-5 shrink-0 rounded-full', style.barClass)} title={style.label} />
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.title ?? item.subtitle}</span>
-      <Badge variant="outline" className={cn('text-xs', status.badge)}>{status.label}</Badge>
-      {/* Flechas para mover sin arrastrar */}
-      <div className="flex shrink-0 flex-col gap-0.5">
-        <button type="button" onClick={onMoveUp} disabled={!onMoveUp} aria-label="Subir" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30 pointer-coarse:size-8">
-          <ChevronUp className="size-3.5 pointer-coarse:size-4" />
-        </button>
-        <button type="button" onClick={onMoveDown} disabled={!onMoveDown} aria-label="Bajar" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30 pointer-coarse:size-8">
-          <ChevronDown className="size-3.5 pointer-coarse:size-4" />
-        </button>
-      </div>
-    </div>
-  )
-}
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { SortableRow } from './sortable-row'
 
 export function WebAlertsReorderList() {
   const router = useRouter()
+  const canReorder = useCan('web_alerts.reorder')
   const { isSubmitting, confirm } = useWebAlertReorderStore()
 
   const [items, setItems]                 = useState<WebAlert[]>([])
@@ -129,6 +91,15 @@ export function WebAlertsReorderList() {
     } else {
       toastError('Error', useWebAlertReorderStore.getState().error ?? 'No se pudo guardar el orden.')
     }
+  }
+
+  // Sin permiso de reordenar solo mostramos un aviso (ver ROLES_Y_PERMISOS.md)
+  if (!canReorder) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground">
+        No tienes permiso para reordenar.
+      </div>
+    )
   }
 
   if (isLoading) {

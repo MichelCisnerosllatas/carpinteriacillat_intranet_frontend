@@ -66,6 +66,12 @@ export const saleSchema = z.object({
   discountTotal: z.number(),
   proformaId: z.number().nullable(),
   proformaCode: z.string().nullable(),
+  // Vendedor (usuario) que registró la venta.
+  userId: z.number().nullable(),
+  sellerName: z.string().nullable(),
+  // Sucursal donde se registró la venta.
+  companyBranchId: z.number().nullable(),
+  branchName: z.string().nullable(),
   amountPaid: z.number(),
   balance: z.number(),
   paymentStatus: salePaymentStatusSchema,

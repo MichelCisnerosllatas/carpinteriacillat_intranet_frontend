@@ -16,11 +16,18 @@ import { toastSuccess } from '@/shared/lib/toast'
 import { useSectionItemDetailListStore } from '../../stores/useSectionItemDetailListStore'
 import { useSectionItemDetailDeleteStore } from '../../stores/useSectionItemDetailDeleteStore'
 import type { SectionItemDetail } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function SectionItemDetailsRowActions({ row }: { row: Row<SectionItemDetail> }) {
   const router = useRouter()
   const { setCurrentItem } = useSectionItemDetailListStore()
   const { toggleState, deleteItem } = useSectionItemDetailDeleteStore()
+
+  // Cada acción solo se muestra si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('section_items.view')
+  const canEdit = useCan('section_items.update')
+  const canState = useCan('section_items.state')
+  const canDelete = useCan('section_items.delete')
 
   const isActive = row.original.stateValue === 1
   const label = row.original.title ?? `Detalle #${row.original.id}`
@@ -75,6 +82,9 @@ export function SectionItemDetailsRowActions({ row }: { row: Row<SectionItemDeta
     )
   }
 
+  // Sin ninguna acción permitida no mostramos el menú "..."
+  if (!canView && !canEdit && !canState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -91,22 +101,34 @@ export function SectionItemDetailsRowActions({ row }: { row: Row<SectionItemDeta
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleToggleState()}>
-          {isActive
-            ? <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
-            : <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canEdit && (
+          <DropdownMenuItem onClick={handleEdit}>
+            Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canState && (
+          <>
+            {(canView || canEdit) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleToggleState()}>
+              {isActive
+                ? <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
+                : <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
+            </DropdownMenuItem>
+          </>
+        )}
+        {canDelete && (
+          <>
+            {(canView || canEdit || canState) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

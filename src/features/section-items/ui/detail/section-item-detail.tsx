@@ -21,6 +21,7 @@ import { SECTION_ITEM_TYPES } from '../../data/data'
 import { useSectionItemListStore } from '../../stores/useSectionItemListStore'
 import { SectionItemDetailInfoTab } from './tabs/info/section-item-detail-info-tab'
 import { SectionItemDetailDetailsTab } from './tabs/details/section-item-detail-details-tab'
+import { Can } from '@/features/auth/ui/can'
 
 const TABS = ['info', 'detalles'] as const
 
@@ -122,13 +123,16 @@ export function SectionItemDetail({ id }: { id: string }) {
             >
               <Settings className="size-4 sm:mr-1.5" /><span className="hidden sm:inline">Configuración</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { NProgress.start(); router.push(`/section-items/edit/${item.id}`) }}
-            >
-              <Pencil className="mr-1.5 size-4" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar items de sección (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="section_items.update">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { NProgress.start(); router.push(`/section-items/edit/${item.id}`) }}
+              >
+                <Pencil className="mr-1.5 size-4" />Editar
+              </Button>
+            </Can>
           </div>
         </div>
       </div>

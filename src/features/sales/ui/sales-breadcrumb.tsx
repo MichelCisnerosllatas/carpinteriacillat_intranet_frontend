@@ -21,7 +21,7 @@ export function SalesBreadcrumb({ currentPage, showHeader = true }: SalesBreadcr
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Inicio</Link>
+              <Link href="/">Inicio</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

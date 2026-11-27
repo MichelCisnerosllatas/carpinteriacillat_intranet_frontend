@@ -2,12 +2,13 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckCircle2, FileText, Loader2, Package, Save, Send, User } from 'lucide-react'
+import { CheckCircle2, FileText, Loader2, Package, Save, Send, User, UserCheck } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { Card } from '@/shared/ui/card'
 import { cn } from '@/shared/lib/utils'
+import { SellerSelect } from '@/features/sellers'
 import { useSalePosStore } from '../../stores/useSalePosStore'
 import { formatMoney, type CartTotals, type TaxConfig } from '../../lib/sale-pos'
 import type { Sale } from '../../data/schema'
@@ -30,6 +31,10 @@ interface SummaryPanelProps {
   onSaveDraft?: () => void
   /** Última venta emitida en esta sesión (reemplaza al modal de éxito). */
   lastSale: Sale | null
+  /** true solo con `sales.view_all`: muestra el selector "Vendedor". */
+  canChooseSeller: boolean
+  /** Vendedor efectivo (el elegido o, por defecto, el usuario de la sesión). */
+  sellerId: number | null
 }
 
 /**
@@ -51,8 +56,10 @@ export function SummaryPanel({
   onEmit,
   onSaveDraft,
   lastSale,
+  canChooseSeller,
+  sellerId,
 }: SummaryPanelProps) {
-  const { client, isGenericClient, lines, currency } = useSalePosStore()
+  const { client, isGenericClient, lines, currency, setSellerId } = useSalePosStore()
   const units = lines.reduce((acc, l) => acc + (Number(l.quantity) || 0), 0)
 
   return (
@@ -82,6 +89,18 @@ export function SummaryPanel({
               <span className="text-muted-foreground italic">Sin cliente</span>
             )}
           </div>
+          {/* Vendedor: solo quien ve las ventas de todos puede asignarla a otro (contrato §11). */}
+          {canChooseSeller && (
+            <div className="flex items-center gap-2">
+              <UserCheck className="text-muted-foreground size-4 shrink-0" />
+              <SellerSelect
+                value={sellerId}
+                onValueChange={setSellerId}
+                placeholder="Vendedor"
+                className="bg-background h-7 text-xs"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Package className="text-muted-foreground size-4 shrink-0" />
             <span className="text-muted-foreground">

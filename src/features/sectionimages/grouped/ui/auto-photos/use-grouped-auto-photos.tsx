@@ -16,6 +16,7 @@ import { getAutoPhotosCounter } from '../../lib/auto-photos-texts'
 import { useAutoPhotos } from '../../lib/use-auto-photos'
 import { usePersonalizeAutoPhotos } from '../../lib/use-personalize-auto-photos'
 import { GroupedAutoPhotos } from './grouped-auto-photos'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface UseGroupedAutoPhotosOptions {
   config: GroupedSectionConfig
@@ -41,6 +42,8 @@ export function useGroupedAutoPhotos({
 }: UseGroupedAutoPhotosOptions) {
   const auto = useAutoPhotos(config)
   const { personalize } = usePersonalizeAutoPhotos(idSection, onReload)
+  // "Personalizar" crea imágenes de sección: solo con permiso de crear (ver ROLES_Y_PERMISOS.md)
+  const canCreatePhotos = useCan('section_images.create')
 
   const forItem = (item: SectionItemApiItem, ownPhotos: SectionImage[]): ItemAutoPhotos => {
     if (!auto.enabled) return { block: undefined, counter: null }
@@ -53,7 +56,7 @@ export function useGroupedAutoPhotos({
         isError={auto.isError}
         hasOwnPhotos={ownPhotos.length > 0}
         onOpenPhoto={(list, index) => onOpenSlides(autoPhotosToSlides(list), index)}
-        onPersonalize={() => void personalize(item, photos, personalizeExtraText)}
+        onPersonalize={canCreatePhotos ? () => void personalize(item, photos, personalizeExtraText) : undefined}
       />
     )
     return { block, counter: getAutoPhotosCounter(ownPhotos, photos) }

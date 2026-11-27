@@ -1,8 +1,6 @@
 // src/features/sales/ui/pos/shortcuts-hint.tsx
 
-const Key = ({ children }: { children: React.ReactNode }) => (
-  <kbd className="bg-muted rounded border px-1 py-0.5 font-mono text-[10px]">{children}</kbd>
-)
+import { Key } from './key'
 
 /** Recordatorio discreto de los atajos de teclado de la pantalla. */
 export function ShortcutsHint({ showProforma }: { showProforma: boolean }) {

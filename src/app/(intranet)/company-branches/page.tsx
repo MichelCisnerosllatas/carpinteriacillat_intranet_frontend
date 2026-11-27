@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Building2 } from 'lucide-react'
 import { CompanyBranchesTable } from '@/features/company-branches/ui/list/company-branches-table'
 
@@ -17,9 +18,12 @@ export default function CompanyBranchesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Sucursales</h2>
             <p className="text-muted-foreground">Sucursales y talleres de la empresa</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/company-branches/create"><Building2 size={18} /><span>Nueva Sucursal</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="company_branches.create">
+            <Button asChild className="space-x-1">
+              <Link href="/company-branches/create"><Building2 size={18} /><span>Nueva Sucursal</span></Link>
+            </Button>
+          </Can>
         </div>
         <CompanyBranchesTable />
       </main>

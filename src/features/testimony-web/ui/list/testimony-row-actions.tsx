@@ -17,6 +17,7 @@ import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
 import { useTestimonyDeleteStore } from '../../stores/useTestimonyDeleteStore'
 import type { Testimony } from '../../data/schema'
 import { TESTIMONY_STATE_PENDING } from '../../data/data'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface TestimonyRowActionsProps {
   row: Row<Testimony>
@@ -27,6 +28,12 @@ export function TestimonyRowActions({ row, hideDelete = false }: TestimonyRowAct
   const router = useRouter()
   const { setCurrentItem } = useTestimonyListStore()
   const { toggleState, deleteItem } = useTestimonyDeleteStore()
+  // Cada acción se muestra solo si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('testimonies.view')
+  const canEdit = useCan('testimonies.update')
+  const canState = useCan('testimonies.state')
+  const hasDeletePermission = useCan('testimonies.delete')
+  const canDelete = !hideDelete && hasDeletePermission
 
   const isActive = row.original.stateValue === 1
   // Pendiente (2): reseña enviada desde la web. "Activar" la aprueba (pasa a 1 = Mostrado).
@@ -82,6 +89,9 @@ export function TestimonyRowActions({ row, hideDelete = false }: TestimonyRowAct
     )
   }
 
+  // Sin ninguna acción permitida no mostramos el menú
+  if (!canView && !canEdit && !canState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -98,21 +108,29 @@ export function TestimonyRowActions({ row, hideDelete = false }: TestimonyRowAct
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleToggleState()}>
-          {isActive
-            ? <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
-            : <>{isPending ? 'Aprobar' : 'Activar'} <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
-        </DropdownMenuItem>
-        {!hideDelete && (
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canEdit && (
+          <DropdownMenuItem onClick={handleEdit}>
+            Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canState && (
           <>
-            <DropdownMenuSeparator />
+            {(canView || canEdit) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleToggleState()}>
+              {isActive
+                ? <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
+                : <>{isPending ? 'Aprobar' : 'Activar'} <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
+            </DropdownMenuItem>
+          </>
+        )}
+        {canDelete && (
+          <>
+            {(canView || canEdit || canState) && <DropdownMenuSeparator />}
             <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
               Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
             </DropdownMenuItem>

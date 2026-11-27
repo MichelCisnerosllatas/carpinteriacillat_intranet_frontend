@@ -17,6 +17,10 @@ type State = {
   filters: DashboardFiltersValue
   /** Cliente elegido: se conserva entre pestañas (solo se envía si el reporte lo usa). */
   clientId: number | null
+  /** Vendedor elegido (null = todos). Solo se muestra el filtro con `sales.view_all`. */
+  sellerId: number | null
+  /** Sucursales elegidas ([] = todas las que puede ver). Solo en reportes de ventas/proformas. */
+  branchIds: number[]
   /** Estado elegido: cambia por reporte, así que se limpia al cambiar de pestaña. */
   status: string | null
   data: ReportDataDto | null
@@ -31,6 +35,8 @@ type Action = {
   setPaymentsView: (view: PaymentsView) => void
   setFilters: (filters: DashboardFiltersValue) => void
   setClientId: (clientId: number | null) => void
+  setSellerId: (sellerId: number | null) => void
+  setBranchIds: (branchIds: number[]) => void
   setStatus: (status: string | null) => void
   load: () => Promise<boolean>
   exportFile: (format: 'xlsx' | 'pdf') => Promise<boolean>
@@ -56,6 +62,9 @@ export function buildReportParams(state: State): ReportRequestDto {
     currency: state.filters.currency,
     client_id: config.usesClient ? state.clientId : null,
     status: config.statusOptions ? state.status : null,
+    user_id: config.usesSeller ? state.sellerId : null,
+    // Las sucursales aplican a los mismos reportes que el vendedor (ventas, pagos, proformas).
+    branch_ids: config.usesSeller && state.branchIds.length ? state.branchIds : null,
   }
 }
 
@@ -68,6 +77,8 @@ export const useReportStore = create<State & Action>((set, get) => ({
   paymentsView: 'recibidos',
   filters: defaultFilters(),
   clientId: null,
+  sellerId: null,
+  branchIds: [],
   status: null,
   data: null,
   isFetching: false,
@@ -85,6 +96,8 @@ export const useReportStore = create<State & Action>((set, get) => ({
   },
   setFilters: (filters) => set({ filters }),
   setClientId: (clientId) => set({ clientId }),
+  setSellerId: (sellerId) => set({ sellerId }),
+  setBranchIds: (branchIds) => set({ branchIds }),
   setStatus: (status) => set({ status }),
 
   load: async () => {

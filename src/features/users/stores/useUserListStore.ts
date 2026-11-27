@@ -90,6 +90,10 @@ const mapUserFromApi = (user: UserJoinType): User => {
     role: normalizeRole(user.role?.role_name),
     roleLabel: user.role?.role_name ?? 'Sin rol',
 
+    allBranches: Boolean(user.all_branches),
+    defaultBranchId: user.default_branch_id ?? null,
+    branches: (user.branches ?? []).map((b) => ({ id: b.id, name: b.name, isDefault: Boolean(b.is_default) })),
+
     createdAt: user.user_created_at_format ?? user.user_created_at,
     updatedAt: user.user_updated_at_format ?? user.user_updated_at,
   }

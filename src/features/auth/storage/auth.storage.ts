@@ -1,51 +1,38 @@
-// src/feature/auth/storage/auth.storage.ts
-import { TokenStorage } from './token.storage';
-import { UserStorage } from './user.storage';
-import { LoginDataDTO } from '@/features/auth/model/logindto/login.dto'
+// src/features/auth/storage/auth.storage.ts
+// Junta en un solo lugar: tokens (TokenStorage) + sesión (AuthSessionStorage).
+import { TokenStorage } from './token.storage'
+import { AuthSessionStorage } from './session.storage'
+import type { AuthSession } from '@/features/auth/model/session.type'
 import { CookieStorage } from '@/shared/config/cookie.storage'
+import { ActiveBranchStorage } from './active-branch.storage'
 
 export const AuthStorage = {
-  saveOnlyTokens: ({
-    accessToken,
-    refreshToken,
-  }: {
-    accessToken: string;
-    refreshToken: string;
-  }) => {
-    TokenStorage.setAccessToken(accessToken);
-    TokenStorage.setRefreshToken(refreshToken);
+  // Paso 1 del login: guardar los tokens (el access_token también va a la cookie).
+  saveTokens: (accessToken: string, refreshToken: string | null) => {
+    TokenStorage.clearTokens()
+    TokenStorage.setAccessToken(accessToken)
+    // Con Google no hay refresh_token
+    if (refreshToken) TokenStorage.setRefreshToken(refreshToken)
   },
 
-  saveSession: async ({
-    accessToken,
-    refreshToken,
-    user_login,
-  }: {
-    accessToken: string;
-    refreshToken: string;
-    user_login: LoginDataDTO;
-  }) => {
-    TokenStorage.setAccessToken(accessToken);
-    TokenStorage.setRefreshToken(refreshToken);
-    CookieStorage.set('auth_role', String(user_login.user?.id_rol))
-    await UserStorage.setUser(user_login);
+  // Paso 2 del login (y cada verify): guardar la sesión.
+  saveSession: (session: AuthSession) => {
+    AuthSessionStorage.set(session)
   },
 
-  getSession: async () => {
-    const accessToken = TokenStorage.getAccessToken();
-    const refreshToken = TokenStorage.getRefreshToken();
-    const user_login = await UserStorage.getUser();
-
+  getSession: () => {
     return {
-      accessToken,
-      refreshToken,
-      user_login,
-    };
+      accessToken: TokenStorage.getAccessToken(),
+      refreshToken: TokenStorage.getRefreshToken(),
+      session: AuthSessionStorage.get(),
+    }
   },
 
-  clearSession: async () => {
-    TokenStorage.clearTokens();
+  clearSession: () => {
+    TokenStorage.clearTokens()
+    // Borra la cookie antigua 'auth_role' por si quedó de una sesión anterior.
     CookieStorage.remove('auth_role')
-    await UserStorage.deleteUser();
+    ActiveBranchStorage.clear()
+    AuthSessionStorage.clear()
   },
-};
+}

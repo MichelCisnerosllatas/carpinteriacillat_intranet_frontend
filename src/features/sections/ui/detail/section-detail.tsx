@@ -23,6 +23,7 @@ import { SectionDetailItemsTab } from './tabs/items/section-detail-items-tab'
 import { SectionDetailTestimoniesTab } from './tabs/testimonies/section-detail-testimonies-tab'
 import { SectionDetailWorksTab } from './tabs/works/section-detail-works-tab'
 import { getSectionWorksConfig } from './tabs/works/section-works.config'
+import { Can } from '@/features/auth/ui/can'
 
 const TABS = ['info', 'works', 'images', 'buttons', 'items', 'testimonies'] as const
 
@@ -148,13 +149,16 @@ export function SectionDetail({ id }: { id: string }) {
             >
               <Settings className="size-4 @sm:mr-1.5" /><span className="hidden @sm:inline">Configuración</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { NProgress.start(); router.push(`/sections/edit/${item.id}`) }}
-            >
-              <Pencil className="mr-1.5 size-4" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar secciones (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="sections.update">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { NProgress.start(); router.push(`/sections/edit/${item.id}`) }}
+              >
+                <Pencil className="mr-1.5 size-4" />Editar
+              </Button>
+            </Can>
           </div>
         </div>
       </div>

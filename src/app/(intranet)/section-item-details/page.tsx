@@ -3,6 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { ArrowUpDown, Plus } from 'lucide-react'
+import { Can } from '@/features/auth/ui/can'
 import { SectionItemDetailsTable } from '@/features/section-item-details/ui/list/section-item-details-table'
 
 export const metadata: Metadata = { title: 'Detalles de Item de Sección' }
@@ -18,12 +19,17 @@ export default function SectionItemDetailsPage() {
             <p className="text-muted-foreground">Gestión de las líneas de detalle de los items de sección del catálogo</p>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline" className="space-x-1">
-              <Link href="/section-item-details/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
-            </Button>
-            <Button asChild className="space-x-1">
-              <Link href="/section-item-details/create"><Plus size={18} /><span>Nuevo Detalle</span></Link>
-            </Button>
+            {/* Los detalles usan los permisos de items de sección (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="section_items.reorder">
+              <Button asChild variant="outline" className="space-x-1">
+                <Link href="/section-item-details/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+              </Button>
+            </Can>
+            <Can permission="section_items.create">
+              <Button asChild className="space-x-1">
+                <Link href="/section-item-details/create"><Plus size={18} /><span>Nuevo Detalle</span></Link>
+              </Button>
+            </Can>
           </div>
         </div>
         <SectionItemDetailsTable />

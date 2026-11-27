@@ -16,14 +16,15 @@ import {
   useLayoutStore,
 } from '@/shared/stores/layout-store'
 import { useSearchStore } from '@/shared/stores/search-store'
-import { NavGroup } from './nav-group'
-import { TeamSwitcher } from './team-switcher'
+import { NavGroup } from './nav-group/nav-group'
+import { CompanyBranchSwitcher } from './company-branch-switcher'
 import { NavUser } from './nav-user'
 import { SidebarSearch } from './sidebar-search'
 import { SidebarToggle } from './sidebar-toggle'
 
-import { filterNavByRole } from '@/shared/config/nav-types'
+import { filterNavByPermission } from '@/shared/config/nav-types'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
+import { hasPermission, isSuperAdminSession } from '@/features/auth/hooks/usePermission'
 import { getImageUrl } from '@/features/images/lib/image-url'
 
 type AppSidebarProps = {
@@ -34,7 +35,7 @@ type AppSidebarProps = {
 export function AppSidebar({ defaultVariant, defaultCollapsible }: AppSidebarProps) {
   const [mounted, setMounted] = useState(false)
   const { collapsible, variant } = useLayoutStore()
-  const {loginDataDTO} = useAuthStore();
+  const session = useAuthStore((state) => state.session)
   const pathname = usePathname()
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -69,15 +70,20 @@ export function AppSidebar({ defaultVariant, defaultCollapsible }: AppSidebarPro
     return () => window.clearTimeout(t)
   }, [pathname])
 
-  // const loginDataDTO = useAuthStore((state) => state.loginDataDTO)
+  // Datos del usuario (nombre y foto vienen de session.user.person)
+  const person = session?.user.person
   const currentUser = {
-    name: `${loginDataDTO?.person?.person_name ?? 'Usuario'} ${loginDataDTO?.person?.person_lastname ?? ''}`.trim(),
-    email: loginDataDTO?.user?.email ?? 'Sin correo',
-    avatar: loginDataDTO?.person?.photo_url ? getImageUrl(loginDataDTO.person.photo_url) : '',
+    name: `${person?.person_name ?? 'Usuario'} ${person?.person_lastname ?? ''}`.trim(),
+    email: session?.user.email ?? 'Sin correo',
+    avatar: person?.photo_url ? getImageUrl(person.photo_url) : '',
   }
 
-  const currentRole = loginDataDTO?.user?.id_rol ? String(loginDataDTO.user.id_rol) : undefined;
-  const filteredGroups = filterNavByRole(sidebarData.navGroups, currentRole)
+  // Solo se muestran los módulos para los que el rol tiene permiso (ver ROLES_Y_PERMISOS.md).
+  const filteredGroups = filterNavByPermission(
+    sidebarData.navGroups,
+    (perm) => hasPermission(session, perm),
+    isSuperAdminSession(session)
+  )
 
   return (
     <Sidebar
@@ -88,7 +94,8 @@ export function AppSidebar({ defaultVariant, defaultCollapsible }: AppSidebarPro
         {/* Una fila: empresa · buscar · contraer. Contraído (icon): columna logo → buscar. */}
         <div className="flex items-center gap-0.5 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
-            <TeamSwitcher teams={sidebarData.teams} />
+            {/* Empresa (logo de Configuración de la empresa) + sucursal activa de la sesión. */}
+            <CompanyBranchSwitcher />
           </div>
           <SidebarSearch />
           {(mounted ? collapsible : defaultCollapsible) !== 'none' && <SidebarToggle />}

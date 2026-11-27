@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Lock } from 'lucide-react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -23,6 +24,8 @@ export const rolesColumns: ColumnDef<Role>[] = [
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(v) => row.toggleSelected(!!v)}
+        // Los roles del sistema no se pueden seleccionar (no aplican las acciones masivas)
+        disabled={!row.getCanSelect()}
         aria-label="Seleccionar fila"
         className="translate-y-0.5"
       />
@@ -40,7 +43,14 @@ export const rolesColumns: ColumnDef<Role>[] = [
       const role = row.original
       return (
         <div className="flex min-w-[280px] max-w-[480px] flex-col gap-1 py-2 text-xs leading-5">
-          <Link href={`/roles/${role.id}`} className="font-semibold text-primary hover:underline">{role.name}</Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/roles/${role.id}`} className="font-semibold text-primary hover:underline">{role.name}</Link>
+            {role.isSystem && (
+              <Badge variant="secondary" className="gap-1">
+                <Lock className="size-3" /> Sistema
+              </Badge>
+            )}
+          </div>
           {role.description && (
             <span className="text-muted-foreground">{role.description}</span>
           )}

@@ -31,6 +31,9 @@ export type SaleFullPostRequestDto = {
   currency: string
   observation?: string
   proforma_id?: number
+  /** Vendedor (contrato §11.1). Solo se respeta con `sales.view_all`; si no, el backend usa
+   * al usuario autenticado. */
+  user_id?: number
   status?: SaleStatusApi
   details: SaleFullDetailDto[]
   payments?: SaleFullPaymentDto[]

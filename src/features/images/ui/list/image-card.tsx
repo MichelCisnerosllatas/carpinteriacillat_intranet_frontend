@@ -12,6 +12,7 @@ import {
 import { useLongPress } from '@/shared/lib/use-long-press'
 import { cn } from '@/shared/lib/utils'
 import { formatBytes } from '../../lib/image-url'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import type { ImageItem } from '../../data/schema'
 
 export function ImageCard({
@@ -30,6 +31,8 @@ export function ImageCard({
   const [imgError, setImgError] = useState(false)
   const [loaded,   setLoaded]   = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  // Solo si tiene permiso de eliminar imágenes (ver ROLES_Y_PERMISOS.md)
+  const canDelete = useCan('images.delete')
   const displayName = item.name ?? item.patch.split('/').pop() ?? item.patch
 
   // En touch no hay :hover para revelar el checkbox: mantener presionado la foto activa
@@ -137,12 +140,14 @@ export function ImageCard({
                   <ExternalLink className="mr-2 size-4" /> Abrir original
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-500! pointer-coarse:py-2.5"
-                onClick={() => onDelete(item)}
-              >
-                <Trash2 className="mr-2 size-4" /> Eliminar
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-red-500! pointer-coarse:py-2.5"
+                  onClick={() => onDelete(item)}
+                >
+                  <Trash2 className="mr-2 size-4" /> Eliminar
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

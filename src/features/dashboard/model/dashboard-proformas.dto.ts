@@ -33,10 +33,11 @@ export type ProformasTopClientDto = { client_name: string; count: number; total:
 
 export type DashboardProformasDto = {
   period: DashboardPeriodDto
-  kpis: ProformasKpisDto
-  funnel: ProformasFunnelDto[]
-  by_status: ProformasByStatusDto[]
-  by_type: ProformasByTypeDto[]
-  monthly: ProformasMonthlyDto[]
-  top_clients: ProformasTopClientDto[]
+  // Bloques (widgets) opcionales: el backend OMITE los que el rol no tiene permitidos.
+  kpis?: ProformasKpisDto
+  funnel?: ProformasFunnelDto[]
+  by_status?: ProformasByStatusDto[]
+  by_type?: ProformasByTypeDto[]
+  monthly?: ProformasMonthlyDto[]
+  top_clients?: ProformasTopClientDto[]
 }

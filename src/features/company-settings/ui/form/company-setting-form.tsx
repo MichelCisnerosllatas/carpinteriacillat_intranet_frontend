@@ -9,24 +9,31 @@ import { CompanyTaxDataCard } from './company-tax-data-card'
 import { CompanyManagementLinksCard } from './company-management-links-card'
 import { CompanySettingActions } from './company-setting-actions'
 import { useCompanySettingForm } from '../../lib/use-company-setting-form'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function CompanySettingForm() {
   const {form, logoFieldRef, message, isSubmitting, onSubmit} = useCompanySettingForm()
+  // Sin permiso de editar, el formulario queda en solo lectura (ver ROLES_Y_PERMISOS.md)
+  const canUpdate = useCan('company_settings.update')
 
   return (
     <TooltipProvider delayDuration={250}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto w-full max-w-7xl space-y-5 pb-6">
+          {!canUpdate && (
+            <p className="text-xs text-muted-foreground">Solo lectura: no tienes permiso para editar</p>
+          )}
+
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
             <CompanyLogoCard
               control={form.control}
               logoFieldRef={logoFieldRef}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canUpdate}
             />
 
             <CompanyTaxDataCard
               control={form.control}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canUpdate}
             />
           </div>
 
@@ -41,7 +48,7 @@ export function CompanySettingForm() {
             </div>
           )}
 
-          <CompanySettingActions isSubmitting={isSubmitting} />
+          {canUpdate && <CompanySettingActions isSubmitting={isSubmitting} />}
         </form>
       </Form>
     </TooltipProvider>

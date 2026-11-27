@@ -5,6 +5,7 @@ import NProgress from 'nprogress'
 import { ArrowUpDown, LayoutList, Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { SectionItemsTable } from '@/features/section-items/ui/list/section-items-table'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SectionDetailItemsTabProps {
   sectionId: number
@@ -29,18 +30,21 @@ export function SectionDetailItemsTab({
 }: SectionDetailItemsTabProps) {
   const router = useRouter()
   const goTo = (path: string) => { NProgress.start(); router.push(path) }
+  // Además de la configuración del tipo de sección, se pide el permiso del módulo items (ver ROLES_Y_PERMISOS.md)
+  const canCreatePerm = useCan('section_items.create')
+  const canReorderPerm = useCan('section_items.reorder')
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-sm font-medium"><LayoutList className="size-4" />{title}</h3>
         <div className="flex items-center gap-2">
-          {canReorder && (
+          {canReorder && canReorderPerm && (
             <Button size="sm" variant="outline" onClick={() => goTo(`/section-items/reorder?id_section=${sectionId}`)}>
               <ArrowUpDown className="mr-1.5 size-4" />Reordenar
             </Button>
           )}
-          {canAdd && (
+          {canAdd && canCreatePerm && (
             <Button size="sm" onClick={() => goTo(`/section-items/create?id_section=${sectionId}`)}>
               <Plus className="mr-1.5 size-4" />{addLabel}
             </Button>

@@ -14,6 +14,7 @@ import type { ClientApiItem, ClientJoinApiItem } from '@/features/clients/model/
 import { useSalePosStore } from '../../stores/useSalePosStore'
 import { AutocompleteInput } from './autocomplete-input'
 import { FieldError } from './field-error'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 // "Cliente varios" se ofrece como una opción más de la lista (no como estado por defecto).
 type ClientOption = { kind: 'generic' } | { kind: 'client'; client: ClientJoinApiItem }
@@ -50,6 +51,8 @@ export function ClientField({
   const { options, load, setForceReload } = useClientSelectStore()
   const [query, setQuery] = useState('')
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+  // Solo si tiene permiso de crear clientes (ver ROLES_Y_PERMISOS.md)
+  const canCreateClient = useCan('clients.create')
   // true cuando la selección se soltó porque el usuario está escribiendo: en ese caso NO se debe
   // borrar lo que escribió (solo se borra al limpiar la venta completa).
   const typingRef = useRef(false)
@@ -159,13 +162,15 @@ export function ClientField({
           icon={<Search />}
         />
         {/* Atajo directo para registrar un cliente sin pasar por el buscador. */}
-        <IconButton
-          label="Nuevo cliente"
-          className="shrink-0"
-          disabled={disabled}
-          onClick={() => setQuickCreateOpen(true)}
-          icon={<UserPlus />}
-        />
+        {canCreateClient && (
+          <IconButton
+            label="Nuevo cliente"
+            className="shrink-0"
+            disabled={disabled}
+            onClick={() => setQuickCreateOpen(true)}
+            icon={<UserPlus />}
+          />
+        )}
         {trailing}
       </div>
       {client?.document && (

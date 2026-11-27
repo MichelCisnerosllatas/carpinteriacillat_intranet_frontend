@@ -15,6 +15,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { RoleSelect } from '@/features/roles/ui/role-select'
 import { useGoogleAccessRequestActionStore } from '../../stores/useGoogleAccessRequestActionStore'
 import type { GoogleAccessRequest } from '../../data/schema'
@@ -23,6 +24,8 @@ export function GoogleAccessRequestRowActions({ row }: { row: Row<GoogleAccessRe
   const { approve, reject, isSubmitting } = useGoogleAccessRequestActionStore()
   const [approveOpen, setApproveOpen] = useState(false)
   const [idRol, setIdRol] = useState<string>('')
+  // Aprobar / rechazar solo con permiso 'approve' (ver ROLES_Y_PERMISOS.md)
+  const canApprove = useCan('google_access.approve')
 
   const isPending = row.original.status === 'pending'
   const displayName = row.original.name?.trim() || row.original.email
@@ -53,6 +56,9 @@ export function GoogleAccessRequestRowActions({ row }: { row: Row<GoogleAccessRe
       { title: 'Rechazando...' }
     )
   }
+
+  // Sin permiso de aprobar no hay acciones que mostrar
+  if (!canApprove) return null
 
   return (
     <>

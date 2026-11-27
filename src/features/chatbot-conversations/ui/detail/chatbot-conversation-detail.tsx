@@ -21,18 +21,15 @@ import { useChatbotConversationDeleteStore } from '../../stores/useChatbotConver
 import type { ChatbotConversationStatus } from '../../model/chatbotconversationget.dto'
 import { CHATBOT_STATUS_ICONS } from '../list/chatbot-conversations-row-actions'
 import { ChatbotConversationThread } from './chatbot-conversation-thread'
-
-function InfoRow({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3 text-sm">
-      <span className="flex shrink-0 items-center gap-1.5 text-muted-foreground"><Icon className="size-3.5" />{label}</span>
-      <span className="min-w-0 break-words text-right font-medium">{value}</span>
-    </div>
-  )
-}
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { InfoRow } from './info-row'
 
 export function ChatbotConversationDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('chatbot_conversations.state')
+  const canDelete = useCan('chatbot_conversations.delete')
+  const canViewVisitor = useCan('chatbot_visitors.view')
   const { item, isLoading, isError, message, load, reset } = useChatbotConversationDetailStore()
   const { updateStatus, isSubmitting } = useChatbotConversationStatusStore()
   const { deleteItem } = useChatbotConversationDeleteStore()
@@ -113,9 +110,11 @@ export function ChatbotConversationDetail({ id }: { id: string }) {
                 {!item.visitor.phone && !item.visitor.email && (
                   <p className="text-xs text-muted-foreground">Chateó de forma anónima (sin datos de contacto).</p>
                 )}
-                <Button asChild variant="link" size="sm" className="h-auto w-fit p-0">
-                  <Link href={`/chatbot/visitors/${item.visitor.id}`}>Ver todas sus conversaciones →</Link>
-                </Button>
+                {canViewVisitor && (
+                  <Button asChild variant="link" size="sm" className="h-auto w-fit p-0">
+                    <Link href={`/chatbot/visitors/${item.visitor.id}`}>Ver todas sus conversaciones →</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -139,14 +138,16 @@ export function ChatbotConversationDetail({ id }: { id: string }) {
         </Card>
 
         <div className="flex flex-wrap gap-2">
-          {otherStatuses.map((s) => (
+          {canState && otherStatuses.map((s) => (
             <Button key={s.value} variant="outline" size="sm" disabled={isSubmitting} onClick={() => void handleChangeStatus(s.value)} className="gap-1">
               {CHATBOT_STATUS_ICONS[s.value]}Marcar {s.label}
             </Button>
           ))}
-          <Button variant="outline" size="sm" className="gap-1 text-red-500 hover:text-red-600" onClick={() => void handleDelete()}>
-            <Trash2 className="size-4" />Eliminar
-          </Button>
+          {canDelete && (
+            <Button variant="outline" size="sm" className="gap-1 text-red-500 hover:text-red-600" onClick={() => void handleDelete()}>
+              <Trash2 className="size-4" />Eliminar
+            </Button>
+          )}
         </div>
       </div>
 

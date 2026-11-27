@@ -34,6 +34,8 @@ const defaultFilters: ProformaListRequestDto = {
   search: '',
   status: undefined,
   client_id: undefined,
+  user_id: undefined,
+  branch_ids: undefined,
   date_from: '',
   date_to: '',
 }
@@ -99,6 +101,10 @@ export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
   })),
   saleId: item.sale_id ?? null,
   saleCode: item.sale_code ?? null,
+  userId: item.user_id ?? null,
+  sellerName: item.seller_name ?? null,
+  companyBranchId: item.company_branch_id ?? null,
+  branchName: item.branch_name ?? null,
   createdAt: item.created_at,
   updatedAt: item.updated_at ?? '',
 })

@@ -4,7 +4,8 @@ import { ChartCard, formatMoney, formatShortDate, type Currency } from '@/shared
 import { useReportHref } from '../../lib/use-report-href'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import type { SummaryLatestSaleDto } from '../../model/dashboard-summary.dto'
-import { PaymentStatusBadge, SaleStatusBadge } from '../common/status-badge'
+import { PaymentStatusBadge } from '../common/payment-status-badge'
+import { SaleStatusBadge } from '../common/sale-status-badge'
 
 type Props = {
   data: SummaryLatestSaleDto[] | undefined

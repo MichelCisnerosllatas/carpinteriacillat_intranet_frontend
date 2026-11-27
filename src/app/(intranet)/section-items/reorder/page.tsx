@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation'
 import { Header } from '@/widgets/header/header'
 import { Card, CardContent } from '@/shared/ui/card'
 import { SectionItemsBreadcrumb } from '@/features/section-items/ui/section-items-breadcrumb'
-import { SectionItemsReorderList } from '@/features/section-items/ui/reorder/section-items-reorder-list'
+import {
+  SectionItemsReorderList,
+} from '@/features/section-items/ui/reorder/section-items-reorder-list/section-items-reorder-list'
 import { SectionSelect } from '@/features/sections/ui/section-select'
 
 export default function SectionItemReorderPage() {

@@ -5,8 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Info, Loader2 } from 'lucide-react'
-
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { PasswordInput } from '@/shared/ui/password-input'
@@ -27,19 +26,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select'
-
 import {
   Camera,
   IdCard,
   KeyRound,
   UserRoundCheck,
   Mail,
+  MapPin,
   Save,
   ShieldCheck,
   UserRound,
   X,
 } from 'lucide-react'
-
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
@@ -48,7 +46,8 @@ import { useUserFormStore } from '@/features/users/stores/useUserFormStore'
 import { TypeDocSelect } from '@/features/typedocs/ui/typedoc-select'
 import { RoleSelect } from '@/features/roles/ui/role-select'
 import { PersonPhotoPicker } from './person-photo-picker'
-import { AlertError } from '@/widgets/alerts_components'
+import { UserBranchesField } from './user-branches-field'
+import { AlertError } from '@/widgets/alerts_components/alert-error'
 import { formatDatetime } from '@/shared/lib/utils'
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
@@ -62,7 +61,17 @@ const baseSchema = z.object({
   email:            z.string().email('Correo electrónico inválido.'),
   id_rol:           z.number().min(1, 'Selecciona un rol.'),
   user_state:       z.number(),
+  // Sucursales: all_branches = trabaja en todas; si no, al menos una en branch_ids.
+  all_branches:      z.boolean(),
+  branch_ids:        z.array(z.number()),
+  default_branch_id: z.number().nullable(),
 })
+
+// Sin "todas las sucursales" debe elegir al menos una.
+const branchesRule = (data: { all_branches: boolean; branch_ids: number[] }) =>
+  data.all_branches || data.branch_ids.length > 0
+
+const branchesRuleError = { message: 'Elige al menos una sucursal o marca "todas las sucursales".', path: ['branch_ids'] }
 
 const createSchema = baseSchema.extend({
   password:              z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
@@ -70,7 +79,7 @@ const createSchema = baseSchema.extend({
 }).refine((data) => data.password === data.password_confirmation, {
   message: 'Las contraseñas no coinciden.',
   path:    ['password_confirmation'],
-})
+}).refine(branchesRule, branchesRuleError)
 
 const editSchema = baseSchema.extend({
   // Cadena vacía = no cambiar la contraseña actual (se filtra antes de enviar al API).
@@ -81,7 +90,7 @@ const editSchema = baseSchema.extend({
 }).refine((data) => data.password.length === 0 || data.password === data.password_confirmation, {
   message: 'Las contraseñas no coinciden.',
   path:    ['password_confirmation'],
-})
+}).refine(branchesRule, branchesRuleError)
 
 type FormValues = z.infer<typeof createSchema>
 
@@ -135,6 +144,9 @@ export function UserForm({ mode, id }: UserFormProps) {
       password_confirmation: '',
       id_rol:                0,
       user_state:            1,
+      all_branches:          false,
+      branch_ids:            [],
+      default_branch_id:     null,
     },
   })
 
@@ -151,6 +163,9 @@ export function UserForm({ mode, id }: UserFormProps) {
         password_confirmation: '',
         id_rol:                resolvedUser.idRole ?? 0,
         user_state:            resolvedUser.status === 'active' ? 1 : 0,
+        all_branches:          resolvedUser.allBranches,
+        branch_ids:            resolvedUser.allBranches ? [] : resolvedUser.branches.map((b) => b.id),
+        default_branch_id:     resolvedUser.defaultBranchId,
       })
     }
   }, [isEdit, resolvedUser?.id])
@@ -189,6 +204,9 @@ export function UserForm({ mode, id }: UserFormProps) {
           password:   values.password!,
           id_rol:     values.id_rol,
           user_state: values.user_state,
+          all_branches:      values.all_branches,
+          branch_ids:        values.all_branches ? [] : values.branch_ids,
+          default_branch_id: values.default_branch_id,
           ...(!isEdit && {user_created_at: formatDatetime()}),
         },
       })
@@ -209,6 +227,9 @@ export function UserForm({ mode, id }: UserFormProps) {
           email:      values.email,
           id_rol:     values.id_rol,
           user_state: values.user_state,
+          all_branches:      values.all_branches,
+          branch_ids:        values.all_branches ? [] : values.branch_ids,
+          default_branch_id: values.default_branch_id,
           // En blanco = no tocar la contraseña actual.
           ...(values.password ? { password: values.password } : {}),
         },
@@ -791,6 +812,34 @@ export function UserForm({ mode, id }: UserFormProps) {
 
 
               {/* ===================================================
+                  SUCURSALES
+              =================================================== */}
+              <Separator className="my-6" />
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <MapPin className="size-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold">Sucursales</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Dónde trabaja el usuario: define dónde registra ventas y qué datos puede ver
+                  </p>
+                </div>
+              </div>
+              <UserBranchesField
+                allBranches={form.watch('all_branches')}
+                branchIds={form.watch('branch_ids')}
+                defaultBranchId={form.watch('default_branch_id')}
+                error={form.formState.errors.branch_ids?.message}
+                onChange={(v) => {
+                  form.setValue('all_branches', v.allBranches, { shouldDirty: true })
+                  form.setValue('branch_ids', v.branchIds, { shouldDirty: true, shouldValidate: form.formState.isSubmitted })
+                  form.setValue('default_branch_id', v.defaultBranchId, { shouldDirty: true })
+                }}
+              />
+
+
+              {/* ===================================================
                   CONTRASEÑA
               =================================================== */}
               {showPasswordFields && (
@@ -1124,16 +1173,5 @@ export function UserForm({ mode, id }: UserFormProps) {
         </div>
       </form>
     </Form>
-  )
-}
-
-// ── Small helper ─────────────────────────────────────────────────────────────
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="h-4 w-1 rounded-full bg-primary" />
-      <p className="text-sm font-semibold text-foreground">{children}</p>
-    </div>
   )
 }

@@ -72,6 +72,12 @@ export type ProformaApiItem = {
   // Opcionales por si el backend aún no los expone: el mapper los trata como null.
   sale_id?: number | null
   sale_code?: string | null
+  // Vendedor que registró la proforma (contrato §11). Opcionales por compatibilidad.
+  user_id?: number | null
+  seller_name?: string | null
+  // Sucursal donde se registró (BranchScope del backend). null = sin sucursal.
+  company_branch_id?: number | null
+  branch_name?: string | null
   created_at: string
   updated_at: string | null
 }

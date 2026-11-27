@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
-import { UserDeviceDetail } from '@/features/user-devices/ui/detail/user-device-detail'
+import {
+  UserDeviceDetail,
+} from '@/features/user-devices/ui/detail/user-device-detail/user-device-detail'
 import { UserDevicesBreadcrumb } from '@/features/user-devices/ui/user-devices-breadcrumb'
 
 export const metadata: Metadata = { title: 'Detalle de Dispositivo' }

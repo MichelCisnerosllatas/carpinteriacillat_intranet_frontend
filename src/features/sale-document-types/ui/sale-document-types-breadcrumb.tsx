@@ -12,7 +12,7 @@ export function SaleDocumentTypesBreadcrumb({ currentPage, showHeader = true }: 
     <div className="flex flex-col gap-4">
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem><BreadcrumbLink asChild><Link href="/sale-document-types">Tipos de Comprobante de Venta</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />

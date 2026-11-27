@@ -9,6 +9,7 @@ import { useProformaDetailPage } from '../../hooks'
 import { ProformaDetailHero } from './proforma-detail-hero'
 import { ProformaSummaryTab } from './proforma-summary-tab'
 import { ProformaPdfTab } from './proforma-pdf-tab'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 /**
  * Vista de solo lectura. "Resumen" (cliente, ítems, totales) es la pestaña por defecto. El PDF
@@ -30,6 +31,8 @@ export function ProformaDetail({ id }: { id: string }) {
     handleDownload,
     retryPdf,
   } = useProformaDetailPage(id)
+  // La pestaña del PDF solo si tiene permiso 'proformas.pdf' (ver ROLES_Y_PERMISOS.md)
+  const canPdf = useCan('proformas.pdf')
 
   if (!item) {
     return (
@@ -62,6 +65,7 @@ export function ProformaDetail({ id }: { id: string }) {
             </TooltipTrigger>
             <TooltipContent>Cliente, ítems y totales</TooltipContent>
           </Tooltip>
+          {canPdf && (
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="flex flex-1">
@@ -84,23 +88,26 @@ export function ProformaDetail({ id }: { id: string }) {
                   : 'Vista previa del PDF real de la proforma'}
             </TooltipContent>
           </Tooltip>
+          )}
         </TabsList>
 
         <TabsContent value="resumen">
           <ProformaSummaryTab item={item} />
         </TabsContent>
 
-        <TabsContent value="pdf" className="flex flex-col">
-          <ProformaPdfTab
-            pdfBlob={pdfBlob}
-            pdfUrl={pdfUrl}
-            isLoading={pdfLoading}
-            isError={pdfError}
-            isDownloading={isDownloading}
-            onRetry={retryPdf}
-            onDownload={() => void handleDownload()}
-          />
-        </TabsContent>
+        {canPdf && (
+          <TabsContent value="pdf" className="flex flex-col">
+            <ProformaPdfTab
+              pdfBlob={pdfBlob}
+              pdfUrl={pdfUrl}
+              isLoading={pdfLoading}
+              isError={pdfError}
+              isDownloading={isDownloading}
+              onRetry={retryPdf}
+              onDownload={() => void handleDownload()}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

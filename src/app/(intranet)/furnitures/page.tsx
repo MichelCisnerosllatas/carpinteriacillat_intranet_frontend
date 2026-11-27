@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Plus } from 'lucide-react'
 import { FurnituresTable } from '@/features/furnitures/ui/list/furnitures-table'
 
@@ -17,9 +18,12 @@ export default function FurnituresPage() {
             <h2 className="text-2xl font-bold tracking-tight">Muebles</h2>
             <p className="text-muted-foreground">Catálogo de muebles disponibles</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/furnitures/create"><Plus size={18} /><span>Nuevo Mueble</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="furnitures.create">
+            <Button asChild className="space-x-1">
+              <Link href="/furnitures/create"><Plus size={18} /><span>Nuevo Mueble</span></Link>
+            </Button>
+          </Can>
         </div>
         <FurnituresTable />
       </main>

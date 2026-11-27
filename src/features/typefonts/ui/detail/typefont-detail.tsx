@@ -13,9 +13,12 @@ import { useTypeFontListStore } from '../../stores/useTypeFontListStore'
 import { fontFamilyStyle, loadGoogleFont } from '../../lib/load-google-font'
 import { TypeFontPreview } from '../typefont-preview'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function TypeFontDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Solo si tiene permiso de editar (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('type_fonts.update')
   const { currentItem, items, setCurrentItem } = useTypeFontListStore()
 
   useEffect(() => {
@@ -47,9 +50,11 @@ export function TypeFontDetail({ id }: { id: string }) {
               {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/typefonts/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/typefonts/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

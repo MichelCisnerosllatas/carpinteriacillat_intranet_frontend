@@ -67,6 +67,26 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
   },
 
   {
+    id: 'seller',
+    accessorFn: (row) => row.sellerName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Vendedor" />,
+    cell: ({ row }) => <span className="text-sm">{row.original.sellerName ?? '—'}</span>,
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'min-w-[140px]', label: 'Vendedor' },
+  },
+
+  {
+    id: 'branch',
+    accessorFn: (row) => row.branchName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Sucursal" />,
+    cell: ({ row }) => <span className="text-sm">{row.original.branchName ?? '—'}</span>,
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'min-w-[140px]', label: 'Sucursal' },
+  },
+
+  {
     accessorKey: 'issueDate',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Fecha de emisión" />,
     cell: ({ row }) => (

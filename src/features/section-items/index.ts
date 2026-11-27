@@ -5,7 +5,7 @@ export * from './ui/section-items-breadcrumb'
 export * from './ui/section-item-select'
 export * from './ui/form/section-item-form'
 export * from './ui/detail/section-item-detail'
-export * from './ui/reorder/section-items-reorder-list'
+export * from './ui/reorder/section-items-reorder-list/section-items-reorder-list'
 
 export * from './stores/useSectionItemListStore'
 export * from './stores/useSectionItemFormStore'

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PackagePlus, Search } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { Badge } from '@/shared/ui/badge'
 import { ModalSelect } from '@/shared/ui/modal-select'
 import { ImageLightbox } from '@/shared/ui/image-lightbox'
@@ -63,6 +64,8 @@ export function ProductServicePickerModal({
   const [typeTab, setTypeTab] = useState<TypeTab>('all')
   const [previewItem, setPreviewItem] = useState<ProductServiceJoinApiItem | null>(null)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+  // Solo si tiene permiso de crear productos/servicios (ver ROLES_Y_PERMISOS.md)
+  const canCreate = useCan('products_services.create')
   const { options, isLoading, isError, load, setForceReload } = useProductServiceSelectStore()
 
   useEffect(() => {
@@ -176,14 +179,14 @@ export function ProductServicePickerModal({
         searchPlaceholder="Buscar producto o servicio..."
         emptyMessage="No se encontraron productos o servicios."
         emptyAction={
-          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleCreateNew}>
+          canCreate && <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleCreateNew}>
             <PackagePlus className="size-4" />
             Crear producto o servicio
           </Button>
         }
         selectLabel="Agregar"
         onSelect={onSelect}
-        onCreateNew={handleCreateNew}
+        onCreateNew={canCreate ? handleCreateNew : undefined}
         createLabel="Nuevo"
       />
 

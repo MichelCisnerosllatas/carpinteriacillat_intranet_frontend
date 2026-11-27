@@ -6,7 +6,6 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -14,6 +13,7 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -23,6 +23,7 @@ import { navigationsColumns } from './navigations-columns'
 import { NavigationStatsBar } from './navigation-stats-bar'
 import { ErrorState } from '@/widgets/error/error-state'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function NavigationsTable() {
   const {
@@ -94,13 +95,23 @@ export function NavigationsTable() {
   const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
   const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('navigations.state')
+  const canDelete = useCan('navigations.delete')
+  const canBulk = canState || canDelete
+  // Sin acciones masivas permitidas no mostramos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? navigationsColumns : navigationsColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
+
   const table = useReactTable({
     data: items,
-    columns: navigationsColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -124,6 +135,14 @@ export function NavigationsTable() {
     setIsUserFetching(true)
     void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -215,7 +234,12 @@ export function NavigationsTable() {
             <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -267,9 +291,9 @@ export function NavigationsTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

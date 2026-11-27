@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionItem } from '../../../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface SectionItemDetailDetailsTabProps {
   item: SectionItem
@@ -29,13 +30,18 @@ interface SectionItemDetailDetailsTabProps {
 export function SectionItemDetailDetailsTab({ item, canAdd = true, canReorder = true }: SectionItemDetailDetailsTabProps) {
   const router = useRouter()
   const details = item.details ?? []
+  // Los detalles usan los permisos de items de sección (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('section_items.view')
+  const canEdit = useCan('section_items.update')
+  const canCreatePerm = useCan('section_items.create')
+  const canReorderPerm = useCan('section_items.reorder')
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2 text-sm"><Rows3 className="size-4" />Detalles del item</CardTitle>
         <div className="flex items-center gap-2">
-          {canReorder && (
+          {canReorder && canReorderPerm && (
             <Button
               size="sm"
               variant="outline"
@@ -44,7 +50,7 @@ export function SectionItemDetailDetailsTab({ item, canAdd = true, canReorder = 
               <ArrowUpDown className="mr-1.5 size-4" />Reordenar
             </Button>
           )}
-          {canAdd && (
+          {canAdd && canCreatePerm && (
             <Button
               size="sm"
               variant="outline"
@@ -75,28 +81,32 @@ export function SectionItemDetailDetailsTab({ item, canAdd = true, canReorder = 
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost" size="icon" className="size-8"
-                          onClick={() => { NProgress.start(); router.push(`/section-item-details/${d.id}`) }}
-                        >
-                          <Eye className="size-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Ver</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost" size="icon" className="size-8"
-                          onClick={() => { NProgress.start(); router.push(`/section-item-details/edit/${d.id}`) }}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Editar</TooltipContent>
-                    </Tooltip>
+                    {canView && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost" size="icon" className="size-8"
+                            onClick={() => { NProgress.start(); router.push(`/section-item-details/${d.id}`) }}
+                          >
+                            <Eye className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Ver</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {canEdit && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost" size="icon" className="size-8"
+                            onClick={() => { NProgress.start(); router.push(`/section-item-details/edit/${d.id}`) }}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Editar</TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
               )

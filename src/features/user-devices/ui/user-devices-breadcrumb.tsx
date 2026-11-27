@@ -30,7 +30,7 @@ export function UserDevicesBreadcrumb({
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/dashboard">Inicio</Link>
+                <Link href="/">Inicio</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             {parentPage && backHref && (

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
-import { ChatbotSettingsForm } from '@/features/chatbot-settings/ui/chatbot-settings-form'
+import {
+  ChatbotSettingsForm,
+} from '@/features/chatbot-settings/ui/chatbot-settings-form/chatbot-settings-form'
 
 export const metadata: Metadata = { title: 'Configuración del ChatBot' }
 

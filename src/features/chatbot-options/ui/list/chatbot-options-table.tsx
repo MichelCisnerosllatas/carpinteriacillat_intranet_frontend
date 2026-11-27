@@ -7,13 +7,13 @@ import { flexRender, getCoreRowModel, useReactTable, type PaginationState } from
 import { Info } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
 import { ErrorState } from '@/widgets/error/error-state'
@@ -22,6 +22,7 @@ import { useChatbotOptionListStore } from '../../stores/useChatbotOptionListStor
 import { useChatbotOptionDeleteStore } from '../../stores/useChatbotOptionDeleteStore'
 import { CHATBOT_OPTION_STATES } from '../../data/data'
 import { chatbotOptionsColumns } from './chatbot-options-columns'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ChatbotOptionsTable() {
   const { items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } = useChatbotOptionListStore()
@@ -63,13 +64,31 @@ export function ChatbotOptionsTable() {
     void load({ search: '', state: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all'
+
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('chatbot_options.state')
+  const canDelete = useCan('chatbot_options.delete')
+  const canBulk = canState || canDelete
+  // Sin acciones masivas permitidas no mostramos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? chatbotOptionsColumns : chatbotOptionsColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
+
   const table = useReactTable({
     data: items,
-    columns: chatbotOptionsColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { pagination, rowSelection },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
@@ -168,7 +187,12 @@ export function ChatbotOptionsTable() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+        <DataTableFilterActions
+          onClear={resetFilters}
+          onRefresh={handleRefresh}
+          hasActiveFilters={hasActiveFilters}
+          isFetching={isFetching}
+        />
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -212,9 +236,9 @@ export function ChatbotOptionsTable() {
 
       <DataTableBulkActions
         selectedCount={selectedCount}
-        onActivate={() => handleBulkToggle(true)}
-        onDeactivate={() => handleBulkToggle(false)}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? () => handleBulkToggle(true) : undefined}
+        onDeactivate={canState ? () => handleBulkToggle(false) : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

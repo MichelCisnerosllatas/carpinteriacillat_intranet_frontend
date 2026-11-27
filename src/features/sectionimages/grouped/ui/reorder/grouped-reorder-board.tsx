@@ -4,6 +4,7 @@
 // Pantalla Reordenar: acordeón por item con fotos arrastrables y "Confirmar orden".
 // Lo general de imágenes de sección vive fuera de esta carpeta (ver grouped/README.md).
 
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -58,6 +59,8 @@ interface GroupedReorderBoardProps {
  * Nada se guarda al soltar: se guarda con "Confirmar orden".
  */
 export function GroupedReorderBoard({ config, idSection }: GroupedReorderBoardProps) {
+  // Solo puede guardar el nuevo orden si tiene permiso de reordenar (ver ROLES_Y_PERMISOS.md)
+  const canReorder = useCan('section_images.reorder')
   const router = useRouter()
   const { isSubmitting, confirm } = useSectionImageReorderStore()
 
@@ -249,7 +252,7 @@ export function GroupedReorderBoard({ config, idSection }: GroupedReorderBoardPr
         <Button type="button" variant="outline" onClick={() => goBackOrFallback(router, '/section-images')} disabled={isSubmitting}>
           Cancelar
         </Button>
-        <Button type="button" disabled={!hasChanges || isSubmitting} onClick={handleConfirm} className="min-w-36">
+        <Button type="button" disabled={!canReorder || !hasChanges || isSubmitting} onClick={handleConfirm} className="min-w-36">
           {isSubmitting
             ? <><LoaderCircle className="mr-2 size-4 animate-spin" />Guardando...</>
             : 'Confirmar orden'}

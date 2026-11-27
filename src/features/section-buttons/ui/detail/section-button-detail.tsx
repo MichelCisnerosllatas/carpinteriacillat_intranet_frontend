@@ -14,6 +14,7 @@ import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionButtonListStore } from '../../stores/useSectionButtonListStore'
 import NProgress from 'nprogress'
+import { Can } from '@/features/auth/ui/can'
 
 export function SectionButtonDetail({ id }: { id: string }) {
   const router = useRouter()
@@ -62,14 +63,17 @@ export function SectionButtonDetail({ id }: { id: string }) {
             <Badge variant="outline" className={cn('w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          onClick={() => { NProgress.start(); router.push(`/section-buttons/edit/${item.id}`) }}
-        >
-          <Pencil className="mr-1.5 size-4" />Editar
-        </Button>
+        {/* Solo si tiene permiso de editar botones (ver ROLES_Y_PERMISOS.md) */}
+        <Can permission="section_buttons.update">
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={() => { NProgress.start(); router.push(`/section-buttons/edit/${item.id}`) }}
+          >
+            <Pencil className="mr-1.5 size-4" />Editar
+          </Button>
+        </Can>
       </div>
 
       <Card>

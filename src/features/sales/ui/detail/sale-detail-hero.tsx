@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { getSaleStatusOption, getSalePaymentStatusOption } from '../../data/data'
 import type { Sale, SaleStatus } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export const SALE_STATUS_ICON: Record<SaleStatus, typeof CheckCircle2> = {
   GUARDADA: Clock,
@@ -35,6 +36,10 @@ export function SaleDetailHero({ item, isRefreshing, onRefresh }: SaleDetailHero
   const statusOpt = getSaleStatusOption(item.status)
   const paymentStatusOpt = getSalePaymentStatusOption(item.paymentStatus)
   const StatusIcon = SALE_STATUS_ICON[item.status]
+
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canCreate = useCan('sales.create')
+  const canUpdate = useCan('sales.update')
 
   const goTo = (path: string) => {
     NProgress.start()
@@ -64,20 +69,24 @@ export function SaleDetailHero({ item, isRefreshing, onRefresh }: SaleDetailHero
               {item.clientBusinessName ?? '—'} · Emitida el {item.issueDateFormatted ?? item.issueDate}
               {item.dueDate && <> · Vence el {item.dueDateFormatted ?? item.dueDate}</>}
               {item.proformaCode && <> · Desde proforma {item.proformaCode}</>}
+              {item.sellerName && <> · Vendedor: {item.sellerName}</>}
+              {item.branchName && <> · Sucursal: {item.branchName}</>}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => goTo('/sales/create')}>
-                <FilePlus className="mr-1 size-4" />
-                Nueva
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Crear una venta nueva</TooltipContent>
-          </Tooltip>
-          {item.status === 'GUARDADA' && (
+          {canCreate && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => goTo('/sales/create')}>
+                  <FilePlus className="mr-1 size-4" />
+                  Nueva
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Crear una venta nueva</TooltipContent>
+            </Tooltip>
+          )}
+          {item.status === 'GUARDADA' && canUpdate && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => goTo(`/sales/edit/${item.id}`)}>

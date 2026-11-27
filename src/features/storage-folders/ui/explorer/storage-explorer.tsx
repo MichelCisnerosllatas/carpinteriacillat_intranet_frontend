@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -25,7 +26,8 @@ import { useStorageFileListStore } from '@/features/storage-files/stores/useStor
 import { useStorageFileActionStore } from '@/features/storage-files/stores/useStorageFileActionStore'
 import { isImage } from '@/features/storage-files/data/schema'
 import { FolderBreadcrumb } from './folder-breadcrumb'
-import { StorageItemCard, StorageItemSkeleton } from './storage-item-card'
+import { StorageItemCard } from './storage-item-card/storage-item-card'
+import { StorageItemSkeleton } from './storage-item-card/storage-item-skeleton'
 import { FileUploadModal } from '@/features/storage-files/ui/modals/file-upload-modal'
 import { FileRenameModal } from '@/features/storage-files/ui/modals/file-rename-modal'
 import { FileMoveModal } from '@/features/storage-files/ui/modals/file-move-modal'
@@ -371,14 +373,19 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               <RefreshCw className={cn('size-3.5', isFetching && 'animate-spin')} />
               <span className="hidden sm:inline text-xs">Actualizar</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={onNewFolder} className="gap-1.5 h-8">
-              <FolderPlus className="size-3.5" />
-              <span className="hidden sm:inline text-xs">Nueva carpeta</span>
-            </Button>
-            <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5 h-8">
-              <Upload className="size-3.5" />
-              <span className="text-xs">Subir archivo</span>
-            </Button>
+            {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="storage_folders.create">
+              <Button variant="outline" size="sm" onClick={onNewFolder} className="gap-1.5 h-8">
+                <FolderPlus className="size-3.5" />
+                <span className="hidden sm:inline text-xs">Nueva carpeta</span>
+              </Button>
+            </Can>
+            <Can permission="storage_folders.create">
+              <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5 h-8">
+                <Upload className="size-3.5" />
+                <span className="text-xs">Subir archivo</span>
+              </Button>
+            </Can>
           </div>
         </div>
 
@@ -512,12 +519,17 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
             </div>
             {!search && (
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={onNewFolder} className="gap-1.5">
-                  <FolderPlus className="size-3.5" />Nueva carpeta
-                </Button>
-                <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5">
-                  <Upload className="size-3.5" />Subir archivo
-                </Button>
+                {/* Solo si tiene permiso de crear */}
+                <Can permission="storage_folders.create">
+                  <Button size="sm" variant="outline" onClick={onNewFolder} className="gap-1.5">
+                    <FolderPlus className="size-3.5" />Nueva carpeta
+                  </Button>
+                </Can>
+                <Can permission="storage_folders.create">
+                  <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5">
+                    <Upload className="size-3.5" />Subir archivo
+                  </Button>
+                </Can>
               </div>
             )}
           </div>
@@ -587,20 +599,26 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               )}
             </div>
 
-            <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => setBulkMove(true)}>
-              <MoveRight className="size-3.5" />
-              <span className="hidden sm:inline">Mover</span>
-            </Button>
+            {/* Mover en bloque: permiso de editar */}
+            <Can permission="storage_folders.update">
+              <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => setBulkMove(true)}>
+                <MoveRight className="size-3.5" />
+                <span className="hidden sm:inline">Mover</span>
+              </Button>
+            </Can>
 
             <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing || selectedFiles.length === 0} onClick={() => void handleBulkDownload()}>
               <Download className="size-3.5" />
               <span className="hidden sm:inline">Descargar</span>
             </Button>
 
-            <Button size="sm" variant="destructive" className="shrink-0 gap-1.5 h-8 px-2 pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => void handleBulkDelete()}>
-              {isActing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-              <span className="hidden sm:inline">Eliminar</span>
-            </Button>
+            {/* Eliminar en bloque: permiso de eliminar */}
+            <Can permission="storage_folders.delete">
+              <Button size="sm" variant="destructive" className="shrink-0 gap-1.5 h-8 px-2 pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => void handleBulkDelete()}>
+                {isActing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                <span className="hidden sm:inline">Eliminar</span>
+              </Button>
+            </Can>
 
             <Tooltip>
               <TooltipTrigger asChild>

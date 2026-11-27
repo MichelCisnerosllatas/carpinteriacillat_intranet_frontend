@@ -35,6 +35,7 @@ const defaultFilters: SaleListRequestDto = {
   status: undefined,
   payment_status: undefined,
   client_id: undefined,
+  user_id: undefined,
   date_from: '',
   date_to: '',
 }
@@ -66,6 +67,10 @@ export const mapSaleFromApi = (item: SaleJoinApiItem): Sale => ({
   discountTotal: Number(item.discount_total ?? 0),
   proformaId: item.proforma_id ?? null,
   proformaCode: item.proforma_code ?? null,
+  userId: item.user_id ?? null,
+  sellerName: item.seller_name ?? null,
+  companyBranchId: item.company_branch_id ?? null,
+  branchName: item.branch_name ?? null,
   amountPaid: Number(item.amount_paid),
   balance: Number(item.balance),
   paymentStatus: item.payment_status,

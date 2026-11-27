@@ -65,6 +65,12 @@ export type SaleApiItem = {
   // Proforma de la que salió esta venta (contrato §6) — null si se hizo desde cero.
   proforma_id?: number | null
   proforma_code?: string | null
+  // Vendedor que registró la venta (contrato §11). Opcionales por si el backend aún no los manda.
+  user_id?: number | null
+  seller_name?: string | null
+  // Sucursal donde se registró (BranchScope del backend). null = sin sucursal.
+  company_branch_id?: number | null
+  branch_name?: string | null
   // amount_paid/balance/payment_status: solo lectura, recalculados en servidor desde sale_payments.
   amount_paid: number
   balance: number

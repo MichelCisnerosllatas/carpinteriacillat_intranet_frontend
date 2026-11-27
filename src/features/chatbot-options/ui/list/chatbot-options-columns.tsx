@@ -11,9 +11,12 @@ import type { ChatbotOption } from '../../data/schema'
 import { useChatbotOptionDeleteStore } from '../../stores/useChatbotOptionDeleteStore'
 import { ChatbotOptionStateSwitch } from '../chatbot-option-state-switch'
 import { ChatbotOptionsRowActions } from './chatbot-options-row-actions'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 function StateCell({ option }: { option: ChatbotOption }) {
   const { loadingId, toggleState } = useChatbotOptionDeleteStore()
+  // Sin permiso de cambiar estado el interruptor queda deshabilitado (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('chatbot_options.state')
 
   const handleChange = async (on: boolean) => {
     const ok = await toggleState(option.id, on)
@@ -24,7 +27,7 @@ function StateCell({ option }: { option: ChatbotOption }) {
   return (
     <ChatbotOptionStateSwitch
       checked={option.state}
-      disabled={loadingId === option.id}
+      disabled={!canState || loadingId === option.id}
       onCheckedChange={(on) => void handleChange(on)}
     />
   )

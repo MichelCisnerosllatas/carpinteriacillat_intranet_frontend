@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { SectionSelect } from '@/features/sections/ui/section-select'
 import { Card, CardContent } from '@/shared/ui/card'
-import { SectionButtonsReorderList } from './section-buttons-reorder-list'
+import {
+  SectionButtonsReorderList,
+} from './section-buttons-reorder-list/section-buttons-reorder-list'
 
 /**
  * Cuando se entra a `/section-buttons/reorder` sin `?id_section=`, no hay un grupo obvio que

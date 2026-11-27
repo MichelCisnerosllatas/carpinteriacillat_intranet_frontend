@@ -15,12 +15,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useImageListStore } from '../../stores/useImageListStore'
 import { useImageDeleteStore } from '../../stores/useImageDeleteStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import type { ImageItem } from '../../data/schema'
 
 export function ImagesRowActions({ row }: { row: Row<ImageItem> }) {
   const router = useRouter()
   const { setCurrentItem } = useImageListStore()
   const { deleteItem } = useImageDeleteStore()
+  // Permisos de imágenes (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('images.view')
+  const canDelete = useCan('images.delete')
 
   const handleView = () => {
     setCurrentItem(row.original)
@@ -45,6 +49,9 @@ export function ImagesRowActions({ row }: { row: Row<ImageItem> }) {
     )
   }
 
+  // Sin ninguna acción permitida no se muestra el menú
+  if (!canView && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -61,13 +68,17 @@ export function ImagesRowActions({ row }: { row: Row<ImageItem> }) {
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canView && canDelete && <DropdownMenuSeparator />}
+        {canDelete && (
+          <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+            Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -15,6 +15,7 @@ import type { WebAlert } from '../../data/schema'
 import { useWebAlertDeleteStore } from '../../stores/useWebAlertDeleteStore'
 import { WebAlertStateSwitch } from '../web-alert-state-switch'
 import { WebAlertsRowActions } from './web-alerts-row-actions'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 /** "2026-11-15 23:59:00" → "15/11". */
 const shortDate = (value: string) => {
@@ -34,6 +35,8 @@ const validityText = (startsAt: string | null, endsAt: string | null) => {
 /** Interruptor "Activada" de una fila: guarda al instante. */
 function StateCell({ alert }: { alert: WebAlert }) {
   const { loadingId, toggleState } = useWebAlertDeleteStore()
+  // Sin permiso de cambiar estado el interruptor queda deshabilitado (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('web_alerts.state')
 
   const handleChange = async (on: boolean) => {
     const ok = await toggleState(alert.id, on ? 1 : 0)
@@ -44,7 +47,7 @@ function StateCell({ alert }: { alert: WebAlert }) {
   return (
     <WebAlertStateSwitch
       checked={alert.stateValue === 1}
-      disabled={loadingId === alert.id}
+      disabled={!canState || loadingId === alert.id}
       onCheckedChange={(on) => void handleChange(on)}
     />
   )

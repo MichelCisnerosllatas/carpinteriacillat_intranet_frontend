@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Globe, Plus } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { cn } from '@/shared/lib/utils'
 import type { FurnitureWebWork } from '../data/schema'
@@ -70,12 +71,15 @@ export function FurnitureWebWorksCard({ furnitureId, webWorks, className }: Furn
             })}
           </ul>
         )}
-        <Button asChild variant="outline" size="sm" className="w-fit">
-          <Link href={`/web-works/create?id_furniture=${furnitureId}`}>
-            <Plus className="mr-1.5 size-4" />
-            Crear trabajo con este mueble
-          </Link>
-        </Button>
+        {/* Crear trabajo pide el permiso de crear de Galería → Trabajos */}
+        <Can permission="web_works.create">
+          <Button asChild variant="outline" size="sm" className="w-fit">
+            <Link href={`/web-works/create?id_furniture=${furnitureId}`}>
+              <Plus className="mr-1.5 size-4" />
+              Crear trabajo con este mueble
+            </Link>
+          </Button>
+        </Can>
       </CardContent>
     </Card>
   )

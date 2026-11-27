@@ -13,9 +13,12 @@ import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
 import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useNavigationListStore } from '../../stores/useNavigationListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function NavigationDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('navigations.update')
   const { currentItem, items, setCurrentItem } = useNavigationListStore()
 
   useEffect(() => {
@@ -56,9 +59,11 @@ export function NavigationDetail({ id }: { id: string }) {
               {item.url && <p className="text-sm text-muted-foreground">{item.url}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/navigations/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/navigations/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

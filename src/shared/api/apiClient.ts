@@ -2,8 +2,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { AUTH_ENDPOINTS } from '@/features/auth/services/auth.endpoints';
 import { TokenStorage } from '@/features/auth/storage/token.storage';
+import { ActiveBranchStorage } from '@/features/auth/storage/active-branch.storage';
 import { SessionExpired } from '@/shared/api/sessionExpired'
 import { getAppPlatform, getAppVersion, getClientType } from '@/shared/device/appInfo'
+import { toastError } from '@/shared/lib/toast'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
 
@@ -47,6 +49,10 @@ apiClient.interceptors.request.use(
 
     if (token && !shouldSkipAuthToken(config.url)) {
       config.headers.Authorization = `Bearer ${token}`;
+
+      // Sucursal activa de la sesión: el backend la usa al registrar ventas/proformas.
+      const branchId = ActiveBranchStorage.get();
+      if (branchId) config.headers['X-Branch-Id'] = String(branchId);
     }
 
     // console.log('API FULL URL:', axios.getUri(config));
@@ -60,71 +66,111 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-let isRefreshing = false;
+// ─── 403: sin permiso ────────────────────────────────────────────────────────
+// Cuando el backend responde 403 (el rol no tiene el permiso) se muestra un toast con su
+// mensaje. Para no llenar la pantalla si varias peticiones fallan a la vez, el mismo
+// mensaje no se repite antes de 3 segundos.
+let lastForbiddenMessage = '';
+let lastForbiddenAt = 0;
+
+const showForbiddenToast = (error: AxiosError) => {
+  const data: any = error.response?.data;
+  const message = data?.message || 'No tienes permiso para realizar esta acción.';
+
+  const now = Date.now();
+  if (message === lastForbiddenMessage && now - lastForbiddenAt < 3000) return;
+
+  lastForbiddenMessage = message;
+  lastForbiddenAt = now;
+  toastError('Sin permiso', message);
+};
+
+// ─── 401: refresh del token ──────────────────────────────────────────────────
+// Si varias peticiones reciben 401 al mismo tiempo, solo UNA hace el refresh y las demás
+// esperan esa misma promesa (antes las demás fallaban directamente con 401).
+let refreshPromise: Promise<string | null> | null = null;
+
+/** Pide un access_token nuevo. Devuelve null si no se pudo (y en ese caso cierra la sesión). */
+const refreshAccessToken = async (): Promise<string | null> => {
+  try {
+    const refreshToken = await TokenStorage.getRefreshToken();
+    if (!refreshToken) {
+      await TokenStorage.clearTokens();
+      SessionExpired.execute();
+      return null;
+    }
+
+    const response = await axios.post(
+      `${API_URL}${AUTH_ENDPOINTS.v1.refresh}`,
+      {
+        refresh_token: refreshToken,
+      },
+      {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const newAccessToken = response.data.access_token;
+    const newRefreshToken = response.data.refresh_token;
+
+    TokenStorage.setAccessToken(newAccessToken);
+
+    if (newRefreshToken) {
+      TokenStorage.setRefreshToken(newRefreshToken);
+    }
+
+    return newAccessToken;
+  } catch {
+    TokenStorage.clearTokens()
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_user')
+    }
+
+    SessionExpired.execute()
+    return null;
+  }
+};
 
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest: any = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry && !shouldSkipRefresh(originalRequest.url)) {
+    // 403 → el usuario no tiene permiso: se avisa con un toast y el error sigue su camino
+    // normal (cada store decide qué más hacer con él).
+    if (error.response?.status === 403) {
+      showForbiddenToast(error);
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !shouldSkipRefresh(originalRequest.url)) {
       originalRequest._retry = true;
 
-      if (!isRefreshing) {
-        isRefreshing = true;
-
-        try {
-          const refreshToken = await TokenStorage.getRefreshToken();
-          if (!refreshToken) {
-            await TokenStorage.clearTokens();
-            SessionExpired.execute();
-            // EXTRAER MENSAJE DEL BACKEND
-            if (error.response?.data) {
-              console.log("API ERROR:", error.response.data);
-            }
-
-            return Promise.reject(error);
-          }
-
-          const response = await axios.post(
-            `${API_URL}${AUTH_ENDPOINTS.v1.refresh}`,
-            {
-              refresh_token: refreshToken,
-            },
-            {
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          const newAccessToken = response.data.access_token;
-          const newRefreshToken = response.data.refresh_token;
-
-          TokenStorage.setAccessToken(newAccessToken);
-
-          if (newRefreshToken) {
-            TokenStorage.setRefreshToken(newRefreshToken);
-          }
-
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return apiClient(originalRequest);
-        } 
-        catch (refreshError) {
-          TokenStorage.clearTokens()
-
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('auth_user')
-          }
-
-          SessionExpired.execute()
-          return Promise.reject(refreshError)
-        } 
-        finally {
-          isRefreshing = false;
-        }
+      // Si ya hay un refresh en curso lo esperamos; si no, lo iniciamos.
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken().finally(() => {
+          refreshPromise = null;
+        });
       }
+
+      const newAccessToken = await refreshPromise;
+
+      if (!newAccessToken) {
+        // EXTRAER MENSAJE DEL BACKEND
+        if (error.response?.data) {
+          console.log("API ERROR:", error.response.data);
+        }
+
+        return Promise.reject(error);
+      }
+
+      // Reintenta la petición original con el token nuevo
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return apiClient(originalRequest);
     }
 
     return Promise.reject(error);

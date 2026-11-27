@@ -3,10 +3,10 @@
 import type { Control } from 'react-hook-form'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
-import { FieldTip } from '@/shared/ui/field-tip'
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import type { SectionImageFormValues } from './sectionimage-form'
 import type { ImageFieldsConfig, ImageTextFieldName } from './image-fields-by-section'
+import { FieldLabel } from './field-label'
 
 interface SectionImageTextFieldsProps {
   control: Control<SectionImageFormValues>
@@ -20,11 +20,6 @@ interface SectionImageTextFieldsProps {
    * null/undefined = el formulario de siempre.
    */
   config?: ImageFieldsConfig | null
-}
-
-/** Nombre del campo, con el ícono de ayuda (i) si el tipo de sección trae una ayuda. */
-function FieldLabel({ label, tip }: { label: string; tip?: string }) {
-  return <FormLabel>{tip ? <FieldTip label={label} tip={tip} /> : label}</FormLabel>
 }
 
 /** Textos opcionales que acompañan a la foto en el sitio web. */

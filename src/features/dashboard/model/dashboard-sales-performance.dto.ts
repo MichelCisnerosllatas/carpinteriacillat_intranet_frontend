@@ -80,15 +80,35 @@ export type SalesReceivablesDto = {
 
 export type DashboardSalesPerformanceDto = {
   period: DashboardPeriodDto
-  kpis: SalesPerformanceKpisDto
-  goal: SalesGoalDto
-  monthly: SalesMonthlyDto[]
-  by_document_type: SalesByDocumentTypeDto[]
-  by_payment_method: SalesByPaymentMethodDto[]
-  top_clients: SalesTopClientDto[]
-  top_products: SalesTopProductDto[]
-  by_type: SalesByTypeDto[]
-  by_category: SalesByCategoryDto[]
-  weekday_heatmap: SalesWeekdayHeatmapDto[]
-  receivables: SalesReceivablesDto
+  // Bloques (widgets) opcionales: el backend OMITE los que el rol no tiene permitidos.
+  kpis?: SalesPerformanceKpisDto
+  goal?: SalesGoalDto
+  monthly?: SalesMonthlyDto[]
+  by_document_type?: SalesByDocumentTypeDto[]
+  by_payment_method?: SalesByPaymentMethodDto[]
+  top_clients?: SalesTopClientDto[]
+  top_products?: SalesTopProductDto[]
+  by_type?: SalesByTypeDto[]
+  by_category?: SalesByCategoryDto[]
+  weekday_heatmap?: SalesWeekdayHeatmapDto[]
+  receivables?: SalesReceivablesDto
+  /** §11: puede faltar si el backend aún no lo envía. */
+  by_seller?: SalesBySellerDto[]
+}
+
+// §11 — Rendimiento por vendedor. Viene ordenado por total (mayor a menor).
+// user_id null = ventas "Sin vendedor".
+export type SalesBySellerDto = {
+  user_id: number | null
+  seller_name: string
+  count: number
+  total: number
+  average_ticket: number
+  goal: number | null
+  progress_pct: number | null
+  discount_total: number
+  balance: number
+  proformas_count: number
+  proformas_converted: number
+  conversion_rate_pct: number | null
 }

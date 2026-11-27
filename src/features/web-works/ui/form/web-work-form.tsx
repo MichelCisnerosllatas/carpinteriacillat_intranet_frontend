@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { ClipboardList, Images, Loader2, Plus, Sofa, SplitSquareHorizontal } from 'lucide-react'
+import { ClipboardList, Images, Loader2, Sofa, SplitSquareHorizontal } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
@@ -26,10 +26,11 @@ import { toastError, toastInfo, toastSuccess } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
-import { AlertError } from '@/widgets/alerts_components'
+import { AlertError } from '@/widgets/alerts_components/alert-error'
 import { useTypeWorkSelectStore } from '@/features/typeworks'
 import { CategorySelect, CategoryQuickCreateDialog } from '@/features/categories'
 import { TypeWoodSelect, TypeWoodQuickCreateDialog } from '@/features/typewoods'
+import { Can } from '@/features/auth/ui/can'
 import { FurnitureSelect, furnituresService } from '@/features/furnitures'
 import { ImageSelect } from '@/features/images/ui/image-select'
 import { getImageUrl, getImageDisplayName } from '@/features/images/lib/image-url'
@@ -41,15 +42,17 @@ import type { WebWorkBaseBodyDto } from '../../model/webworkpost.dto'
 import { WebWorksError } from '../web-works-error'
 import { FormGroupTitle } from './form-group-title'
 import { WebWorkPhotosField } from './web-work-photos-field'
-import { WebWorkPairsField } from './web-work-pairs-field'
+import { WebWorkPairsField } from './web-work-pairs-field/web-work-pairs-field'
 import {
   webWorkFormSchema, WEB_WORK_FORM_DEFAULTS,
   type WebWorkFormValues, type WebWorkPhotoFormValue,
 } from './web-work-form.schema'
+import { NewOptionButton } from './new-option-button'
 
 const FLUID_GRID = 'grid items-start gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]'
 
 type FurnitureDetail = Awaited<ReturnType<typeof furnituresService.getById>>['data']
+
 type TypeOption = { id_typework: number; typework_key: string; typework_name: string }
 
 const textOrNull = (v: string | undefined | null) => (v ?? '').trim() || null
@@ -379,7 +382,10 @@ export function WebWorkForm({ mode, id, initialFurnitureId, initialTypeKey }: We
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Categoría</FormLabel>
-                      <NewOptionButton onClick={() => setShowCategoryCreate(true)} disabled={isSubmitting} />
+                      {/* Solo si tiene permiso de crear categorías (ver ROLES_Y_PERMISOS.md) */}
+                      <Can permission="categories.create">
+                        <NewOptionButton onClick={() => setShowCategoryCreate(true)} disabled={isSubmitting} />
+                      </Can>
                     </div>
                     <FormControl><CategorySelect value={field.value} onValueChange={field.onChange} clearable /></FormControl>
                     <FormMessage />
@@ -389,7 +395,10 @@ export function WebWorkForm({ mode, id, initialFurnitureId, initialTypeKey }: We
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Madera</FormLabel>
-                      <NewOptionButton onClick={() => setShowWoodCreate(true)} disabled={isSubmitting} />
+                      {/* Solo si tiene permiso de crear maderas (ver ROLES_Y_PERMISOS.md) */}
+                      <Can permission="type_woods.create">
+                        <NewOptionButton onClick={() => setShowWoodCreate(true)} disabled={isSubmitting} />
+                      </Can>
                     </div>
                     <FormControl><TypeWoodSelect value={field.value} onValueChange={field.onChange} clearable /></FormControl>
                     <FormMessage />
@@ -558,19 +567,5 @@ export function WebWorkForm({ mode, id, initialFurnitureId, initialTypeKey }: We
         onCreated={(item) => form.setValue('id_typewood', item.id_typewood, { shouldValidate: true, shouldDirty: true })}
       />
     </Form>
-  )
-}
-
-/** Atajo "+ Nuevo" junto a la etiqueta de un select: abre el modal de creación rápida (mismo que Secciones). */
-function NewOptionButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:pointer-events-none disabled:opacity-50"
-    >
-      <Plus className="size-3.5" />Nuevo
-    </button>
   )
 }

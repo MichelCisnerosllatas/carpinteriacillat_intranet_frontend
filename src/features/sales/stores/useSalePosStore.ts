@@ -26,6 +26,8 @@ type State = {
   /** Solo se usa en "Adelanto" — en "Completo" el monto siempre es el total. */
   paymentAmount: number
   paymentMethod: string | null
+  /** Vendedor elegido (solo con `sales.view_all`). null = el usuario actual (lo decide el hook). */
+  sellerId: number | null
 }
 
 type Action = {
@@ -44,6 +46,7 @@ type Action = {
   setPaymentMode: (mode: PaymentMode) => void
   setPaymentAmount: (amount: number) => void
   setPaymentMethod: (method: string) => void
+  setSellerId: (id: number | null) => void
   loadFromDraft: (draft: ProformaSaleDraftDto) => void
   clearProforma: () => void
   loadFromSale: (sale: Sale) => void
@@ -68,6 +71,7 @@ const initialState = (): State => ({
   paymentAmount: 0,
   // Efectivo por defecto: es el caso más común en caja y ahorra un paso.
   paymentMethod: 'EFECTIVO',
+  sellerId: null,
 })
 
 export const useSalePosStore = create<State & Action>((set, get) => ({
@@ -127,6 +131,7 @@ export const useSalePosStore = create<State & Action>((set, get) => ({
   setPaymentMode: (mode) => set({ paymentMode: mode }),
   setPaymentAmount: (amount) => set({ paymentAmount: amount }),
   setPaymentMethod: (method) => set({ paymentMethod: method }),
+  setSellerId: (id) => set({ sellerId: id }),
 
   // Reemplaza cliente, moneda y líneas con lo que trae la proforma. El IGV NO se copia: se
   // recalcula con la configuración vigente (contrato §6).
@@ -162,6 +167,8 @@ export const useSalePosStore = create<State & Action>((set, get) => ({
     set({
       ...initialState(),
       saleId: sale.id,
+      // Al editar se conserva el vendedor original de la venta.
+      sellerId: sale.userId,
       client: sale.clientId
         ? { id: sale.clientId, name: sale.clientBusinessName ?? 'Cliente', document: null }
         : null,

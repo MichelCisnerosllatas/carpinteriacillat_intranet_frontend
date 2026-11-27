@@ -18,18 +18,13 @@ import { formatChatDate, getChatbotConversationStatus, visitorDisplayName } from
 import { describeUserAgent } from '../../data/data'
 import { useChatbotVisitorDetailStore } from '../../stores/useChatbotVisitorDetailStore'
 import { useChatbotVisitorDeleteStore } from '../../stores/useChatbotVisitorDeleteStore'
-
-function InfoRow({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3 text-sm">
-      <span className="flex shrink-0 items-center gap-1.5 text-muted-foreground"><Icon className="size-3.5" />{label}</span>
-      <span className="min-w-0 break-words text-right font-medium">{value}</span>
-    </div>
-  )
-}
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { InfoRow } from './info-row'
 
 export function ChatbotVisitorDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canDelete = useCan('chatbot_visitors.delete')
   const { item, isLoading, isError, message, load, reset } = useChatbotVisitorDetailStore()
   const { deleteItem } = useChatbotVisitorDeleteStore()
 
@@ -111,11 +106,13 @@ export function ChatbotVisitorDetail({ id }: { id: string }) {
           </CardContent>
         </Card>
 
-        <div>
-          <Button variant="outline" size="sm" className="gap-1 text-red-500 hover:text-red-600" onClick={() => void handleDelete()}>
-            <Trash2 className="size-4" />Eliminar visitante
-          </Button>
-        </div>
+        {canDelete && (
+          <div>
+            <Button variant="outline" size="sm" className="gap-1 text-red-500 hover:text-red-600" onClick={() => void handleDelete()}>
+              <Trash2 className="size-4" />Eliminar visitante
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card className="lg:col-span-7">

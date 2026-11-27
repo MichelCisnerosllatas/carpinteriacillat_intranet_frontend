@@ -17,6 +17,7 @@ import { cn } from '@/shared/lib/utils'
 import type { SectionItemApiItem } from '@/features/section-items/model/sectionitemget.dto'
 import { getGroupItemName, type GroupedSectionConfig } from '../grouped-section.config'
 import { GroupedItemTitleEditor } from './grouped-item-title-editor'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface GroupedItemHeaderProps {
   /** Textos y reglas de la sección (ver grouped-section.config.ts). */
@@ -57,10 +58,19 @@ export function GroupedItemHeader({
 }: GroupedItemHeaderProps) {
   const [isToggling, setIsToggling] = useState(false)
 
+  // Permisos del item (section_items) y de sus fotos (section_images) (ver ROLES_Y_PERMISOS.md)
+  const canEditItem = useCan('section_items.update')
+  const canStateItem = useCan('section_items.state')
+  const canDeleteItem = useCan('section_items.delete')
+  // "Seleccionar todas las fotos" solo sirve para acciones masivas de fotos
+  const canSelectPhotos = useCan(['section_images.state', 'section_images.delete'])
+  const showEditDetails = !!onEditDetails && canEditItem
+  const showDelete = !!onDelete && canDeleteItem
+
   const name = getGroupItemName(config, item)
   const number = String(index + 1).padStart(2, '0')
   const isVisible = item.sectionitem_state === 1
-  const hasMenu = !!onEditDetails || !!onDelete
+  const hasMenu = showEditDetails || showDelete
 
   // Regla SOLO del hero de Servicios: un servicio sin fotos visibles no puede mostrarse (se vería vacío).
   // Si está oculto y no tiene fotos visibles, el switch no se puede encender.
@@ -97,7 +107,7 @@ export function GroupedItemHeader({
 
       <div className="flex min-w-0 flex-1 basis-full items-center gap-1 sm:basis-0">
         {/* Seleccionar todas las fotos del item (encima del Trigger: no abre/cierra) */}
-        {onSelectAll && (
+        {onSelectAll && canSelectPhotos && (
           <label
             className={cn(
               'relative z-10 mr-1 flex size-7 shrink-0 items-center justify-center pointer-coarse:size-9',
@@ -117,7 +127,7 @@ export function GroupedItemHeader({
         )}
         <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">{number} ·</span>
         {/* Nombre: con lápiz (editable en línea) solo si la sección lo permite (config.canRenameInline) */}
-        {config.canRenameInline ? (
+        {config.canRenameInline && canEditItem ? (
           <GroupedItemTitleEditor title={item.sectionitem_title ?? ''} ofTheItem={config.ofTheItem} onSave={onRename}>
             {nameText}
           </GroupedItemTitleEditor>
@@ -134,7 +144,7 @@ export function GroupedItemHeader({
         >
           <Switch
             checked={isVisible}
-            disabled={isToggling || cannotShow}
+            disabled={isToggling || cannotShow || !canStateItem}
             onCheckedChange={(checked) => void handleToggle(checked)}
           />
           <span className={cn('w-12', isVisible ? 'text-foreground' : 'text-muted-foreground')}>{isVisible ? 'Visible' : config.hiddenLabel}</span>
@@ -156,13 +166,13 @@ export function GroupedItemHeader({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {onEditDetails && (
+                {showEditDetails && (
                   <DropdownMenuItem onClick={onEditDetails}>
                     <FileText className="mr-2 size-4" />{config.editItemLabel}
                   </DropdownMenuItem>
                 )}
-                {onEditDetails && onDelete && <DropdownMenuSeparator />}
-                {onDelete && (
+                {showEditDetails && showDelete && <DropdownMenuSeparator />}
+                {showDelete && (
                   <DropdownMenuItem onClick={onDelete} className="text-red-500!">
                     <Trash2 className="mr-2 size-4" />{config.deleteItemLabel}
                   </DropdownMenuItem>

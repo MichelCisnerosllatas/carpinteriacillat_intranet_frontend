@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Navigation2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { cn } from '@/shared/lib/utils'
 import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionsGroupTable } from './sections-group-table'
 import { SectionStatsBar } from './section-stats-bar'
@@ -131,6 +131,14 @@ export function SectionsTable() {
     void load({ search: '', state: undefined, date_from: '', date_to: '', per_page: GROUPED_PER_PAGE, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
+
   if (!hasLoaded && !isInitialLoading) {
     return (
       <CircleProgressIndicatorPage/>
@@ -185,7 +193,12 @@ export function SectionsTable() {
           <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
         <div className="flex flex-col justify-end">
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          <DataTableFilterActions
+            onClear={resetFilters}
+            onRefresh={handleRefresh}
+            hasActiveFilters={hasActiveFilters}
+            isFetching={isFetching}
+          />
         </div>
       </div>
 

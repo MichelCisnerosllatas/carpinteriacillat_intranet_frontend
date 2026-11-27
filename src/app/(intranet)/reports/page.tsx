@@ -23,6 +23,8 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     date_from: first(params.date_from),
     date_to: first(params.date_to),
     currency: first(params.currency),
+    user_id: first(params.user_id),
+    branch_ids: first(params.branch_ids),
   }
 
   return (

@@ -13,6 +13,19 @@ export type UserJoinType = {
   user_updated_at_format: string;
   person: UserPersonType | null;
   role: UserRoleType | null;
+  /** true = trabaja en TODAS las sucursales. */
+  all_branches?: boolean;
+  /** Sucursal por defecto (con la que arranca la sesión). */
+  default_branch_id?: number | null;
+  /** Sucursales asignadas (tabla branch_user). */
+  branches?: UserBranchType[];
+}
+
+export type UserBranchType = {
+  id: number;
+  name: string;
+  status: number;
+  is_default: boolean;
 }
 
 type UserPersonType = {

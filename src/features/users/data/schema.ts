@@ -41,6 +41,11 @@ export const userSchema = z.object({
   role: userRoleSchema,
   roleLabel: z.string(),
 
+  // Sucursales: allBranches = trabaja en todas; si no, las asignadas (branches).
+  allBranches: z.boolean(),
+  defaultBranchId: z.number().nullable(),
+  branches: z.array(z.object({ id: z.number(), name: z.string(), isDefault: z.boolean() })),
+
   // Fechas
   createdAt: z.string(),
   updatedAt: z.string(),

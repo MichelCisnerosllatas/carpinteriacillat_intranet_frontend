@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { ModuleDownloadIndicator } from '@/widgets/header/module-download-indicator'
 import { HardDrive } from 'lucide-react'
-import { StorageGallery } from '@/features/images_storage/ui/gallery/storage-gallery'
+import {
+  StorageGallery,
+} from '@/features/images_storage/ui/gallery/storage-gallery/storage-gallery'
 
 export const metadata: Metadata = { title: 'Almacenamiento — Imágenes' }
 

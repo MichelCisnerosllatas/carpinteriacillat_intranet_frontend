@@ -20,6 +20,7 @@ import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useProformaTemplateListStore } from '../../stores/useProformaTemplateListStore'
 import { useProformaTemplateDeleteStore } from '../../stores/useProformaTemplateDeleteStore'
 import type { ProformaTemplate } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate> }) {
   const router = useRouter()
@@ -27,6 +28,12 @@ export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate
   const { toggleState, deleteItem } = useProformaTemplateDeleteStore()
 
   const isActive = row.original.stateValue === 1
+
+  // Permisos del usuario (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('proforma_templates.view')
+  const canUpdate = useCan('proforma_templates.update')
+  const canChangeState = useCan('proforma_templates.state')
+  const canDelete = useCan('proforma_templates.delete')
 
   const handleView = () => {
     setCurrentItem(row.original)
@@ -79,6 +86,9 @@ export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate
     )
   }
 
+  // Si no queda ninguna acción, no mostramos el botón "..."
+  if (!canView && !canUpdate && !canChangeState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       {/* El `span` intermedio evita que el `data-state` del tooltip pise el `data-state="open"/
@@ -99,43 +109,55 @@ export function ProformaTemplatesRowActions({ row }: { row: Row<ProformaTemplate
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle{' '}
-          <DropdownMenuShortcut>
-            <Eye size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          Editar{' '}
-          <DropdownMenuShortcut>
-            <Pencil size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleToggleState()}>
-          {isActive ? (
-            <>
-              Desactivar{' '}
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle{' '}
+            <DropdownMenuShortcut>
+              <Eye size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canUpdate && (
+          <DropdownMenuItem onClick={handleEdit}>
+            Editar{' '}
+            <DropdownMenuShortcut>
+              <Pencil size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canChangeState && (
+          <>
+            {(canView || canUpdate) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleToggleState()}>
+              {isActive ? (
+                <>
+                  Desactivar{' '}
+                  <DropdownMenuShortcut>
+                    <XCircle size={16} />
+                  </DropdownMenuShortcut>
+                </>
+              ) : (
+                <>
+                  Activar{' '}
+                  <DropdownMenuShortcut>
+                    <CheckCircle2 size={16} />
+                  </DropdownMenuShortcut>
+                </>
+              )}
+            </DropdownMenuItem>
+          </>
+        )}
+        {canDelete && (
+          <>
+            {(canView || canUpdate || canChangeState) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar{' '}
               <DropdownMenuShortcut>
-                <XCircle size={16} />
+                <Trash2 size={16} />
               </DropdownMenuShortcut>
-            </>
-          ) : (
-            <>
-              Activar{' '}
-              <DropdownMenuShortcut>
-                <CheckCircle2 size={16} />
-              </DropdownMenuShortcut>
-            </>
-          )}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar{' '}
-          <DropdownMenuShortcut>
-            <Trash2 size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

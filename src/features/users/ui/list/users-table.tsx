@@ -7,7 +7,6 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -15,11 +14,13 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import { useUserDeleteStore } from '../../stores/useUserDeleteStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { UsersError } from '../users-error'
 import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 import { usersColumns } from './users-columns'
@@ -50,6 +51,16 @@ export function UsersTable() {
   ]
 
   const { bulkToggleState, bulkDeleteItems } = useUserDeleteStore()
+
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('users.state')
+  const canDelete = useCan('users.delete')
+  const canBulk = canState || canDelete
+  // Sin acciones masivas permitidas, ocultamos la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? usersColumns : usersColumns.filter((c) => c.id !== 'select')),
+    [canBulk],
+  )
 
   const appliedSearch = useRef(search)
 
@@ -105,11 +116,11 @@ export function UsersTable() {
 
   const table = useReactTable({
     data: users,
-    columns: usersColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const nextPagination = typeof updater === 'function' ? updater(pagination) : updater
 
@@ -147,6 +158,14 @@ export function UsersTable() {
       page: 1,
     }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || role !== 'all' || dateFrom !== '' || dateTo !== ''
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -248,7 +267,12 @@ export function UsersTable() {
             <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -293,7 +317,7 @@ export function UsersTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={usersColumns.length} className="h-24 text-center">
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No hay usuarios para mostrar.
                 </TableCell>
               </TableRow>
@@ -315,9 +339,9 @@ export function UsersTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

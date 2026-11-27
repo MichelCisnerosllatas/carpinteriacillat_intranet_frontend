@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { ArrowUpDown, Settings, Plus } from 'lucide-react'
 import { TestimonyTable } from '@/features/testimony-web/ui/list/testimony-table'
+import { Can } from '@/features/auth/ui/can'
 
 export const metadata: Metadata = { title: 'Testimonios' }
 
@@ -21,12 +22,18 @@ export default function TestimonyWebPage() {
             <Button asChild variant="outline" className="space-x-1">
               <Link href="/testimony/settings"><Settings size={18} /><span className="hidden sm:inline">Configuración</span></Link>
             </Button>
-            <Button asChild variant="outline" className="space-x-1">
-              <Link href="/testimony/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
-            </Button>
-            <Button asChild className="space-x-1">
-              <Link href="/testimony/create"><Plus size={18} /><span>Nuevo Testimonio</span></Link>
-            </Button>
+            {/* Solo si tiene permiso de reordenar (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="testimonies.reorder">
+              <Button asChild variant="outline" className="space-x-1">
+                <Link href="/testimony/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+              </Button>
+            </Can>
+            {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="testimonies.create">
+              <Button asChild className="space-x-1">
+                <Link href="/testimony/create"><Plus size={18} /><span>Nuevo Testimonio</span></Link>
+              </Button>
+            </Can>
           </div>
         </div>
         <TestimonyTable />

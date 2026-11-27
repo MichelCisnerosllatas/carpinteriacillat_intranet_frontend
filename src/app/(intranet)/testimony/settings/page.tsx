@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { TestimonyWebBreadcrumb } from '@/features/testimony-web/ui/testimony-web-breadcrumb'
-import { TestimonyWebSettingForm } from '@/features/testimony-web/ui/form/testimony-web-setting-form'
+import {
+  TestimonyWebSettingForm,
+} from '@/features/testimony-web/ui/form/testimony-web-setting-form/testimony-web-setting-form'
 
 export const metadata: Metadata = { title: 'Configuración de Testimonios' }
 

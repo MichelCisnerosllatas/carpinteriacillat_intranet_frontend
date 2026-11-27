@@ -9,7 +9,7 @@ export function WebAlertsBreadcrumb({ currentPage }: { currentPage: string }) {
     <div className="flex flex-col gap-4">
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/dashboard">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbItem><BreadcrumbLink asChild><Link href="/">Inicio</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem><BreadcrumbLink asChild><Link href="/web-alerts">Alertas del sitio</Link></BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator />

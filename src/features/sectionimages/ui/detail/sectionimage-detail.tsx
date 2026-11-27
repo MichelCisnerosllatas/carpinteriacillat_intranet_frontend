@@ -17,6 +17,7 @@ import { useSectionImageRole } from '../../lib/use-section-image-role'
 import { SectionImageRoleBadge } from '../list/sectionimage-role-badge'
 import { isRoleBadgeVisible } from '../../lib/image-roles'
 import NProgress from 'nprogress'
+import { Can } from '@/features/auth/ui/can'
 
 export function SectionImageDetail({ id }: { id: string }) {
   const router = useRouter()
@@ -69,9 +70,12 @@ export function SectionImageDetail({ id }: { id: string }) {
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
               <SectionImageRoleBadge role={role} className="w-fit text-xs" />
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/section-images/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar imágenes de sección (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="section_images.update">
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/section-images/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            </Can>
           </div>
         </CardContent>
       </Card>

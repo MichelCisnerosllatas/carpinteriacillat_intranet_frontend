@@ -12,6 +12,11 @@ export type ReportConfig = {
   usesCurrency: boolean
   /** Muestra el filtro de cliente (envía client_id). */
   usesClient: boolean
+  /**
+   * Muestra el filtro de vendedor (envía user_id). El filtro solo aparece si además el usuario
+   * tiene `sales.view_all`; sin ese permiso el backend ya devuelve solo lo propio.
+   */
+  usesSeller: boolean
   /** Si existe, muestra un filtro de estado con estas opciones (envía status). */
   statusOptions?: ReportStatusOption[]
   /** Aclaración que se muestra bajo los filtros (ej. cómo se usa el rango de fechas). */
@@ -45,6 +50,7 @@ export const REPORTS: Record<ReportKey, ReportConfig> = {
     description: 'Todas las ventas del periodo con su comprobante, base imponible, IGV y total.',
     usesCurrency: true,
     usesClient: true,
+    usesSeller: true,
     statusOptions: SALE_STATUSES,
     note: 'Incluye las ventas anuladas, pero sus montos no suman en los totales.',
   },
@@ -53,18 +59,21 @@ export const REPORTS: Record<ReportKey, ReportConfig> = {
     description: 'Cuánto compró cada cliente en el periodo, cuánto pagó y cuánto debe.',
     usesCurrency: true,
     usesClient: true,
+    usesSeller: true,
   },
   'sales-by-product': {
     title: 'Ventas por producto o servicio',
     description: 'Cantidades y montos vendidos de cada producto, servicio o ítem libre.',
     usesCurrency: true,
     usesClient: true,
+    usesSeller: true,
   },
   receivables: {
     title: 'Cuentas por cobrar',
     description: 'Ventas con saldo pendiente y los días que llevan sin pagarse.',
     usesCurrency: true,
     usesClient: true,
+    usesSeller: true,
     note: 'Es un reporte histórico: la fecha "Hasta" se usa como fecha de corte.',
   },
   payments: {
@@ -72,12 +81,14 @@ export const REPORTS: Record<ReportKey, ReportConfig> = {
     description: 'Pagos registrados en el periodo, con su método y la venta asociada.',
     usesCurrency: true,
     usesClient: true,
+    usesSeller: true,
   },
   proformas: {
     title: 'Proformas',
     description: 'Proformas emitidas en el periodo, su estado y la venta generada (si la hay).',
     usesCurrency: true,
     usesClient: true,
+    usesSeller: true,
     statusOptions: PROFORMA_STATUSES,
   },
   'contact-messages': {
@@ -85,7 +96,16 @@ export const REPORTS: Record<ReportKey, ReportConfig> = {
     description: 'Mensajes recibidos desde el formulario del sitio web.',
     usesCurrency: false,
     usesClient: false,
+    // Los mensajes de contacto no pertenecen a un vendedor.
+    usesSeller: false,
     statusOptions: CONTACT_STATUSES,
+  },
+  'sales-by-seller': {
+    title: 'Ventas por vendedor',
+    description: 'Cuánto vendió cada vendedor, su ticket promedio y el avance de su meta.',
+    usesCurrency: true,
+    usesClient: false,
+    usesSeller: true,
   },
 }
 
@@ -98,12 +118,27 @@ export function isReportKey(value: string): value is ReportKey {
 // ── Pestañas de la página /reports ──
 // El valor de cada pestaña es el que va en la URL: /reports?tab=ventas
 
-export type ReportTab = 'ventas' | 'clientes' | 'productos' | 'pagos' | 'proformas' | 'mensajes'
+export type ReportTab =
+  | 'ventas'
+  | 'clientes'
+  | 'productos'
+  | 'pagos'
+  | 'proformas'
+  | 'mensajes'
+  | 'vendedores'
 
 /** Sub-vista de la pestaña Pagos: /reports?tab=pagos&vista=saldos */
 export type PaymentsView = 'recibidos' | 'saldos'
 
-export const REPORT_TABS: { value: ReportTab; label: string; report: ReportKey }[] = [
+export type ReportTabConfig = {
+  value: ReportTab
+  label: string
+  report: ReportKey
+  /** Permiso EXTRA para ver la pestaña, además de report_<slug>.view (opcional). */
+  permission?: string
+}
+
+export const REPORT_TABS: ReportTabConfig[] = [
   { value: 'ventas', label: 'Ventas', report: 'sales-register' },
   { value: 'clientes', label: 'Clientes', report: 'sales-by-client' },
   { value: 'productos', label: 'Productos', report: 'sales-by-product' },
@@ -111,6 +146,8 @@ export const REPORT_TABS: { value: ReportTab; label: string; report: ReportKey }
   { value: 'pagos', label: 'Pagos', report: 'payments' },
   { value: 'proformas', label: 'Proformas', report: 'proformas' },
   { value: 'mensajes', label: 'Mensajes', report: 'contact-messages' },
+  // Solo pide report_sales_by_seller.view (el admin decide en Roles quién compara vendedores).
+  { value: 'vendedores', label: 'Vendedores', report: 'sales-by-seller' },
 ]
 
 export const PAYMENTS_VIEWS: { value: PaymentsView; label: string; report: ReportKey }[] = [

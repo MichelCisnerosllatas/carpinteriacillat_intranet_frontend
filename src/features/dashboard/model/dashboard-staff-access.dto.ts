@@ -16,10 +16,11 @@ export type GoogleRequestsByStatusDto = { status: string; label: string; count: 
 
 export type DashboardStaffAccessDto = {
   period: DashboardPeriodDto
-  kpis: StaffAccessKpisDto
-  daily: StaffDailyLoginsDto[]
-  by_platform: StaffByPlatformDto[]
-  by_app_version: StaffByAppVersionDto[]
-  by_browser: StaffByBrowserDto[]
-  google_requests_by_status: GoogleRequestsByStatusDto[]
+  // Bloques (widgets) opcionales: el backend OMITE los que el rol no tiene permitidos.
+  kpis?: StaffAccessKpisDto
+  daily?: StaffDailyLoginsDto[]
+  by_platform?: StaffByPlatformDto[]
+  by_app_version?: StaffByAppVersionDto[]
+  by_browser?: StaffByBrowserDto[]
+  google_requests_by_status?: GoogleRequestsByStatusDto[]
 }

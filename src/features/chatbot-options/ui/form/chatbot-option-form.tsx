@@ -18,7 +18,7 @@ import { FaIcon } from '@/shared/ui/icon-picker/fa-icon'
 import { toastSuccess } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { goBackOrFallback } from '@/shared/lib/navigation-history'
-import { AlertError } from '@/widgets/alerts_components'
+import { AlertError } from '@/widgets/alerts_components/alert-error'
 import { ErrorState } from '@/widgets/error/error-state'
 import { chatbotOptionsService } from '../../services/chatbot-options.service'
 import { useChatbotOptionFormStore } from '../../stores/useChatbotOptionFormStore'
@@ -27,6 +27,7 @@ import { chatbotOptionFormSchema, CHATBOT_OPTION_FORM_DEFAULTS, type ChatbotOpti
 import type { ChatbotOptionApiItem } from '../../model/chatbotoptionget.dto'
 import type { ChatbotOptionBodyDto } from '../../model/chatbotoptionpost.dto'
 import { ChatbotOptionStateSwitch } from '../chatbot-option-state-switch'
+import { SectionTitle } from './section-title'
 
 const toFormValues = (item: ChatbotOptionApiItem): ChatbotOptionFormValues => ({
   option_key: item.option_key,
@@ -37,14 +38,6 @@ const toFormValues = (item: ChatbotOptionApiItem): ChatbotOptionFormValues => ({
   value: item.value ?? '',
   state: Boolean(item.state),
 })
-
-function SectionTitle({ icon: Icon, title }: { icon: typeof Type; title: string }) {
-  return (
-    <h3 className="flex items-center gap-2 border-b pb-2 text-sm font-semibold">
-      <Icon className="size-4 text-muted-foreground" />{title}
-    </h3>
-  )
-}
 
 export function ChatbotOptionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string }) {
   const router = useRouter()

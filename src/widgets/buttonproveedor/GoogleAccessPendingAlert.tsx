@@ -2,7 +2,7 @@ import { ShieldAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { getInitials } from '@/shared/lib/get-initials'
-import type { GoogleAuthRejectionDataDTO } from '@/features/auth/model/logindto/login.dto'
+import type { GoogleAuthRejectionDataDTO } from '@/features/auth/model/login-google.dto'
 
 interface GoogleAccessPendingAlertProps {
   data: GoogleAuthRejectionDataDTO

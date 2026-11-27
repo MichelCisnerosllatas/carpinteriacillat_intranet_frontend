@@ -12,7 +12,7 @@ export { WEB_ALERTS_ENDPOINTS } from './services/web-alerts.endpoint'
 
 // Pantallas
 export { WebAlertsTable } from './ui/list/web-alerts-table'
-export { WebAlertForm } from './ui/form/web-alert-form'
+export { WebAlertForm } from './ui/form/web-alert-form/web-alert-form'
 export { WebAlertsReorderList } from './ui/reorder/web-alerts-reorder-list'
 export { WebAlertsBreadcrumb } from './ui/web-alerts-breadcrumb'
 export { WebAlertsPrimaryButtons } from './ui/web-alerts-primary-buttons'

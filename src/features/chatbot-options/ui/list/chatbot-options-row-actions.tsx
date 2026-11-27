@@ -14,10 +14,15 @@ import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { toastSuccess } from '@/shared/lib/toast'
 import { useChatbotOptionDeleteStore } from '../../stores/useChatbotOptionDeleteStore'
 import type { ChatbotOption } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ChatbotOptionsRowActions({ row }: { row: Row<ChatbotOption> }) {
   const router = useRouter()
   const { toggleState, deleteItem } = useChatbotOptionDeleteStore()
+  // Cada acción se muestra solo si tiene su permiso (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('chatbot_options.update')
+  const canState = useCan('chatbot_options.state')
+  const canDelete = useCan('chatbot_options.delete')
   const name = row.original.title
   const isActive = row.original.state
 
@@ -62,6 +67,9 @@ export function ChatbotOptionsRowActions({ row }: { row: Row<ChatbotOption> }) {
     )
   }
 
+  // Sin ninguna acción permitida no mostramos el menú
+  if (!canEdit && !canState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -71,18 +79,26 @@ export function ChatbotOptionsRowActions({ row }: { row: Row<ChatbotOption> }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
+        {canEdit && (
         <DropdownMenuItem onClick={handleEdit}>
           Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
         </DropdownMenuItem>
+        )}
+        {canState && (
         <DropdownMenuItem onClick={() => void handleToggle()}>
           {isActive
             ? <>Desactivar <DropdownMenuShortcut><PowerOff size={16} /></DropdownMenuShortcut></>
             : <>Activar <DropdownMenuShortcut><Power size={16} /></DropdownMenuShortcut></>}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        )}
+        {canDelete && (
+          <>
+            {(canEdit || canState) && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -22,6 +22,7 @@ import { goBackOrFallback } from '@/shared/lib/navigation-history'
 import { StarRatingInput } from '@/shared/ui/star-rating-input'
 import { ImageSelect } from '@/features/images/ui/image-select'
 import { ImageQuickUploadDialog } from '@/features/images/ui/image-quick-upload-dialog'
+import { Can } from '@/features/auth/ui/can'
 import { getImageUrl } from '@/features/images/lib/image-url'
 import { WebWorkSelect } from '../web-work-select'
 import type { ImageApiItem } from '@/features/images/model/imageget.dto'
@@ -246,13 +247,16 @@ export function TestimonyForm({ mode, id }: { mode: 'create' | 'edit'; id?: stri
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Foto</FormLabel>
-                  <button
-                    type="button"
-                    onClick={() => setShowImageUpload(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Plus className="size-3.5" />Nueva
-                  </button>
+                  {/* Solo si tiene permiso de crear imágenes (ver ROLES_Y_PERMISOS.md) */}
+                  <Can permission="images.create">
+                    <button
+                      type="button"
+                      onClick={() => setShowImageUpload(true)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="size-3.5" />Nueva
+                    </button>
+                  </Can>
                 </div>
                 <FormControl>
                   <ImageSelect

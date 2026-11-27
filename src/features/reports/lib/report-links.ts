@@ -13,6 +13,8 @@ export function getRowHref(link: ReportRowLinkDto | undefined): string | null {
       return `/contact-messages/${link.id}`
     case 'client':
       return `/clients/${link.id}`
+    case 'user':
+      return `/users/${link.id}`
     default:
       return null
   }
@@ -29,6 +31,8 @@ export function getRowLinkLabel(link: ReportRowLinkDto | undefined): string {
       return 'Ver mensaje'
     case 'client':
       return 'Ver cliente'
+    case 'user':
+      return 'Ver usuario'
     default:
       return 'Ver registro'
   }
