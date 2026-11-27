@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { LayoutGrid } from 'lucide-react'
 import { TypeSectionsTable } from '@/features/typesections/ui/list/typesections-table'
 
@@ -17,9 +18,12 @@ export default function TypeSectionsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Secciones</h2>
             <p className="text-muted-foreground">Tipos de sección del sitio web</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/typesections/create"><LayoutGrid size={18} /><span>Nueva Sección</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="type_sections.create">
+            <Button asChild className="space-x-1">
+              <Link href="/typesections/create"><LayoutGrid size={18} /><span>Nueva Sección</span></Link>
+            </Button>
+          </Can>
         </div>
         <TypeSectionsTable />
       </main>

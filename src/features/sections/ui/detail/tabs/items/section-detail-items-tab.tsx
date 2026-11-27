@@ -1,0 +1,66 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import NProgress from 'nprogress'
+import { ArrowUpDown, LayoutList, Plus } from 'lucide-react'
+import { Button } from '@/shared/ui/button'
+import { SectionItemsTable } from '@/features/section-items/ui/list/section-items-table'
+import { useCan } from '@/features/auth/hooks/usePermission'
+
+interface SectionDetailItemsTabProps {
+  sectionId: number
+  /** Título de la pestaña (por defecto "Items de la sección"; ej. carrusel: "Categorías del carrusel"). */
+  title?: string
+  /** Texto del botón de alta (por defecto "Nuevo item"). */
+  addLabel?: string
+  /** `type_section.web_settings.items_add` — oculta "Nuevo item" cuando el conjunto de items es
+   * fijo (ej. "contact", cuyos 4 items de datos son parte fija del layout web). */
+  canAdd?: boolean
+  /** `type_section.web_settings.items_reorder` — oculta "Reordenar" y la columna "Orden" cuando
+   * el orden no afecta nada en el sitio web (ej. "contact", donde cada item se ubica por su
+   * `item_type`, no por su posición). */
+  canReorder?: boolean
+  /** `type_section.web_settings.items_delete` — oculta la acción "Eliminar" (fila y masivo). */
+  canDelete?: boolean
+}
+
+/** Tab "Items" del detalle de Section — lista embebida (filtrada a esta sección) + alta/reordenar. */
+export function SectionDetailItemsTab({
+  sectionId, title = 'Items de la sección', addLabel = 'Nuevo item', canAdd = true, canReorder = true, canDelete = true,
+}: SectionDetailItemsTabProps) {
+  const router = useRouter()
+  const goTo = (path: string) => { NProgress.start(); router.push(path) }
+  // Además de la configuración del tipo de sección, se pide el permiso del módulo items (ver ROLES_Y_PERMISOS.md)
+  const canCreatePerm = useCan('section_items.create')
+  const canReorderPerm = useCan('section_items.reorder')
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-sm font-medium"><LayoutList className="size-4" />{title}</h3>
+        <div className="flex items-center gap-2">
+          {canReorder && canReorderPerm && (
+            <Button size="sm" variant="outline" onClick={() => goTo(`/section-items/reorder?id_section=${sectionId}`)}>
+              <ArrowUpDown className="mr-1.5 size-4" />Reordenar
+            </Button>
+          )}
+          {canAdd && canCreatePerm && (
+            <Button size="sm" onClick={() => goTo(`/section-items/create?id_section=${sectionId}`)}>
+              <Plus className="mr-1.5 size-4" />{addLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      {(!canAdd || !canDelete) && (
+        <p className="text-xs text-muted-foreground">Este tipo de sección tiene un conjunto fijo de items — podés editar su texto y activarlos/desactivarlos, pero no agregar ni eliminar.</p>
+      )}
+
+      {!canReorder && (
+        <p className="text-xs text-muted-foreground">El orden de estos items no afecta nada en el sitio web — cada uno se ubica por su tipo, no por su posición.</p>
+      )}
+      
+      <SectionItemsTable idSection={sectionId} canReorder={canReorder} canDelete={canDelete} />
+    </div>
+  )
+}

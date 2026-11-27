@@ -10,28 +10,42 @@ const PUBLIC_ROUTES = [
 
 const PROTECTED_PREFIXES = [
   '/dashboard',
-  '/settings',
+  '/reports',
   '/users',
   '/roles',
-  '/permissions',
   '/profile',
   '/user-devices',
+  '/google-access-requests',
   '/furnitures',
   '/furniture-images',
   '/categories',
   '/images',
   '/navigations',
   '/sections',
+  '/footer',
   '/section-images',
+  '/section-buttons',
+  '/section-items',
+  '/section-item-details',
+  '/testimony',
   '/typecolors',
   '/typedocs',
   '/typesections',
   '/typewoods',
+  '/typeworks',
+  '/typefonts',
+  '/web-works',
+  '/web-alerts',
+  '/chatbot',
   '/clients',
   '/products-services',
   '/proformas',
   '/proforma-templates',
   '/proforma-types',
+  '/sales',
+  '/sale-document-types',
+  '/sale-settings',
+  '/sale-goals',
   '/company-settings',
   '/company-branches',
   '/company-bank-accounts',
@@ -40,20 +54,13 @@ const PROTECTED_PREFIXES = [
   '/company-social-networks',
   '/contact-messages',
   '/storage',
-  '/tasks',
-  '/apps',
-  '/chats',
-  '/help-center',
   '/ui-components',
 ]
 
-const ROUTE_ROLES: Record<string, string[]> = {
-  '/dashboard': ['1'],
-  '/users': ['1'],
-  '/roles': ['1'],
-  '/permissions': ['1'],
-  '/user-devices': ['1'],
-}
+// Los permisos por rol YA NO se revisan aquí (antes se usaba ROUTE_ROLES con el id del rol).
+// El middleware solo controla que haya token. Qué páginas puede ver cada usuario lo decide
+// el guard del cliente RoutePermissionGuard (src/features/auth/ui/route-permission-guard.tsx)
+// con los permisos que devuelve el backend. Ver ROLES_Y_PERMISOS.md.
 
 function isPublicRoute(pathname: string) {
   return PUBLIC_ROUTES.some(
@@ -67,17 +74,10 @@ function isProtectedRoute(pathname: string) {
   )
 }
 
-function getMatchedRoleRoute(pathname: string) {
-  return Object.keys(ROUTE_ROLES).find((route) => {
-    return pathname === route || pathname.startsWith(`${route}/`)
-  })
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const accessToken = request.cookies.get('access_token')?.value
-  const role = request.cookies.get('auth_role')?.value
 
   const isProtected = isProtectedRoute(pathname)
   if (!accessToken && isProtected) {
@@ -85,18 +85,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (accessToken && pathname === '/sign-in') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  if (accessToken && isProtected) {
-    const matchedRoleRoute = getMatchedRoleRoute(pathname)
-    if (matchedRoleRoute) {
-      const allowedRoles = ROUTE_ROLES[matchedRoleRoute]
-
-      if (!role || !allowedRoles.includes(role)) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
-    }
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return NextResponse.next()

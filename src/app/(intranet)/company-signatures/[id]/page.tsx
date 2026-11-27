@@ -11,7 +11,7 @@ export default async function CompanySignatureDetailPage({ params }: { params: P
     <>
       <Header fixed title="Detalle de Firma" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <CompanySignaturesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <CompanySignaturesBreadcrumb currentPage="Detalle" showHeader={true} />
         <CompanySignatureDetail id={id} />
       </main>
     </>

@@ -7,6 +7,7 @@ import type {
 } from '../model/sectionimageget.dto'
 import type { SectionImagePostRequestDto, SectionImagePostResponseDto } from '../model/sectionimagepost.dto'
 import type { SectionImagePutRequestDto, SectionImagePutResponseDto } from '../model/sectionimageput.dto'
+import type { SectionImageReorderRequestDto, SectionImageReorderResponseDto } from '../model/sectionimagereorder.dto'
 
 export const sectionImagesService = {
   getList: async (param: SectionImageListRequestDto): Promise<SectionImageJoinListResponseDto> => {
@@ -40,5 +41,10 @@ export const sectionImagesService = {
   delete: async (id: number): Promise<boolean> => {
     const { data } = await apiClient.delete(SECTIONIMAGES_ENDPOINTS.v1.delete(id))
     return data.success
+  },
+
+  reorder: async (param: SectionImageReorderRequestDto): Promise<SectionImageReorderResponseDto> => {
+    const { data } = await apiClient.post<SectionImageReorderResponseDto>(SECTIONIMAGES_ENDPOINTS.v1.reorder, param)
+    return data
   },
 }

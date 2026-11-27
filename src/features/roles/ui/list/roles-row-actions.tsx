@@ -2,7 +2,7 @@
 
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { CheckCircle2, Eye, Pencil, Trash2, XCircle } from 'lucide-react'
+import { CheckCircle2, Eye, KeyRound, Pencil, Trash2, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
@@ -16,7 +16,8 @@ import {
 } from '@/shared/ui/dropdown-menu'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
-import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { toastSuccess } from '@/shared/lib/toast'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
 import { useRoleDeleteStore } from '@/features/roles/stores/useRoleDeleteStore'
 import type { Role } from '../../data/schema'
@@ -28,6 +29,18 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
 
   const isActive = row.original.status === 'active'
 
+  // Permisos del usuario actual para esta pantalla
+  const canView = useCan('roles.view')
+  const canUpdate = useCan('roles.update')
+  const canDelete = useCan('roles.delete')
+  const canChangeState = useCan('roles.state')
+
+  // Los roles del sistema (superadmin) no se editan, no se borran ni cambian de estado.
+  const isSystem = row.original.isSystem
+  const showEdit = canUpdate && !isSystem
+  const showState = canChangeState && !isSystem
+  const showDelete = canDelete && !isSystem
+
   const handleView = () => {
     setCurrentRole(row.original)
     NProgress.start()
@@ -38,6 +51,11 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
     setCurrentRole(row.original)
     NProgress.start()
     router.push(`/roles/edit/${row.original.id}`)
+  }
+
+  const handlePermissions = () => {
+    NProgress.start()
+    router.push(`/roles/${row.original.id}/permissions`)
   }
 
   const handleToggleState = async () => {
@@ -56,7 +74,7 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
           toastSuccess(`Rol ${resultLabel}`, `"${row.original.name}" fue ${resultLabel}.`)
           close()
         } else {
-          showError('No se pudo cambiar el estado.')
+          showError(useRoleDeleteStore.getState().error ?? 'No se pudo cambiar el estado.')
         }
       },
     })
@@ -72,7 +90,8 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
           toastSuccess('Rol eliminado', `"${row.original.name}" fue eliminado.`)
           close()
         } else {
-          showError('No se pudo eliminar el rol. Intenta nuevamente.')
+          // Ej. 409: "No se puede eliminar el rol porque tiene usuarios asignados..."
+          showError(useRoleDeleteStore.getState().error ?? 'No se pudo eliminar el rol. Intenta nuevamente.')
         }
       },
       { title: 'Eliminando...' }
@@ -98,21 +117,37 @@ export function RolesRowActions({ row }: { row: Row<Role> }) {
         <DropdownMenuItem onClick={handleView}>
           Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleToggleState()}>
-          {isActive ? (
-            <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
-          ) : (
-            <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>
-          )}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {/* El superadmin no tiene "Permisos": tiene acceso total y no se edita */}
+        {canView && !isSystem && (
+          <DropdownMenuItem onClick={handlePermissions}>
+            Permisos <DropdownMenuShortcut><KeyRound size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {showEdit && (
+          <DropdownMenuItem onClick={handleEdit}>
+            Editar <DropdownMenuShortcut><Pencil size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {showState && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => void handleToggleState()}>
+              {isActive ? (
+                <>Desactivar <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
+              ) : (
+                <>Activar <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>
+              )}
+            </DropdownMenuItem>
+          </>
+        )}
+        {showDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

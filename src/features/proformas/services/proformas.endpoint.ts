@@ -8,6 +8,8 @@ export const PROFORMAS_ENDPOINTS = {
     put: (id: number) => `${BASE}/${id}`,
     patch: (id: number) => `${BASE}/${id}`,
     delete: (id: number) => `${BASE}/${id}`,
+    // Datos listos para precargar una venta desde una proforma ACEPTADA (contrato §6).
+    saleDraft: (id: number) => `${BASE}/${id}/sale-draft`,
     // Regeneran el PDF SIEMPRE en cada llamada (lento) — quedan como fallback/debug, ver
     // proformas.md. El front usa `pdfGuardado`/`pdfGuardadoDownload` para "Ver"/"Descargar".
     pdf: (id: number) => `${BASE}/${id}/pdf`,

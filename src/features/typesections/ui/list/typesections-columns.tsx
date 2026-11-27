@@ -1,9 +1,10 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { TypeSection } from '../../data/schema'
 import { TypeSectionsRowActions } from './typesections-row-actions'
 
@@ -37,7 +38,7 @@ export const typesectionsColumns: ColumnDef<TypeSection>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Sección" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/typesections/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
         {row.original.description && (
           <span className="text-xs text-muted-foreground">{row.original.description}</span>
         )}
@@ -45,13 +46,14 @@ export const typesectionsColumns: ColumnDef<TypeSection>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Sección' },
   },
 
   {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
-      const opt = getStateOption(row.original.stateValue)
+      const opt = getVisibilityStateOption(row.original.stateValue)
       return (
         <Badge variant="outline" className={cn('text-xs', opt.badge)}>
           {opt.label}
@@ -60,7 +62,7 @@ export const typesectionsColumns: ColumnDef<TypeSection>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -82,12 +84,12 @@ export const typesectionsColumns: ColumnDef<TypeSection>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: TypeSectionsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

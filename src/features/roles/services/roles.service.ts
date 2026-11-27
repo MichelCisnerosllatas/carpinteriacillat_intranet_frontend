@@ -15,7 +15,8 @@ export const rolesService = {
   },
 
   getForSelect: async (): Promise<RoleGetResponseDto> => {
-    const { data } = await apiClient.get<RoleGetResponseDto>(ROLES_ENDPOINTS.v1.get)
+    // per_page alto: el select necesita TODOS los roles, no solo la primera página.
+    const { data } = await apiClient.get<RoleGetResponseDto>(ROLES_ENDPOINTS.v1.get, { params: { per_page: 100 } })
     return data
   },
 

@@ -24,8 +24,17 @@ import {
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = '16rem'
+const SIDEBAR_WIDTH_COOKIE_NAME = 'sidebar_width'
+// Ancho ajustable (desktop, expandido) arrastrando el SidebarRail. En px: 16rem – 24rem.
+const SIDEBAR_WIDTH_DEFAULT = 256
+const SIDEBAR_WIDTH_MIN = 256
+const SIDEBAR_WIDTH_MAX = 384
 const SIDEBAR_WIDTH_MOBILE = '18rem'
+
+function clampSidebarWidth(width: number | undefined): number {
+  if (!width || !Number.isFinite(width)) return SIDEBAR_WIDTH_DEFAULT
+  return Math.round(Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, width)))
+}
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
@@ -37,6 +46,9 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  /** Ancho del sidebar expandido en desktop (px). */
+  width: number
+  setWidth: (width: number) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -52,6 +64,7 @@ function useSidebar() {
 
 function SidebarProvider({
   defaultOpen = true,
+  defaultWidth,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -60,11 +73,21 @@ function SidebarProvider({
   ...props
 }: React.ComponentProps<'div'> & {
   defaultOpen?: boolean
+  /** Ancho inicial en px (normalmente leído de la cookie `sidebar_width`). */
+  defaultWidth?: number
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+
+  // Ancho del sidebar expandido; se guarda en cookie para que el SSR lo pinte sin saltos.
+  const [width, _setWidth] = React.useState(() => clampSidebarWidth(defaultWidth))
+  const setWidth = React.useCallback((value: number) => {
+    const next = clampSidebarWidth(value)
+    _setWidth(next)
+    document.cookie = `${SIDEBAR_WIDTH_COOKIE_NAME}=${next}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+  }, [])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -119,8 +142,10 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      width,
+      setWidth,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, width, setWidth]
   )
 
   return (
@@ -130,13 +155,17 @@ function SidebarProvider({
           data-slot='sidebar-wrapper'
           style={
             {
-              '--sidebar-width': SIDEBAR_WIDTH,
+              '--sidebar-width': `${width}px`,
               '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
           }
           className={cn(
             'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
+            // Mientras se arrastra el rail: sin animación de ancho (sigue al mouse) y sin
+            // selección de texto.
+            'data-[resizing=true]:select-none',
+            '[&[data-resizing=true]_[data-slot=sidebar-gap]]:transition-none [&[data-resizing=true]_[data-slot=sidebar-container]]:transition-none',
             className
           )}
           {...props}
@@ -281,19 +310,82 @@ function SidebarTrigger({
   )
 }
 
+// Borde del sidebar:
+// - Expandido: arrastrar ajusta el ancho (entre SIDEBAR_WIDTH_MIN y SIDEBAR_WIDTH_MAX);
+//   doble clic lo restablece. Un clic simple no contrae (para eso está el botón del header).
+// - Contraído: clic expande.
+// Durante el arrastre se escribe la variable CSS directo en el wrapper (sin re-render por cada
+// movimiento) y el estado/cookie se actualiza solo al soltar.
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, state, width, setWidth } = useSidebar()
+  const isExpanded = state === 'expanded'
+  const dragRef = React.useRef<{
+    wrapper: HTMLElement
+    startX: number
+    startWidth: number
+    dir: 1 | -1
+    width: number
+    moved: boolean
+  } | null>(null)
+
+  const endDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current
+    dragRef.current = null
+    if (!drag) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    delete drag.wrapper.dataset.resizing
+    document.body.style.removeProperty('cursor')
+    if (drag.moved) setWidth(drag.width)
+  }
 
   return (
     <button
       data-sidebar='rail'
       data-slot='sidebar-rail'
-      aria-label='Toggle Sidebar'
+      aria-label={isExpanded ? 'Ajustar ancho del menú' : 'Expandir menú'}
       tabIndex={-1}
-      onClick={toggleSidebar}
-      title='Toggle Sidebar'
+      title={isExpanded ? 'Arrastra para ajustar el ancho · doble clic para restablecer' : 'Expandir menú'}
+      onPointerDown={(event) => {
+        if (!isExpanded || event.button !== 0) return
+        const wrapper = event.currentTarget.closest<HTMLElement>('[data-slot="sidebar-wrapper"]')
+        if (!wrapper) return
+        const side = event.currentTarget.closest('[data-side]')?.getAttribute('data-side')
+        event.currentTarget.setPointerCapture(event.pointerId)
+        dragRef.current = {
+          wrapper,
+          startX: event.clientX,
+          startWidth: width,
+          dir: side === 'right' ? -1 : 1,
+          width,
+          moved: false,
+        }
+      }}
+      onPointerMove={(event) => {
+        const drag = dragRef.current
+        if (!drag) return
+        const delta = (event.clientX - drag.startX) * drag.dir
+        if (!drag.moved && Math.abs(delta) < 3) return
+        if (!drag.moved) {
+          drag.moved = true
+          drag.wrapper.dataset.resizing = 'true'
+          document.body.style.cursor = 'col-resize'
+        }
+        drag.width = clampSidebarWidth(drag.startWidth + delta)
+        drag.wrapper.style.setProperty('--sidebar-width', `${drag.width}px`)
+      }}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onClick={() => {
+        if (!isExpanded) toggleSidebar()
+      }}
+      onDoubleClick={() => {
+        if (isExpanded) setWidth(SIDEBAR_WIDTH_DEFAULT)
+      }}
       className={cn(
         'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-inset-e-4 group-data-[side=right]:inset-s-0 after:absolute after:inset-y-0 after:inset-s-1/2 after:w-0.5 hover:after:bg-sidebar-border sm:flex',
+        'touch-none [[data-state=expanded]_&]:cursor-col-resize',
         'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
         '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
         'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:start-full hover:group-data-[collapsible=offcanvas]:bg-sidebar',
@@ -481,13 +573,13 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-start text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding,background-color,color,transform] duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:scale-[0.97] active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 group-has-data-[sidebar=menu-action]/menu-item:pe-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-primary/15 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:hover:bg-sidebar-primary/20 data-[active=true]:hover:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-start text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding,background-color,color,transform] duration-150 hover:bg-sidebar-primary/20 hover:text-sidebar-foreground focus-visible:ring-2 active:scale-[0.97] active:bg-sidebar-primary/45 active:text-sidebar-foreground disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 group-has-data-[sidebar=menu-action]/menu-item:pe-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-primary/45 data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground data-[active=true]:hover:bg-sidebar-primary/55 data-[active=true]:hover:text-sidebar-foreground data-[state=open]:hover:bg-sidebar-primary/20 data-[state=open]:hover:text-sidebar-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        default: 'hover:bg-sidebar-primary/20 hover:text-sidebar-foreground',
         outline:
-          'bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
+          'bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-primary/20 hover:text-sidebar-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
       },
       size: {
         default: 'h-8 text-sm',
@@ -693,8 +785,8 @@ function SidebarMenuSubButton({
       data-size={size}
       data-active={isActive}
       className={cn(
-        'flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color,color,transform] duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:scale-[0.97] active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-inherit',
-        'data-[active=true]:bg-sidebar-primary/15 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:hover:bg-sidebar-primary/20 data-[active=true]:hover:text-sidebar-accent-foreground',
+        'flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground ring-sidebar-ring outline-hidden transition-[background-color,color,transform] duration-150 hover:bg-sidebar-primary/20 hover:text-sidebar-foreground focus-visible:ring-2 active:scale-[0.97] active:bg-sidebar-primary/45 active:text-sidebar-foreground disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-inherit',
+        'data-[active=true]:bg-sidebar-primary/45 data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground data-[active=true]:hover:bg-sidebar-primary/55 data-[active=true]:hover:text-sidebar-foreground',
         size === 'sm' && 'text-xs',
         size === 'md' && 'text-sm',
         'group-data-[collapsible=icon]:hidden',

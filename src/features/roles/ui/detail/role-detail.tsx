@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, ShieldCheck, CalendarDays, RefreshCw } from 'lucide-react'
+import { Pencil, ShieldCheck, CalendarDays, RefreshCw, KeyRound, Lock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -11,6 +11,7 @@ import { cn } from '@/shared/lib/utils'
 import { roleStatusBadge } from '@/features/roles/data/data'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 interface RoleDetailProps {
   id: string
@@ -19,6 +20,8 @@ interface RoleDetailProps {
 export function RoleDetail({ id }: RoleDetailProps) {
   const router = useRouter()
   const { currentRole, roles, setCurrentRole } = useRoleListStore()
+  const canUpdate = useCan('roles.update')
+  const canView = useCan('roles.view')
 
   useEffect(() => {
     if (!currentRole || String(currentRole.id) !== id) {
@@ -48,6 +51,14 @@ export function RoleDetail({ id }: RoleDetailProps) {
     router.push(`/roles/edit/${role.id}`)
   }
 
+  const handlePermissions = () => {
+    NProgress.start()
+    router.push(`/roles/${role.id}/permissions`)
+  }
+
+  // Los roles del sistema (superadmin) no se editan
+  const showEdit = canUpdate && !role.isSystem
+
   return (
     <div className="flex flex-col gap-6">
       {/* Cabecera */}
@@ -62,16 +73,32 @@ export function RoleDetail({ id }: RoleDetailProps) {
               {role.description && (
                 <p className="text-sm text-muted-foreground">{role.description}</p>
               )}
-              <div className="mt-1">
+              <div className="mt-1 flex flex-wrap gap-2">
                 <Badge variant="outline" className={cn('capitalize', statusClass)}>
                   {role.statusLabel}
                 </Badge>
+                {role.isSystem && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Lock className="size-3" /> Sistema
+                  </Badge>
+                )}
               </div>
             </div>
-            <Button onClick={handleEdit} variant="outline" size="sm" className="shrink-0">
-              <Pencil className="size-4 mr-2" />
-              Editar
-            </Button>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {/* El superadmin no tiene botón: tiene acceso total y no se edita */}
+              {canView && !role.isSystem && (
+                <Button onClick={handlePermissions} variant="outline" size="sm">
+                  <KeyRound className="size-4 mr-2" />
+                  Permisos
+                </Button>
+              )}
+              {showEdit && (
+                <Button onClick={handleEdit} variant="outline" size="sm">
+                  <Pencil className="size-4 mr-2" />
+                  Editar
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

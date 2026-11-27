@@ -11,7 +11,7 @@ export default async function SectionImageDetailPage({ params }: { params: Promi
     <>
       <Header fixed title="Detalle Sección — Imagen" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <SectionImagesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <SectionImagesBreadcrumb currentPage="Detalle" showHeader={true} />
         <SectionImageDetail id={id} />
       </main>
     </>

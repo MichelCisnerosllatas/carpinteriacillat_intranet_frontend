@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { FolderPlus } from 'lucide-react'
 import { CategoriesTable } from '@/features/categories/ui/list/categories-table'
 
@@ -17,9 +18,12 @@ export default function CategoriesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Categorías</h2>
             <p className="text-muted-foreground">Gestiona las categorías del catálogo de muebles</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/categories/create"><FolderPlus size={18} /><span>Nueva Categoría</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="categories.create">
+            <Button asChild className="space-x-1">
+              <Link href="/categories/create"><FolderPlus size={18} /><span>Nueva Categoría</span></Link>
+            </Button>
+          </Can>
         </div>
         <CategoriesTable />
       </main>

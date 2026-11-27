@@ -109,10 +109,12 @@ All API responses: `{ success: boolean, status: number, message: string, data: T
 
 ## Auth Flow
 
-- **Storage:** `access_token` and `refresh_token` in `localStorage`; `access_token` and `auth_role` also written to `document.cookie` (for Next.js middleware)
-- **Middleware** (`src/middleware.ts`): reads `access_token` cookie to gate `PROTECTED_PREFIXES`; reads `auth_role` to enforce `ROUTE_ROLES` per path
-- **Post-login redirect:** use `window.location.replace('/dashboard')` — **not** `router.replace()` — to guarantee cookies are included in the first server request
-- **`AuthSessionProvider`** (mounted in `(intranet)` layout): calls `authStore.verify()` on mount to populate the Zustand store from `localStorage`; does NOT redirect
+- **Login flow (email and Google):** 1) `POST /v1/intranet/auth/login` (or `/google`) returns **only tokens** (`access_token`, `refresh_token` — `null` for Google —, `token_type`, `expires_in`, `device_id`) → `AuthStorage.saveTokens()`; 2) `GET /v1/intranet/auth/verify` returns the session → `AuthStorage.saveSession()`; if verify fails, tokens are cleared and its `message` is shown; 3) redirect with `getHomeUrl(session)` (`features/auth/lib/home-url.ts`). All in `login()` / `loginWithGoogle()` of `features/auth/stores/auth.store.ts`
+- **Storage:** tokens in `localStorage` (`TokenStorage`); `access_token` also written to `document.cookie` (for Next.js middleware). The session (`AuthSession` = `VerifyDataDTO`, `features/auth/model/session.type.ts`) lives in `localStorage` `auth_user` (`session.storage.ts`) and in `useAuthStore` as `session`. It is **nested**: `{ platform, expires_at, user: { id, email, person, role: { id_rol, role_name, role_slug, role_is_system, permissions[] }, all_branches, branches[] }, company, branch_filter: { can_view_all, default_branch_id, options[] } }`. Superadmin = `user.role.role_slug === 'superadmin'` (`isSuperAdminSession()`); there is no `is_superadmin`. A stored session with the old flat shape (no `user.role.permissions`) is discarded and the user is sent to `/sign-in`
+- **Middleware** (`src/middleware.ts`): only reads the `access_token` cookie to gate `PROTECTED_PREFIXES` (no role checks). Per-route permissions are enforced client-side by `RoutePermissionGuard` (`features/auth/ui/route-permission-guard.tsx`, mounted in `(intranet)/layout-client.tsx`) using `getRouteRequirement()` from `shared/config/route-permissions.ts`
+- **Post-login redirect:** use `window.location.replace(getHomeUrl(session))` — **not** `router.replace()` — to guarantee cookies are included in the first server request
+- **`AuthSessionProvider`** (mounted in `(intranet)` layout): loads the local session (`loadLocalSession`), renders, then calls `syncAccess()` (GET verify) in background and replaces the stored session with the response; a 401 clears the session. Does NOT redirect otherwise
+- **Permissions:** use `useCan(perm)`, `<Can permission>`, `hasPermission(session, perm)`, `useIsSuperAdmin()` from `features/auth`. A global 403 toast lives in `apiClient`. Full guide: **`ROLES_Y_PERMISOS.md`** (read it before protecting a new module)
 
 ## Environment Variables
 
@@ -139,10 +141,10 @@ NEXT_PUBLIC_CLIENT=web
 Defined in `src/shared/config/sidebar-data.ts`. Supports:
 - Simple links: `{ title, url, icon }`
 - Collapsible groups: `{ title, icon, items: [...] }`
-- Role-based visibility: add `roles: string[]` to any item
+- Permission-based visibility: add `permission: '<module>.view'` (or `superadminOnly: true`) to any item, sub-item or group
 - Badge chips: add `badge: string`
 
-All icons are from `lucide-react`. `filterNavByRole(navGroups, role)` is available in `shared/config/nav-types.ts` for filtering by role.
+All icons are from `lucide-react`. `filterNavByPermission(navGroups, can, isSuperAdmin)` in `shared/config/nav-types.ts` filters the menu (sidebar + command menu); `can` is passed in because `shared/` cannot import from `features/`. See `ROLES_Y_PERMISOS.md`.
 
 ## Tables
 
@@ -160,3 +162,4 @@ TanStack Table v8 with server-side pagination:
 - Tailwind utilities only — no CSS modules or inline styles
 - Path alias `@/*` → `src/*`
 - No `any` except in `catch (error: any)` blocks and Axios response error access
+- Un componente React por archivo (excepto los primitivos de shadcn en src/shared/ui)

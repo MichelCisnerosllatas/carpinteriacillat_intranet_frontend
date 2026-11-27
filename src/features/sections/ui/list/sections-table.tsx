@@ -1,19 +1,21 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, LoaderCircle, Navigation2 } from 'lucide-react'
+import { ChevronDown, Navigation2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { cn } from '@/shared/lib/utils'
-import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { VISIBILITY_STATES } from '@/shared/config/entity-states'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { SectionsGroupTable } from './sections-group-table'
 import { SectionStatsBar } from './section-stats-bar'
 import type { Section } from '../../data/schema'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 /** Trae todo de una vez (no pagina) — el listado se agrupa por navegación, así que no
  * tiene sentido paginar server-side: se vería una navegación distinta en cada página. */
@@ -23,6 +25,7 @@ type NavigationGroup = {
   key: string
   navigationName: string
   navigationUrl: string | null
+  navigationOrder: number | null
   sections: Section[]
 }
 
@@ -35,12 +38,22 @@ function groupByNavigation(items: Section[]): NavigationGroup[] {
         key,
         navigationName: item.navigationName ?? 'Sin navegación',
         navigationUrl: item.navigationUrl,
+        navigationOrder: item.navigationOrder,
         sections: [],
       })
     }
     map.get(key)!.sections.push(item)
   }
-  return Array.from(map.values()).sort((a, b) => a.navigationName.localeCompare(b.navigationName))
+  // Los grupos se ordenan por `navigation_order` (el orden real de la navegación, el mismo que
+  // se usa en el menú del sitio), no alfabéticamente — antes "Galería" podía aparecer primero
+  // solo por orden de letras aunque su navegación no fuera la de orden 1. Sin navegación (o sin
+  // `navigation_order` definido) queda siempre al final.
+  return Array.from(map.values()).sort((a, b) => {
+    if (a.navigationOrder == null && b.navigationOrder == null) return a.navigationName.localeCompare(b.navigationName)
+    if (a.navigationOrder == null) return 1
+    if (b.navigationOrder == null) return -1
+    return a.navigationOrder - b.navigationOrder
+  })
 }
 
 export function SectionsTable() {
@@ -118,22 +131,35 @@ export function SectionsTable() {
     void load({ search: '', state: undefined, date_from: '', date_to: '', per_page: GROUPED_PER_PAGE, page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
+
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando secciones...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar secciones</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load({ per_page: GROUPED_PER_PAGE, page: 1 }) }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching} 
+        title='Error al cargar secciones' 
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => { 
+          reset(); 
+          void load({ 
+            per_page: GROUPED_PER_PAGE, 
+            page: 1 
+          });
+        }}
+      />
     )
   }
 
@@ -154,7 +180,7 @@ export function SectionsTable() {
             <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los estados</SelectItem>
-              {ENTITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              {VISIBILITY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -167,7 +193,12 @@ export function SectionsTable() {
           <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
         </div>
         <div className="flex flex-col justify-end">
-          <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+          <DataTableFilterActions
+            onClear={resetFilters}
+            onRefresh={handleRefresh}
+            hasActiveFilters={hasActiveFilters}
+            isFetching={isFetching}
+          />
         </div>
       </div>
 

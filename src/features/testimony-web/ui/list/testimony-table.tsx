@@ -1,0 +1,317 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type PaginationState, type SortingState, type VisibilityState,
+  flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
+} from '@tanstack/react-table'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { DataTablePagination } from '@/shared/ui/data-table/pagination'
+import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
+import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
+import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
+import { Clock } from 'lucide-react'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { WebWorkSelect } from '../web-work-select'
+import { TESTIMONY_STATES, TESTIMONY_STATE_PENDING } from '../../data/data'
+import { useTestimonyListStore } from '../../stores/useTestimonyListStore'
+import { useTestimonyDeleteStore } from '../../stores/useTestimonyDeleteStore'
+import { getTestimonyColumns, getTestimonyScopedColumns } from './testimony-columns'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
+
+interface TestimonyTableProps {
+  /** Opcional: sin él, la tabla carga todos los testimonios (uso standalone en
+   * `/testimony`); con él, filtra por esa sección y oculta la columna "Sección" — se usa
+   * embebida en un tab del detalle de `Section`. */
+  idSection?: number
+  /** Oculta "Eliminar" (por fila y masivo). Default `true` (comportamiento de siempre). */
+  canDelete?: boolean
+}
+
+export function TestimonyTable({ idSection, canDelete: canDeleteProp = true }: TestimonyTableProps) {
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('testimonies.state')
+  const hasDeletePermission = useCan('testimonies.delete')
+  const canDelete = canDeleteProp && hasDeletePermission
+  const canBulk = canState || canDelete
+  const {
+    items, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message,
+    load, reset,
+  } = useTestimonyListStore()
+  const { bulkToggleState, bulkDeleteItems } = useTestimonyDeleteStore()
+
+  const columns = useMemo(() => {
+    const cols = idSection !== undefined
+      ? getTestimonyScopedColumns({ hideDelete: !canDelete })
+      : getTestimonyColumns({ hideDelete: !canDelete })
+    // Sin acciones masivas permitidas no mostramos la columna de selección
+    return canBulk ? cols : cols.filter((c) => c.id !== 'select')
+  }, [idSection, canDelete, canBulk])
+
+  const [rowSelection, setRowSelection]         = useState({})
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [sorting, setSorting]                   = useState<SortingState>([])
+  const [search, setSearch]                     = useState(filters.search ?? '')
+  const [state, setState]                       = useState<string>(filters.state !== undefined ? String(filters.state) : 'all')
+  /** Filtro "Trabajo": solo reseñas de ese trabajo de la galería web. */
+  const [webWorkFilter, setWebWorkFilter]   = useState<number | null>(filters.id_web_work ?? null)
+  const [isBulkLoading, setIsBulkLoading]       = useState(false)
+  /** true solo mientras hay un fetch disparado por el usuario (filtro/búsqueda/paginación) — no en la carga automática al entrar al módulo. Controla la TableLoadingBar. */
+  const [isUserFetching, setIsUserFetching]     = useState(false)
+
+  const pagination = useMemo<PaginationState>(() => ({
+    pageIndex: Math.max((filters.page ?? 1) - 1, 0),
+    pageSize: filters.per_page ?? 10,
+  }), [filters.page, filters.per_page])
+
+  const appliedSearch = useRef(search)
+
+  useEffect(() => { 
+    void load({ 
+      id_section: idSection 
+    }) 
+  }, [idSection])
+
+  // "Buscar" es texto libre: se espera a que el usuario deje de escribir (debounce) antes de
+  // disparar la petición y encender la barra, para no parpadear en cada tecla.
+  useEffect(() => {
+    if (appliedSearch.current === search) return
+    appliedSearch.current = search
+
+    const t = window.setTimeout(() => {
+      setIsUserFetching(true)
+      void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_web_work: webWorkFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+    }, 500)
+    return () => window.clearTimeout(t)
+  }, [search])
+
+  // Estado es una acción discreta (una selección), no texto que se esté escribiendo: se
+  // dispara de inmediato, sin esperar el debounce de "Buscar".
+  const handleStateChange = (value: string) => {
+    setState(value)
+    setIsUserFetching(true)
+    void load({ id_section: idSection, search, state: value === 'all' ? undefined : Number(value), id_web_work: webWorkFilter ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+  }
+
+  // Filtro por trabajo de la galería — también es una selección, se aplica de inmediato
+  const handleWebWorkChange = (value: number | null) => {
+    setWebWorkFilter(value)
+    setIsUserFetching(true)
+    void load({ id_section: idSection, search, state: state === 'all' ? undefined : Number(state), id_web_work: value ?? undefined, page: 1 }).finally(() => setIsUserFetching(false))
+  }
+
+  // Filtro rápido "Solo pendientes": reseñas de la web que esperan aprobación
+  const isPendingOnly = state === String(TESTIMONY_STATE_PENDING)
+  const togglePendingOnly = () => handleStateChange(isPendingOnly ? 'all' : String(TESTIMONY_STATE_PENDING))
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    pageCount: meta?.last_page ?? 1,
+    manualPagination: true,
+    state: { sorting, pagination, rowSelection, columnVisibility },
+    enableRowSelection: canBulk,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater
+      setIsUserFetching(true)
+      void load({ id_section: idSection, page: next.pageIndex + 1, per_page: next.pageSize }).finally(() => setIsUserFetching(false))
+    },
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  const selectedRows  = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+
+  const resetFilters = () => {
+    appliedSearch.current = ''
+    setSearch(''); setState('all'); setWebWorkFilter(null)
+    setIsUserFetching(true)
+    void load({ id_section: idSection, search: '', state: undefined, id_web_work: undefined, page: 1 }).finally(() => setIsUserFetching(false))
+  }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || webWorkFilter !== null
+
+  const handleBulkActivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const ids = selectedRows.map((r) => r.original.id)
+      const ok  = await bulkToggleState(ids, 1)
+      if (ok) { toastSuccess('Activados', `${selectedCount} registro(s) activado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron activar todos los registros.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDeactivate = async () => {
+    setIsBulkLoading(true)
+    try {
+      const ids = selectedRows.map((r) => r.original.id)
+      const ok  = await bulkToggleState(ids, 0)
+      if (ok) { toastSuccess('Desactivados', `${selectedCount} registro(s) desactivado(s).`); table.resetRowSelection() }
+      else toastError('Error', 'No se pudieron desactivar todos los registros.')
+    } finally { setIsBulkLoading(false) }
+  }
+
+  const handleBulkDelete = async () => {
+    await swalDeleteConfirm(
+      `¿Eliminar ${selectedCount} registro(s)?`, 'Esta acción no se puede deshacer.',
+      async ({ close, showError }) => {
+        const ids = selectedRows.map((r) => r.original.id)
+        const ok  = await bulkDeleteItems(ids)
+        if (ok) {
+          toastSuccess('Eliminados', `${selectedCount} registro(s) eliminado(s).`)
+          table.resetRowSelection()
+          close()
+        } else {
+          showError('No se pudieron eliminar todos los registros.')
+        }
+      },
+      { title: 'Eliminando...' }
+    )
+  }
+
+  if (!hasLoaded && !isInitialLoading) {
+    return (
+      <CircleProgressIndicatorPage/>
+    )
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar Testimonios'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset();
+          void load({ id_section: idSection })
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="relative flex flex-1 flex-col gap-4">
+      <TableLoadingBar active={isUserFetching} />
+
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Buscar</span>
+            <Input placeholder="Nombre del testimonio..." value={search} disabled={isFetching} onChange={(e) => setSearch(e.target.value)} className="h-8 w-full sm:w-[220px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Estado</span>
+            <Select value={state} disabled={isFetching} onValueChange={handleStateChange}>
+              <SelectTrigger className="h-8 w-full sm:w-[155px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {TESTIMONY_STATES.map((s) => <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Trabajo</span>
+            <div className="w-full sm:w-[220px]">
+              <WebWorkSelect
+                value={webWorkFilter}
+                onValueChange={handleWebWorkChange}
+                placeholder="Todos los trabajos"
+                disabled={isFetching}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col justify-end">
+            <Button
+              variant={isPendingOnly ? 'default' : 'outline'}
+              size="sm"
+              disabled={isFetching}
+              onClick={togglePendingOnly}
+            >
+              <Clock className="mr-1.5 size-4" />Solo pendientes
+            </Button>
+          </div>
+          <div className="flex flex-col justify-end">
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
+          </div>
+        </div>
+        <DataTableViewOptions table={table} />
+      </div>
+
+      <div className="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id} colSpan={h.colSpan} className={cn('bg-muted/50 text-xs', (h.column.columnDef.meta as any)?.className)}>
+                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className={cn('transition-colors', selectedCount > 0 && !row.getIsSelected() && 'opacity-50')}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className={cn('py-2', (cell.column.columnDef.meta as any)?.className)}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-20 text-center text-sm text-muted-foreground">
+                  No hay registros para mostrar.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <DataTablePagination table={table} className="mt-auto"
+        summary={meta ? `Mostrando ${meta.from ?? 0} - ${meta.to ?? 0} de ${meta.total ?? 0} registros` : 'Sin registros'}
+      />
+
+      <DataTableBulkActions
+        selectedCount={selectedCount}
+        isLoading={isBulkLoading}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
+        onClear={() => table.resetRowSelection()}
+      />
+    </div>
+  )
+}

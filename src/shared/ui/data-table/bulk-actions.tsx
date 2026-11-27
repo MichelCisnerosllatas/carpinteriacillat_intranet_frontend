@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, Loader2, Repeat, Trash2, XCircle, X } from 'lucide-react'
+import { CheckCircle2, Download, Loader2, Repeat, Trash2, XCircle, X } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -21,6 +21,7 @@ interface DataTableBulkActionsProps {
   selectedCount: number
   onActivate?: () => Promise<void> | void
   onDeactivate?: () => Promise<void> | void
+  onDownload?: () => Promise<void> | void
   onDelete?: () => Promise<void> | void
   onClear: () => void
   isLoading?: boolean
@@ -36,6 +37,7 @@ export function DataTableBulkActions({
   selectedCount,
   onActivate,
   onDeactivate,
+  onDownload,
   onDelete,
   onClear,
   isLoading = false,
@@ -149,6 +151,27 @@ export function DataTableBulkActions({
           </TooltipTrigger>
           <TooltipContent className="sm:hidden">Desactivar</TooltipContent>
         </Tooltip>
+      )}
+
+      {onDownload && (
+        <>
+          <Separator orientation="vertical" className="h-5 shrink-0 bg-background/20" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => void onDownload()}
+                className="h-7 gap-1.5 px-2 pointer-coarse:h-9 pointer-coarse:px-3"
+              >
+                <Download className="size-3.5" />
+                <span className="hidden sm:inline">Descargar</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="sm:hidden">Descargar</TooltipContent>
+          </Tooltip>
+        </>
       )}
 
       {onDelete && (

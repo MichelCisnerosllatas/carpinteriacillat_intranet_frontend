@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle, RefreshCw } from 'lucide-react'
 import {
   type PaginationState,
   type SortingState,
@@ -12,17 +11,17 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { useUserDeviceListStore } from '../../stores/useUserDeviceListStore'
 import { userDevicesColumns } from './user-devices-columns'
 import { UserDevicesError } from '../user-devices-error'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 const PLATFORM_OPTIONS = [
   { value: 'all',     label: 'Todas las plataformas' },
@@ -157,12 +156,17 @@ export function UserDevicesTable() {
     }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || status !== 'all' || platform !== 'all' || deviceType !== 'all' || dateFrom !== '' || dateTo !== ''
+
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
-        <LoaderCircle className="mb-3 size-9 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando dispositivos...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
@@ -250,30 +254,16 @@ export function UserDevicesTable() {
           </div>
 
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-              Limpiar
-            </Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                className="size-8"
-                disabled={isFetching}
-                onClick={() => {
-                  setIsUserFetching(true)
-                  void load({ page: 1 }).finally(() => setIsUserFetching(false))
-                }}
-              >
-                <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Actualizar lista</TooltipContent>
-          </Tooltip>
           <DataTableViewOptions table={table} />
         </div>
       </div>

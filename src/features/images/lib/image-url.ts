@@ -1,6 +1,10 @@
+import { buildImageUrl } from '@/shared/lib/images'
+
+// Delega en `buildImageUrl` (única fuente de verdad): detecta si `patch` ya es una URL
+// absoluta (algunos registros la traen así, ej. imágenes de muestra en un dominio externo)
+// y solo antepone el storage local cuando de verdad es una ruta relativa.
 export function getImageUrl(patch: string): string {
-  const base = process.env.NEXT_PUBLIC_IMAGE_URL ?? ''
-  return `${base}${patch}`
+  return buildImageUrl(patch) ?? ''
 }
 
 export function getImageDisplayName(item: { image_name: string | null; image_patch: string }): string {

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { FileText } from 'lucide-react'
 import { TypeDocsTable } from '@/features/typedocs/ui/list/typedocs-table'
 
@@ -17,9 +18,12 @@ export default function TypeDocsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Documentos</h2>
             <p className="text-muted-foreground">Tipos de documento de identidad</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/typedocs/create"><FileText size={18} /><span>Nuevo Documento</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="type_docs.create">
+            <Button asChild className="space-x-1">
+              <Link href="/typedocs/create"><FileText size={18} /><span>Nuevo Documento</span></Link>
+            </Button>
+          </Can>
         </div>
         <TypeDocsTable />
       </main>

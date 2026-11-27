@@ -1,25 +1,31 @@
 import Link from 'next/link'
-import { FileX } from 'lucide-react'
+import type { Metadata } from 'next'
+import { Home, SearchX } from 'lucide-react'
+import { Button } from '@/shared/ui/button'
+import { ErrorPage } from '@/shared/ui/error-page'
+import { GoBackButton } from '@/shared/ui/go-back-button'
 
+export const metadata: Metadata = { title: 'Página no encontrada' }
+
+/** Se muestra en cualquier URL que no existe (ej. /loquesea). */
 export default function NotFound() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 text-center">
-      <div className="flex size-20 items-center justify-center rounded-full bg-muted">
-        <FileX className="size-10 text-muted-foreground" />
-      </div>
-      <div className="space-y-2">
-        <h1 className="text-6xl font-bold tracking-tight">404</h1>
-        <h2 className="text-xl font-semibold">Page Not Found</h2>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
-        </p>
-      </div>
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-      >
-        Go back home
-      </Link>
-    </div>
+    <ErrorPage
+      code="404"
+      title="Ups, esta pantalla no está en el taller"
+      description="Puede que el enlace esté mal escrito o que la página se haya movido."
+      icon={<SearchX className="size-10" />}
+      actions={
+        <>
+          <Button asChild>
+            <Link href="/">
+              <Home className="mr-2 size-4" />
+              Ir al inicio
+            </Link>
+          </Button>
+          <GoBackButton />
+        </>
+      }
+    />
   )
 }

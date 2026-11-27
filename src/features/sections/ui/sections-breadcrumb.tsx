@@ -1,10 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/shared/ui/breadcrumb'
-import { Button } from '@/shared/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { BackButton } from '@/shared/ui/back-button'
 
 interface SectionsBreadcrumbProps {
   currentPage: string
@@ -32,14 +30,7 @@ export function SectionsBreadcrumb({ currentPage, showHeader = true }: SectionsB
 
       {showHeader && (
         <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-                <Link href="/sections"><ChevronLeft className="size-4" /></Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Volver a secciones</TooltipContent>
-          </Tooltip>
+          <BackButton fallbackHref="/sections" label="Volver a secciones" />
           <h2 className="text-xl font-semibold tracking-tight">{currentPage}</h2>
         </div>
       )}

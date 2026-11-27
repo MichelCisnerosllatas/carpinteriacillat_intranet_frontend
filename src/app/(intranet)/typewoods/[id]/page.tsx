@@ -11,7 +11,7 @@ export default async function TypeWoodDetailPage({ params }: { params: Promise<{
     <>
       <Header fixed title="Detalle de Madera" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <TypeWoodsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <TypeWoodsBreadcrumb currentPage="Detalle" showHeader={true} />
         <TypeWoodDetail id={id} />
       </main>
     </>

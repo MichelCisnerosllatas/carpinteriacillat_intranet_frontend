@@ -11,9 +11,12 @@ import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
 import { useProformaTypeListStore } from '../../stores/useProformaTypeListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ProformaTypeDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Solo si tiene permiso de editar (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('proforma_types.update')
   const { currentItem, items, setCurrentItem } = useProformaTypeListStore()
 
   useEffect(() => {
@@ -40,11 +43,14 @@ export function ProformaTypeDetail({ id }: { id: string }) {
             <div className="flex flex-1 flex-col gap-1">
               <h3 className="text-lg font-semibold">{item.name}</h3>
               {item.code && <p className="text-sm text-muted-foreground">{item.code}</p>}
+              {item.description && <p className="text-sm text-muted-foreground whitespace-pre-line">{item.description}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/proforma-types/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/proforma-types/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

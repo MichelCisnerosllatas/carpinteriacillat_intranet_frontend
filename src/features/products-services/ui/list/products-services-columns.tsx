@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -41,7 +42,7 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
       <div className="flex min-w-[220px] items-center gap-3 py-1.5">
         <ProductServiceThumb imageUrl={row.original.coverImageUrl} alt={row.original.name} />
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+          <Link href={`/products-services/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
           {row.original.description && (
             <span className="text-xs text-muted-foreground">{row.original.description}</span>
           )}
@@ -50,6 +51,7 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Nombre' },
   },
 
   {
@@ -62,7 +64,7 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Tipo' },
   },
 
   {
@@ -75,7 +77,7 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Mueble vinculado' },
   },
 
   {
@@ -89,7 +91,7 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Precio' },
   },
 
   {
@@ -105,7 +107,7 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Estado' },
   },
 
   {
@@ -127,12 +129,12 @@ export const productsServicesColumns: ColumnDef<ProductService>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: ProductsServicesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

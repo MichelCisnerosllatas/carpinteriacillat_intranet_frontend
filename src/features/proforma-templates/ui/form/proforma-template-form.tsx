@@ -23,7 +23,7 @@ import { useProformaTemplateFormStore } from '../../stores/useProformaTemplateFo
 import { useLiveStylePreview } from '../preview/use-live-style-preview'
 import { TemplatePreviewCard } from '../preview/template-preview-card'
 import { GeneralTab } from './tabs/general-tab'
-import { StylesTab } from './tabs/styles-tab'
+import { StylesTab } from './tabs/styles-tab/styles-tab'
 import { SectionsTab } from './tabs/sections-tab'
 import { TextsTab } from './tabs/texts-tab'
 import {

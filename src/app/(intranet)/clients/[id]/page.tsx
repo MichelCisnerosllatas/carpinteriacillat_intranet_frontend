@@ -11,7 +11,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     <>
       <Header fixed title="Detalle de Cliente" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ClientsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ClientsBreadcrumb currentPage="Detalle" showHeader={true} />
         <ClientDetail id={id} />
       </main>
     </>

@@ -1,13 +1,15 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { LongText } from '@/shared/ui/long-text'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
+import { getInitials } from '@/shared/lib/get-initials'
 import { callTypes, roles } from '../../data/data'
 import type { User } from '../../data/schema'
 import { UsersRowActions } from './users-row-actions'
-import { UserRound } from 'lucide-react'
 
 export const usersColumns: ColumnDef<User>[] = [
   {
@@ -40,28 +42,17 @@ export const usersColumns: ColumnDef<User>[] = [
   {
     id: 'photo',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Foto" />,
-    cell: ({ row }) => {
-      const photoUrl = row.original.photoUrl
-
-      return (
-        <div className="flex items-center justify-center">
-          {photoUrl ? (
-            <img
-              src={photoUrl}
-              alt={row.original.username}
-              className="size-9 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              <UserRound size={18} />
-            </div>
-          )}
-        </div>
-      )
-    },
+    cell: ({ row }) => (
+      <div className="flex items-center justify-center">
+        <Avatar className="size-9">
+          <AvatarImage src={row.original.photoUrl ?? undefined} alt={row.original.username} />
+          <AvatarFallback className="text-xs">{getInitials(row.original.username)}</AvatarFallback>
+        </Avatar>
+      </div>
+    ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[60px] min-w-[60px]' },
+    meta: { className: 'w-[60px] min-w-[60px]', label: 'Foto' },
   },
 
   {
@@ -74,8 +65,8 @@ export const usersColumns: ColumnDef<User>[] = [
 
       return (
         <div className="flex min-w-[360px] max-w-[520px] flex-col gap-1 py-2 text-xs leading-5">
-          <LongText className="max-w-[480px] font-semibold text-foreground">
-            {fullName}
+          <LongText className="max-w-[480px] font-semibold">
+            <Link href={`/users/${user.id}`} className="text-primary hover:underline">{fullName}</Link>
           </LongText>
 
           <div className="text-muted-foreground">
@@ -98,6 +89,7 @@ export const usersColumns: ColumnDef<User>[] = [
     enableHiding: true,
     meta: {
       className: 'min-w-[360px]',
+      label: 'Datos',
     },
   },
 
@@ -117,6 +109,7 @@ export const usersColumns: ColumnDef<User>[] = [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Estado' },
   },
 
   {
@@ -135,6 +128,7 @@ export const usersColumns: ColumnDef<User>[] = [
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Rol' },
   },
 
   {
@@ -159,11 +153,12 @@ export const usersColumns: ColumnDef<User>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[170px] min-w-[170px]' },
+    meta: { className: 'w-[170px] min-w-[170px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: UsersRowActions,
+    meta: { label: 'Acciones' },
   },
 ]

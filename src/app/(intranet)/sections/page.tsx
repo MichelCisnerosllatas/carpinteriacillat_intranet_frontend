@@ -3,6 +3,7 @@ import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { ArrowUpDown, Plus } from 'lucide-react'
+import { Can } from '@/features/auth/ui/can'
 import { SectionsTable } from '@/features/sections/ui/list/sections-table'
 
 export const metadata: Metadata = { title: 'Secciones' }
@@ -18,12 +19,17 @@ export default function SectionsPage() {
             <p className="text-muted-foreground">Gestión de secciones del catálogo</p>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline" className="space-x-1">
-              <Link href="/sections/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
-            </Button>
-            <Button asChild className="space-x-1">
-              <Link href="/sections/create"><Plus size={18} /><span>Nueva Sección</span></Link>
-            </Button>
+            {/* Solo si tiene permiso de reordenar / crear secciones (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="sections.reorder">
+              <Button asChild variant="outline" className="space-x-1">
+                <Link href="/sections/reorder"><ArrowUpDown size={18} /><span>Reordenar</span></Link>
+              </Button>
+            </Can>
+            <Can permission="sections.create">
+              <Button asChild className="space-x-1">
+                <Link href="/sections/create"><Plus size={18} /><span>Nueva Sección</span></Link>
+              </Button>
+            </Can>
           </div>
         </div>
         <SectionsTable />

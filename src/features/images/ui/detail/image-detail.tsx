@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
+import { Can } from '@/features/auth/ui/can'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { formatBytes } from '../../lib/image-url'
 import { useImageListStore } from '../../stores/useImageListStore'
@@ -91,9 +92,12 @@ export function ImageDetail({ id }: { id: string }) {
                   <ExternalLink className="size-4 mr-1" />Ver original
                 </a>
               </Button>
-              <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
-                <Trash2 className="size-4 mr-1" />Eliminar
-              </Button>
+              {/* Solo si tiene permiso de eliminar imágenes */}
+              <Can permission="images.delete">
+                <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
+                  <Trash2 className="size-4 mr-1" />Eliminar
+                </Button>
+              </Can>
             </div>
           </div>
         </CardContent>

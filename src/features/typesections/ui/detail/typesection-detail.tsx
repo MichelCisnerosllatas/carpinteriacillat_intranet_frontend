@@ -9,12 +9,15 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useTypeSectionListStore } from '../../stores/useTypeSectionListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function TypeSectionDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Solo si tiene permiso de editar (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('type_sections.update')
   const { currentItem, items, setCurrentItem } = useTypeSectionListStore()
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export function TypeSectionDetail({ id }: { id: string }) {
   const item = currentItem && String(currentItem.id) === id ? currentItem : null
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
 
   return (
     <div className="flex max-w-lg flex-col gap-4">
@@ -43,12 +46,29 @@ export function TypeSectionDetail({ id }: { id: string }) {
               {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/typesections/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/typesections/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {item.key && (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><LayoutGrid className="size-4" />Clave interna</CardTitle></CardHeader>
+          <CardContent className="flex flex-col gap-2 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">typesection_key</span>
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{item.key}</code>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Qué tabs mostrar (Imágenes/Botones/Items) y si se puede agregar/reordenar/eliminar cada uno ya no se configura acá — es config de cada Sección puntual, se edita desde el detalle de esa Sección.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>

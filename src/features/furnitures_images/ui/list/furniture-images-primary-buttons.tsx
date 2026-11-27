@@ -4,9 +4,13 @@ import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function FurnitureImagesPrimaryButtons() {
   const router = useRouter()
+  // Solo si tiene permiso de crear muebles (ver ROLES_Y_PERMISOS.md)
+  const canCreate = useCan('furnitures.create')
+  if (!canCreate) return null
 
   return (
     <div className="flex items-center gap-2">

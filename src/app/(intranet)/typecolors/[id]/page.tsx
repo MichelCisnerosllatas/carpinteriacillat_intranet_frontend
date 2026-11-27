@@ -11,7 +11,7 @@ export default async function TypeColorDetailPage({ params }: { params: Promise<
     <>
       <Header fixed title="Detalle de Color" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <TypeColorsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <TypeColorsBreadcrumb currentPage="Detalle" showHeader={true} />
         <TypeColorDetail id={id} />
       </main>
     </>

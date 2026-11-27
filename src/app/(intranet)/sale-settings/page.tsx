@@ -4,6 +4,7 @@ import { SaleSettingView } from '@/features/sale-settings/ui/sale-setting-view'
 
 export const metadata: Metadata = { title: 'Configuración de Ventas' }
 
+// Las metas mensuales ya no viven aquí: tienen su propia página /sale-goals.
 export default function SaleSettingsPage() {
   return (
     <>

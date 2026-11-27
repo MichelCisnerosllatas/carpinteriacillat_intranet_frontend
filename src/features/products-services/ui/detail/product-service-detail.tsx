@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pencil, Package, CalendarDays, Sofa, Tag, Palette, TreePine, ZoomIn } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { ImageLightbox } from '@/shared/ui/image-lightbox'
@@ -13,15 +14,7 @@ import { getStateOption } from '@/shared/config/entity-states'
 import { getProductServiceTypeLabel } from '../../data/data'
 import { useProductServiceListStore } from '../../stores/useProductServiceListStore'
 import NProgress from 'nprogress'
-
-function DetailField({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="flex items-center gap-1 text-xs text-muted-foreground">{icon}{label}</span>
-      <span className="text-sm font-medium">{value}</span>
-    </div>
-  )
-}
+import { DetailField } from './detail-field'
 
 export function ProductServiceDetail({ id }: { id: string }) {
   const router = useRouter()
@@ -99,9 +92,12 @@ export function ProductServiceDetail({ id }: { id: string }) {
                     <Badge variant="outline" className={cn('w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/products-services/edit/${item.id}`) }}>
-                  <Pencil className="size-4 mr-1" />Editar
-                </Button>
+                {/* Solo si tiene permiso de editar */}
+                <Can permission="products_services.update">
+                  <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/products-services/edit/${item.id}`) }}>
+                    <Pencil className="size-4 mr-1" />Editar
+                  </Button>
+                </Can>
               </div>
             </CardContent>
           </Card>

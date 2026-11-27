@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Image as ImageIcon, CalendarDays, Rows3 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
@@ -8,26 +8,47 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
+import { getSectionImageFixLabel } from '../../data/data'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionImageListStore } from '../../stores/useSectionImageListStore'
+import { useSectionImageRole } from '../../lib/use-section-image-role'
+import { SectionImageRoleBadge } from '../list/sectionimage-role-badge'
+import { isRoleBadgeVisible } from '../../lib/image-roles'
 import NProgress from 'nprogress'
+import { Can } from '@/features/auth/ui/can'
 
 export function SectionImageDetail({ id }: { id: string }) {
   const router = useRouter()
-  const { currentItem, items, setCurrentItem } = useSectionImageListStore()
+  const { currentItem, items, loadById, setCurrentItem } = useSectionImageListStore()
 
+  // Siempre trae el registro fresco del backend — no depende de que la tabla ya esté cargada en memoria.
   useEffect(() => {
-    if (!currentItem || String(currentItem.id) !== id) {
-      const found = items.find((i) => String(i.id) === id)
-      if (found) setCurrentItem(found)
-      else router.replace('/section-images')
-    }
-  }, [id, currentItem, items])
+    void loadById(Number(id))
+    return () => setCurrentItem(null)
+  }, [id])
 
-  const item = currentItem && String(currentItem.id) === id ? currentItem : null
+  const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+  // Rol en la web (Principal / Oculta) y nombre del item asignado
+  const { role, itemHeading } = useSectionImageRole(item)
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section_image',
+    id: item!.id,
+    id_section: item!.idSection,
+    fields: {
+      id_image: item!.idImage,
+      name: item!.imageName,
+      url: item!.imageUrl,
+      fix: item!.objectFit,
+      state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
 
   return (
     <div className="flex max-w-lg flex-col gap-4">
@@ -36,7 +57,7 @@ export function SectionImageDetail({ id }: { id: string }) {
           <div className="flex items-start gap-4">
             <div className="flex size-16 overflow-hidden rounded-lg border bg-muted">
               {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.imageName} className="size-full object-cover" />
+                <img src={item.imageUrl} alt={item.imageName} className="size-full" style={{ objectFit: (item.objectFit as CSSProperties['objectFit']) ?? 'cover' }} />
               ) : (
                 <div className="flex size-full items-center justify-center">
                   <ImageIcon className="size-5 text-muted-foreground" />
@@ -47,10 +68,14 @@ export function SectionImageDetail({ id }: { id: string }) {
               <h3 className="text-lg font-semibold">{item.imageName}</h3>
               <Badge variant="secondary" className="w-fit text-xs font-normal">{item.sectionName}</Badge>
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
+              <SectionImageRoleBadge role={role} className="w-fit text-xs" />
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/section-images/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar imágenes de sección (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="section_images.update">
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/section-images/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            </Can>
           </div>
         </CardContent>
       </Card>
@@ -63,9 +88,28 @@ export function SectionImageDetail({ id }: { id: string }) {
             <span className="font-medium">{item.sectionName}</span>
           </div>
           <Separator />
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Item</span>
+            <span className="text-right font-medium">
+              {item.idSectionItem != null ? (itemHeading ?? item.sectionItemTitle ?? `Item #${item.idSectionItem}`) : 'Sin item asignado'}
+            </span>
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">Rol en la web</span>
+            {isRoleBadgeVisible(role)
+              ? <SectionImageRoleBadge role={role} className="text-xs" />
+              : <span className="font-medium">—</span>}
+          </div>
+          <Separator />
           <div className="flex justify-between">
             <span className="text-muted-foreground">Imagen</span>
             <span className="font-medium">{item.imageName}</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Ajuste (object-fit)</span>
+            <span className="font-medium">{getSectionImageFixLabel(item.objectFit)}</span>
           </div>
           {item.imageUrl && (
             <>
@@ -84,9 +128,9 @@ export function SectionImageDetail({ id }: { id: string }) {
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted-foreground">Creado el</span><span className="font-medium">{item.createdAt}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Creado el</span><span className="font-medium">{item.createdAtFormatted ?? item.createdAt}</span></div>
           <Separator />
-          <div className="flex justify-between"><span className="text-muted-foreground">Actualizado</span><span className="font-medium">{item.updatedAt || '—'}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Actualizado</span><span className="font-medium">{item.updatedAtFormatted ?? item.updatedAt ?? '—'}</span></div>
         </CardContent>
       </Card>
     </div>

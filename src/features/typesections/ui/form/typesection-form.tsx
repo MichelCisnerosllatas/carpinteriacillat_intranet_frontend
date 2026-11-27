@@ -13,8 +13,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { ENTITY_STATES } from '@/shared/config/entity-states'
+import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
@@ -23,9 +22,9 @@ import { useTypeSectionListStore } from '../../stores/useTypeSectionListStore'
 import { useTypeSectionFormStore } from '../../stores/useTypeSectionFormStore'
 
 const schema = z.object({
-  typesection_name:        z.string().min(1, 'El nombre es requerido.').max(255),
-  typesection_description: z.string().optional(),
-  typesection_state:       z.number(),
+  typesection_name:              z.string().min(1, 'El nombre es requerido.').max(255),
+  typesection_description:       z.string().optional(),
+  typesection_state:             z.number(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -39,15 +38,18 @@ export function TypeSectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { typesection_name: '', typesection_description: '', typesection_state: 1 },
+    defaultValues: {
+      typesection_name: '', typesection_description: '',
+      typesection_state: 1,
+    },
   })
 
   useEffect(() => {
     if (isEdit && resolved) {
       form.reset({
-        typesection_name:        resolved.name,
-        typesection_description: resolved.description ?? '',
-        typesection_state:       resolved.stateValue,
+        typesection_name:              resolved.name,
+        typesection_description:       resolved.description ?? '',
+        typesection_state:             resolved.stateValue,
       })
     }
   }, [isEdit, resolved?.id])
@@ -62,8 +64,18 @@ export function TypeSectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
     if (!confirmed) return
 
     const success = isEdit
-      ? await update(resolved!.id, { typesection_name: values.typesection_name, typesection_description: values.typesection_description ?? '', typesection_state: values.typesection_state, typesection_updated_at: formatDatetime() })
-      : await create({ typesection_name: values.typesection_name, typesection_description: values.typesection_description, typesection_state: values.typesection_state, typesection_created_at: formatDatetime() })
+      ? await update(resolved!.id, {
+          typesection_name: values.typesection_name,
+          typesection_description: values.typesection_description ?? '',
+          typesection_state: values.typesection_state,
+          typesection_updated_at: formatDatetime(),
+        })
+      : await create({
+          typesection_name: values.typesection_name,
+          typesection_description: values.typesection_description,
+          typesection_state: values.typesection_state,
+          typesection_created_at: formatDatetime(),
+        })
 
     if (success) {
       await swalSuccess(isEdit ? 'Actualizado' : 'Creado', values.typesection_name)
@@ -86,16 +98,11 @@ export function TypeSectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: st
               </FormItem>
             )} />
             <FormField control={form.control} name="typesection_state" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Estado</FormLabel>
-                <Select key={`state-${field.value}`} value={String(field.value)} onValueChange={(v) => field.onChange(Number(v))}>
-                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {ENTITY_STATES.map((s) => (
-                      <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <FormItem className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <FormLabel className="font-normal">Mostrar en el sitio web</FormLabel>
+                <FormControl>
+                  <VisibilityToggle checked={field.value === 1} onCheckedChange={(v) => field.onChange(v ? 1 : 0)} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />

@@ -1,0 +1,182 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { LoaderCircle, Navigation2 } from 'lucide-react'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { swalConfirm } from '@/shared/lib/swal'
+import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { navigationsService } from '../../../services/navigations.service'
+import { useNavigationReorderStore } from '../../../stores/useNavigationReorderStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
+import type { ReorderItem } from './types'
+import { SortableRow } from './sortable-row'
+
+export function NavigationsReorderList() {
+  const router = useRouter()
+  const canReorder = useCan('navigations.reorder')
+  const { isSubmitting, confirm } = useNavigationReorderStore()
+
+  const [items, setItems]           = useState<ReorderItem[]>([])
+  const [originalIds, setOriginalIds] = useState<number[]>([])
+  const [isLoading, setIsLoading]   = useState(true)
+  const [isError, setIsError]       = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setIsLoading(true)
+    navigationsService.getForSelect()
+      .then((res) => {
+        if (cancelled) return
+        if (!res.success) { setIsError(true); return }
+        const sorted = [...res.data].sort((a, b) => (a.navigation_order ?? 0) - (b.navigation_order ?? 0))
+        const mapped = sorted.map((n) => ({
+          id: n.id_navigation, name: n.navigation_name, url: n.navigation_url, stateValue: n.navigation_state,
+        }))
+        setItems(mapped)
+        setOriginalIds(mapped.map((i) => i.id))
+      })
+      .catch(() => { if (!cancelled) setIsError(true) })
+      .finally(() => { if (!cancelled) setIsLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  // PointerSensor cubre mouse; TouchSensor aparte con activación por demora (en vez de
+  // distancia) para que intentar hacer scroll no dispare un arrastre por error en touch;
+  // KeyboardSensor para reordenar con flechas sin necesidad de arrastrar.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setItems((prev) => {
+      const oldIdx = prev.findIndex((i) => i.id === active.id)
+      const newIdx = prev.findIndex((i) => i.id === over.id)
+      return arrayMove(prev, oldIdx, newIdx)
+    })
+  }
+
+  // Alternativa al arrastre que siempre funciona, sin depender de dnd-kit ni del handle.
+  const moveItem = (id: number, direction: -1 | 1) => {
+    setItems((prev) => {
+      const idx = prev.findIndex((i) => i.id === id)
+      const newIdx = idx + direction
+      if (idx < 0 || newIdx < 0 || newIdx >= prev.length) return prev
+      return arrayMove(prev, idx, newIdx)
+    })
+  }
+
+  const currentIds = items.map((i) => i.id)
+  const hasChanges = currentIds.some((id, idx) => id !== originalIds[idx])
+
+  const handleConfirm = async () => {
+    const confirmed = await swalConfirm({
+      title: '¿Confirmar nuevo orden?',
+      text: `Se actualizará el orden de ${items.length} navegación(es).`,
+      confirmText: 'Sí, confirmar',
+      cancelText: 'Cancelar',
+    })
+    if (!confirmed) return
+
+    const ok = await confirm(currentIds)
+    if (ok) {
+      toastSuccess('Orden actualizado', 'El nuevo orden se guardó correctamente.')
+      router.push('/navigations')
+    } else {
+      toastError('Error', 'No se pudo actualizar el orden.')
+    }
+  }
+
+  // Sin permiso de reordenar solo mostramos un aviso (ver ROLES_Y_PERMISOS.md)
+  if (!canReorder) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground">
+        No tienes permiso para reordenar.
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[300px] flex-col items-center justify-center">
+        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Cargando navegaciones...</p>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
+        <p className="text-sm font-semibold">Error al cargar navegaciones</p>
+        <Button size="sm" variant="outline" onClick={() => router.refresh()}>Reintentar</Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-1 flex-col gap-4">
+      <Card>
+        <CardContent className="flex flex-col gap-3 pt-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Navigation2 className="size-4" />
+            Arrastra los ítems para cambiar el orden. Nada se guarda hasta que confirmes.
+          </div>
+
+          {items.length === 0 ? (
+            <div className="flex min-h-[120px] items-center justify-center text-sm text-muted-foreground">
+              No hay navegaciones para reordenar.
+            </div>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="flex flex-col gap-2">
+                  {items.map((item, idx) => (
+                    <SortableRow
+                      key={item.id}
+                      item={item}
+                      onMoveUp={idx > 0 ? () => moveItem(item.id, -1) : undefined}
+                      onMoveDown={idx < items.length - 1 ? () => moveItem(item.id, 1) : undefined}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center justify-end gap-3">
+        <Button type="button" variant="outline" onClick={() => router.push('/navigations')} disabled={isSubmitting}>
+          Cancelar
+        </Button>
+        <Button type="button" disabled={!hasChanges || isSubmitting} onClick={handleConfirm} className="min-w-36">
+          {isSubmitting
+            ? <><LoaderCircle className="mr-2 size-4 animate-spin" />Guardando...</>
+            : 'Confirmar orden'}
+        </Button>
+      </div>
+    </div>
+  )
+}

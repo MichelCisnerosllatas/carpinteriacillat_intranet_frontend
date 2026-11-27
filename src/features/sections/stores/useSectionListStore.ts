@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { sectionsService } from '../services/sections.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { SectionListRequestDto, SectionJoinApiItem } from '../model/sectionget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -31,19 +31,47 @@ type Action = {
 
 const defaultFilters: SectionListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
-const mapFromApi = (item: SectionJoinApiItem): Section => {
-  const stateOpt = getStateOption(item.section_state)
-  const typesectionStateOpt = item.type_section ? getStateOption(item.type_section.typesection_state) : null
-  const navigationStateOpt = item.navigation ? getStateOption(item.navigation.navigation_state) : null
+/** Exportado para que `useSectionAppearanceStore` (tab "Apariencia" de Configuración) reutilice el mismo mapeo sin duplicarlo. */
+export const mapSectionFromApi = (item: SectionJoinApiItem): Section => {
+  const stateOpt = getVisibilityStateOption(item.section_state)
+  const typesectionStateOpt = item.type_section ? getVisibilityStateOption(item.type_section.typesection_state) : null
+  const navigationStateOpt = item.navigation ? getVisibilityStateOption(item.navigation.navigation_state) : null
   return {
     id: item.id_section,
     name: item.section_name,
+    key: item.section_key,
     title: item.section_title,
+    subtitle: item.section_subtitle,
     description: item.section_description,
     content: item.section_content,
+    variant: item.section_variant,
     idTypesection: item.type_section?.id_typesection ?? 0,
+    typesectionKey: item.type_section?.typesection_key ?? null,
     typesectionName: item.type_section?.typesection_name ?? '',
     typesectionDescription: item.type_section?.typesection_description ?? null,
+    // `web_settings` ausente (backend viejo, o una sección creada a mano sin fila de settings
+    // todavía) = tratar como "todo permitido/visible", para no ocultar tabs/acciones por error
+    // solo porque no hay config técnica cargada para esta sección puntual.
+    tabInfo: item.web_settings?.tab_info ?? true,
+    tabImages: item.web_settings?.tab_images ?? true,
+    tabButtons: item.web_settings?.tab_buttons ?? true,
+    tabItems: item.web_settings?.tab_items ?? true,
+    tabWorks: item.web_settings?.tab_works ?? false,
+    imagesAdd: item.web_settings?.images_add ?? true,
+    imagesReorder: item.web_settings?.images_reorder ?? true,
+    imagesDelete: item.web_settings?.images_delete ?? true,
+    buttonsAdd: item.web_settings?.buttons_add ?? true,
+    buttonsReorder: item.web_settings?.buttons_reorder ?? true,
+    buttonsDelete: item.web_settings?.buttons_delete ?? true,
+    itemsAdd: item.web_settings?.items_add ?? true,
+    itemsReorder: item.web_settings?.items_reorder ?? true,
+    itemsDelete: item.web_settings?.items_delete ?? true,
+    // Apariencia: el catálogo y los valores los manda el backend (vacíos si no vienen)
+    displaySettings: item.display_settings ?? {},
+    displaySettingsSchema: {
+      groups: item.display_settings_schema?.groups ?? [],
+      fields: item.display_settings_schema?.fields ?? [],
+    },
     typesectionStateValue: item.type_section?.typesection_state ?? null,
     typesectionStateLabel: typesectionStateOpt?.label ?? null,
     typesectionStateBadge: typesectionStateOpt?.badge ?? null,
@@ -76,11 +104,11 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
   setCurrentItem: (item) => set({ currentItem: item }),
 
   loadById: async (id) => {
-    set({ isFetching: true, isError: false, message: null })
+    set({ isFetching: true })
     try {
       const response = await sectionsService.getById(id)
       if (!response.success) throw new Error(response.message)
-      const mapped = mapFromApi(response.data)
+      const mapped = mapSectionFromApi(response.data)
       set({ isFetching: false, currentItem: mapped, hasLoaded: true })
       return true
     } catch (error: any) {
@@ -93,14 +121,14 @@ export const useSectionListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await sectionsService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
       set({
         hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
         message: response.message,
-        items: response.data.map(mapFromApi),
+        items: response.data.map(mapSectionFromApi),
         links: response.links, meta: response.meta,
         filters: { ...nextFilters, page: response.meta?.current_page ?? nextFilters.page, per_page: response.meta?.per_page ?? nextFilters.per_page },
       })

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -42,7 +43,7 @@ export const companyBankAccountsColumns: ColumnDef<CompanyBankAccount>[] = [
         <div className="flex min-w-[240px] items-center gap-3 py-1.5">
           <BankLogo logo={logo} />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium leading-none text-foreground">{bank}</span>
+            <Link href={`/company-bank-accounts/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{bank}</Link>
             <span className="font-mono text-xs text-muted-foreground">{accountNumber}</span>
             {accountType && (
               <span className="truncate text-xs text-muted-foreground">{accountType}</span>
@@ -53,6 +54,7 @@ export const companyBankAccountsColumns: ColumnDef<CompanyBankAccount>[] = [
     },
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Cuenta' },
   },
 
   {
@@ -63,7 +65,7 @@ export const companyBankAccountsColumns: ColumnDef<CompanyBankAccount>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[90px]' },
+    meta: { className: 'w-[90px]', label: 'Moneda' },
   },
 
   {
@@ -72,7 +74,7 @@ export const companyBankAccountsColumns: ColumnDef<CompanyBankAccount>[] = [
     cell: ({ row }) => <span className="text-xs text-muted-foreground">{row.original.order}</span>,
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[80px]' },
+    meta: { className: 'w-[80px]', label: 'Orden' },
   },
 
   {
@@ -88,7 +90,7 @@ export const companyBankAccountsColumns: ColumnDef<CompanyBankAccount>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -110,12 +112,12 @@ export const companyBankAccountsColumns: ColumnDef<CompanyBankAccount>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: CompanyBankAccountsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

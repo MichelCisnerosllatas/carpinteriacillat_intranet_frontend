@@ -68,9 +68,4 @@ export const SALE_PAYMENT_STATUS_OPTIONS: SalePaymentStatusOption[] = [
 
 export const getSalePaymentStatusOption = (value: SalePaymentStatus): SalePaymentStatusOption => SALE_PAYMENT_STATUS_OPTIONS.find((s) => s.value === value) ?? SALE_PAYMENT_STATUS_OPTIONS[0]
 
-export const SALE_CURRENCIES = [
-  { value: 'PEN', label: 'PEN — Soles' },
-  { value: 'USD', label: 'USD — Dólares' },
-]
-
 export const formatSaleCurrency = (value: number, currency: string) => `${currency} ${value.toFixed(2)}`

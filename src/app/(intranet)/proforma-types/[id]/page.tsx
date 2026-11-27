@@ -11,7 +11,7 @@ export default async function ProformaTypeDetailPage({ params }: { params: Promi
     <>
       <Header fixed title="Detalle de Tipo de Proforma" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ProformaTypesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ProformaTypesBreadcrumb currentPage="Detalle" showHeader={true} />
         <ProformaTypeDetail id={id} />
       </main>
     </>

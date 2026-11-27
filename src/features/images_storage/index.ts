@@ -1,7 +1,7 @@
 export { useStorageGalleryStore } from './stores/useStorageGalleryStore'
 export { useStorageActionStore }  from './stores/useStorageActionStore'
 export { storageService }         from './services/storage.service'
-export { StorageGallery }         from './ui/gallery/storage-gallery'
+export { StorageGallery } from './ui/gallery/storage-gallery/storage-gallery'
 export { StorageCard }            from './ui/gallery/storage-card'
 export { StorageDetailDialog }    from './ui/dialogs/storage-detail-dialog'
 export { StorageActionDialog }    from './ui/dialogs/storage-action-dialog'

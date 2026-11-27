@@ -8,12 +8,17 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useNavigationListStore } from '../../stores/useNavigationListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function NavigationDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('navigations.update')
   const { currentItem, items, setCurrentItem } = useNavigationListStore()
 
   useEffect(() => {
@@ -25,9 +30,21 @@ export function NavigationDetail({ id }: { id: string }) {
   }, [id, currentItem, items])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : null
+
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'navigation',
+    id: item!.id,
+    fields: {
+      navigation_name: item!.name,
+      navigation_url: item!.url ?? '',
+      navigation_order: item!.order ?? 9999,
+      navigation_state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
 
   return (
     <div className="flex max-w-lg flex-col gap-4">
@@ -42,9 +59,11 @@ export function NavigationDetail({ id }: { id: string }) {
               {item.url && <p className="text-sm text-muted-foreground">{item.url}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/navigations/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/navigations/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

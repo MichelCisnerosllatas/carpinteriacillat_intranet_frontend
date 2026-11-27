@@ -11,7 +11,7 @@ export default async function ContactMessageDetailPage({ params }: { params: Pro
     <>
       <Header fixed title="Detalle de Mensaje" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <ContactMessagesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <ContactMessagesBreadcrumb currentPage="Detalle" showHeader={true} />
         <ContactMessageDetail id={id} />
       </main>
     </>

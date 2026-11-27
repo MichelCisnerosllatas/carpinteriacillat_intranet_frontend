@@ -23,6 +23,10 @@ export const userSchema = z.object({
   lastName: z.string(),
   username: z.string(),
   email: z.string(),
+  /** Correo guardado en `persons` — normalmente igual a `email` (la de login), salvo casos raros. */
+  personEmail: z.string().nullable(),
+  /** 'password' (creado desde el módulo de usuarios) o 'google' (aprobado desde Accesos Google) — decide si el form de edición muestra el input de contraseña. */
+  authProvider: z.string(),
 
   // Documento
   typeDocName: z.string(),
@@ -36,6 +40,11 @@ export const userSchema = z.object({
   statusLabel: z.string(),
   role: userRoleSchema,
   roleLabel: z.string(),
+
+  // Sucursales: allBranches = trabaja en todas; si no, las asignadas (branches).
+  allBranches: z.boolean(),
+  defaultBranchId: z.number().nullable(),
+  branches: z.array(z.object({ id: z.number(), name: z.string(), isDefault: z.boolean() })),
 
   // Fechas
   createdAt: z.string(),

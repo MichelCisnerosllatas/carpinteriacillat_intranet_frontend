@@ -49,7 +49,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[120px]' },
+    meta: { className: 'min-w-[120px]', label: 'Código' },
   },
 
   {
@@ -63,7 +63,27 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[180px]' },
+    meta: { className: 'min-w-[180px]', label: 'Cliente' },
+  },
+
+  {
+    id: 'seller',
+    accessorFn: (row) => row.sellerName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Vendedor" />,
+    cell: ({ row }) => <span className="text-sm">{row.original.sellerName ?? '—'}</span>,
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'min-w-[140px]', label: 'Vendedor' },
+  },
+
+  {
+    id: 'branch',
+    accessorFn: (row) => row.branchName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Sucursal" />,
+    cell: ({ row }) => <span className="text-sm">{row.original.branchName ?? '—'}</span>,
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'min-w-[140px]', label: 'Sucursal' },
   },
 
   {
@@ -74,7 +94,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px]' },
+    meta: { className: 'w-[130px]', label: 'Fecha de emisión' },
   },
 
   {
@@ -90,7 +110,7 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -103,12 +123,12 @@ export const proformasColumns: ColumnDef<Proforma>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px] text-right' },
+    meta: { className: 'w-[130px] text-right', label: 'Total' },
   },
 
   {
     id: 'actions',
     cell: ProformasRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

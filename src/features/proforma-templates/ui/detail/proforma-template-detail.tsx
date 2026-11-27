@@ -16,10 +16,8 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
-import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
-import { FieldTip } from '@/shared/ui/field-tip'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
 import { useProformaTypeSelectStore } from '@/features/proforma-types'
@@ -28,39 +26,13 @@ import {
   useProformaTemplateTextDraftStore,
   useProformaTemplateTextListStore,
 } from '@/features/proforma-template-texts'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { useProformaTemplateListStore } from '../../stores/useProformaTemplateListStore'
 import { SECTION_GROUPS } from '../../data/data'
 import { useSavedTemplatePreview } from '../preview/use-saved-template-preview'
 import { TemplatePreviewCard } from '../preview/template-preview-card'
 import NProgress from 'nprogress'
-
-// Fila de solo lectura para un toggle de `sections` — mismo texto/tooltip que su versión
-// editable en sections-tab.tsx, pero sin Switch interactivo (para eso está "Editar").
-function ReadOnlySectionToggle({
-  label,
-  tip,
-  checked,
-}: {
-  label: string
-  tip: string
-  checked: boolean
-}) {
-  return (
-    <div className="flex flex-row items-center justify-between gap-2 rounded-md border p-3">
-      <span className="text-sm font-normal">
-        <FieldTip label={label} tip={tip} />
-      </span>
-      <div className="flex items-center gap-2">
-        <span
-          className={cn('text-xs', checked ? 'text-primary font-medium' : 'text-muted-foreground')}
-        >
-          {checked ? 'Visible' : 'Oculto'}
-        </span>
-        <Switch checked={checked} disabled />
-      </div>
-    </div>
-  )
-}
+import { ReadOnlySectionToggle } from './read-only-section-toggle'
 
 export function ProformaTemplateDetail({ id }: { id: string }) {
   const router = useRouter()
@@ -68,6 +40,9 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
   const { load: loadProformaTypes } = useProformaTypeSelectStore()
   const { setFromExisting } = useProformaTemplateTextDraftStore()
   const { loadByTemplateText } = useProformaTemplateTextListStore()
+  // Botones "Nueva" y "Editar" según permisos (ver ROLES_Y_PERMISOS.md)
+  const canCreate = useCan('proforma_templates.create')
+  const canUpdate = useCan('proforma_templates.update')
 
   useEffect(() => {
     if (!currentItem || String(currentItem.id) !== id) {
@@ -134,6 +109,7 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
+                {canCreate && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -150,6 +126,8 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
                   </TooltipTrigger>
                   <TooltipContent>Crear una plantilla nueva</TooltipContent>
                 </Tooltip>
+                )}
+                {canUpdate && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -166,6 +144,7 @@ export function ProformaTemplateDetail({ id }: { id: string }) {
                   </TooltipTrigger>
                   <TooltipContent>Editar esta plantilla</TooltipContent>
                 </Tooltip>
+                )}
               </div>
             </div>
           </CardContent>

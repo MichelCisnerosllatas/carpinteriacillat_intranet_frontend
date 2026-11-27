@@ -38,6 +38,7 @@ const mapFromApi = (item: ProformaTypeApiItem): ProformaType => {
     id: item.id,
     name: item.name,
     code: item.code,
+    description: item.description ?? null,
     status: item.status === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.status,
@@ -59,7 +60,7 @@ export const useProformaTypeListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await proformaTypesService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

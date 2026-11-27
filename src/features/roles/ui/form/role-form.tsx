@@ -29,12 +29,13 @@ import {
 } from '@/shared/ui/select'
 
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
+import { toastSuccess } from '@/shared/lib/toast'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
 import { useRoleFormStore } from '@/features/roles/stores/useRoleFormStore'
-import { AlertError } from '@/widgets/alerts_components'
+import { AlertError, AlertWarning } from '@/widgets/alerts_components'
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
@@ -96,44 +97,61 @@ export function RoleForm({ mode, id }: RoleFormProps) {
     })
     if (!confirmed) return
 
-    let success: boolean
-
+    // ── Crear: al terminar, se va directo a configurar los permisos del rol nuevo ──
     if (!isEdit) {
-      success = await create({
+      const newRoleId = await create({
         role_name:        values.role_name,
         role_description: values.role_description,
         role_state:       String(values.role_state),
         role_created_at:  formatDatetime(),
       })
-    } else {
-      if (!resolvedRole?.id) {
-        await swalError('Error', 'No se encontraron los datos del rol a editar.')
+
+      if (newRoleId === null) {
+        applyApiErrors(form, useRoleFormStore.getState().fieldErrors)
         return
       }
 
-      success = await update({
-        id: resolvedRole.id,
-        data: {
-          role_name:        values.role_name,
-          role_description: values.role_description ?? '',
-          role_state:       values.role_state,
-          role_updated_at:  formatDatetime(),
-        },
-      })
+      // Un rol nuevo empieza SIN permisos: se abre su pantalla de permisos para configurarlo.
+      toastSuccess('Rol creado', 'Ahora configura sus permisos.')
+      router.push(`/roles/${newRoleId}/permissions`)
+      return
     }
 
+    // ── Editar: igual que siempre, vuelve a la lista ──
+    if (!resolvedRole?.id) {
+      await swalError('Error', 'No se encontraron los datos del rol a editar.')
+      return
+    }
+
+    const success = await update({
+      id: resolvedRole.id,
+      data: {
+        role_name:        values.role_name,
+        role_description: values.role_description ?? '',
+        role_state:       values.role_state,
+        role_updated_at:  formatDatetime(),
+      },
+    })
+
     if (success) {
-      await swalSuccess(
-        isEdit ? 'Rol actualizado' : 'Rol creado',
-        values.role_name
-      )
+      await swalSuccess('Rol actualizado', values.role_name)
       router.push('/roles')
     } else {
-      applyApiErrors(form, fieldErrors)
+      applyApiErrors(form, useRoleFormStore.getState().fieldErrors)
     }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  // Los roles del sistema (superadmin) no se editan: el backend respondería 403.
+  if (isEdit && resolvedRole?.isSystem) {
+    return (
+      <AlertWarning
+        title="Rol del sistema"
+        message={`"${resolvedRole.name}" es un rol del sistema y no se puede editar.`}
+      />
+    )
+  }
 
   return (
     <Form {...form}>

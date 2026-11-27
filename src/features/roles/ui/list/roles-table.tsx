@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -15,18 +13,25 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { useRoleListStore } from '@/features/roles/stores/useRoleListStore'
 import { useRoleDeleteStore } from '@/features/roles/stores/useRoleDeleteStore'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { RolesError } from '../roles-error'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 import { rolesColumns } from './roles-columns'
 
 export function RolesTable() {
   const { roles, meta, filters, hasLoaded, isInitialLoading, isFetching, isError, message, load, reset } =
     useRoleListStore()
   const { bulkToggleState, bulkDeleteItems } = useRoleDeleteStore()
+
+  // Permisos para las acciones masivas (sin permiso → no se muestra el botón)
+  const canChangeState = useCan('roles.state')
+  const canDelete = useCan('roles.delete')
 
   const [rowSelection, setRowSelection]     = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -93,7 +98,8 @@ export function RolesTable() {
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    // Los roles del sistema (superadmin) quedan fuera de las acciones masivas
+    enableRowSelection: (row) => !row.original.isSystem,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -116,13 +122,21 @@ export function RolesTable() {
     void load({ search: '', state: undefined, date_from: '', date_to: '', page: 1 }).finally(() => setIsUserFetching(false))
   }
 
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || state !== 'all' || dateFrom !== '' || dateTo !== ''
+
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
     try {
       const ids = selectedRows.map((r) => r.original.id)
       const ok = await bulkToggleState(ids, 1)
       if (ok) { toastSuccess('Roles activados', `${selectedCount} rol(es) activado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron activar todos los roles.')
+      else toastError('Error', useRoleDeleteStore.getState().error ?? 'No se pudieron activar todos los roles.')
     } finally { setIsBulkLoading(false) }
   }
 
@@ -132,7 +146,7 @@ export function RolesTable() {
       const ids = selectedRows.map((r) => r.original.id)
       const ok = await bulkToggleState(ids, 0)
       if (ok) { toastSuccess('Roles desactivados', `${selectedCount} rol(es) desactivado(s).`); table.resetRowSelection() }
-      else toastError('Error', 'No se pudieron desactivar todos los roles.')
+      else toastError('Error', useRoleDeleteStore.getState().error ?? 'No se pudieron desactivar todos los roles.')
     } finally { setIsBulkLoading(false) }
   }
 
@@ -147,7 +161,8 @@ export function RolesTable() {
           table.resetRowSelection()
           close()
         } else {
-          showError('No se pudieron eliminar todos los roles.')
+          // Ej. 409 si algún rol tiene usuarios asignados
+          showError(useRoleDeleteStore.getState().error ?? 'No se pudieron eliminar todos los roles.')
         }
       },
       { title: 'Eliminando...' }
@@ -156,10 +171,7 @@ export function RolesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[360px] flex-col items-center justify-center bg-background">
-        <LoaderCircle className="mb-3 size-9 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando roles...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
@@ -205,7 +217,12 @@ export function RolesTable() {
             <Input type="date" value={dateTo} disabled={isFetching} onChange={(e) => handleDateToChange(e.target.value)} className="h-8 w-full sm:w-[145px]" />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>Limpiar</Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -273,9 +290,9 @@ export function RolesTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canChangeState ? handleBulkActivate : undefined}
+        onDeactivate={canChangeState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

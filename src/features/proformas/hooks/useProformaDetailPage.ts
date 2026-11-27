@@ -5,6 +5,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useProformaListStore } from '../stores/useProformaListStore'
 import { proformasService } from '../services/proformas.service'
 import { loadProformaPdf, downloadProformaPdf, refreshProforma } from '../lib/proforma-detail'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
+import { hasPermission } from '@/features/auth/hooks/usePermission'
+
+// ¿Puede ver el PDF? Se lee la sesión en el momento (no es hook) para no pedir el PDF
+// en segundo plano si el usuario no tiene 'proformas.pdf' (el backend respondería 403).
+const canLoadPdf = () => hasPermission(useAuthStore.getState().session, 'proformas.pdf')
 
 /**
  * Solo estado de React (proforma cargada, estado del PDF, tab activo) — la lógica de negocio
@@ -26,8 +32,9 @@ export function useProformaDetailPage(id: string) {
   const [isDownloading, setIsDownloading] = useState(false)
   const pdfRequestedRef = useRef(false)
 
-  const fetchPdf = (proformaId: number) =>
-    loadProformaPdf({
+  const fetchPdf = (proformaId: number) => {
+    if (!canLoadPdf()) return Promise.resolve()
+    return loadProformaPdf({
       proformaId,
       viewPdf: proformasService.viewPdf,
       onLoadingChange: setPdfLoading,
@@ -40,6 +47,7 @@ export function useProformaDetailPage(id: string) {
         })
       },
     })
+  }
 
   // Siempre se refresca contra el backend al entrar — si el usuario acaba de agregar/editar
   // líneas de detalle desde el formulario, la copia cacheada en la lista puede estar desfasada

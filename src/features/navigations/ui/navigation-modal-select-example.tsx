@@ -17,7 +17,7 @@
 import { useEffect, useState } from 'react'
 import { ModalSelect } from '@/shared/ui/modal-select'
 import { Button } from '@/shared/ui/button'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import { useNavigationModalSelectStore } from '../stores/useNavigationModalSelectStore'
 import type { NavigationApiItem } from '../model/navigationget.dto'
 
@@ -55,7 +55,7 @@ export function NavigationModalSelectExample({ value, onValueChange }: Navigatio
           { header: 'URL', cell: (navigation) => navigation.navigation_url },
           {
             header: 'Estado',
-            cell: (navigation) => getStateOption(navigation.navigation_state)?.label ?? navigation.navigation_state,
+            cell: (navigation) => getVisibilityStateOption(navigation.navigation_state)?.label ?? navigation.navigation_state,
           },
         ]}
         searchPlaceholder="Buscar navegación..."

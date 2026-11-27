@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { type Row } from '@tanstack/react-table'
 import { Eye, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
@@ -23,6 +24,10 @@ export function UserDevicesRowActions({ row }: { row: Row<UserDevice> }) {
   const router = useRouter()
   const { revoke, deleteDevice, setCurrentDevice } = useUserDeviceListStore()
   const device = row.original
+
+  // Revocar y eliminar usan el permiso 'delete' de dispositivos (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('user_devices.view')
+  const canDelete = useCan('user_devices.delete')
 
   const deviceLabel = device.deviceName ?? device.browser ?? `Dispositivo #${device.id}`
 
@@ -69,6 +74,9 @@ export function UserDevicesRowActions({ row }: { row: Row<UserDevice> }) {
     )
   }
 
+  // Si no tiene ninguna acción permitida, no mostramos el botón "..."
+  if (!canView && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -85,13 +93,15 @@ export function UserDevicesRowActions({ row }: { row: Row<UserDevice> }) {
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
 
-        {device.isActive && (
+        {canDelete && device.isActive && (
           <>
-            <DropdownMenuSeparator />
+            {canView && <DropdownMenuSeparator />}
             <DropdownMenuItem
               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
               onClick={() => void handleRevoke()}
@@ -101,13 +111,17 @@ export function UserDevicesRowActions({ row }: { row: Row<UserDevice> }) {
           </>
         )}
 
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-          onClick={() => void handleDelete()}
-        >
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canDelete && (
+          <>
+            {(canView || device.isActive) && <DropdownMenuSeparator />}
+            <DropdownMenuItem
+              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              onClick={() => void handleDelete()}
+            >
+              Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

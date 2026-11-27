@@ -12,7 +12,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     <>
       <Header fixed title="Detalle de Usuario" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <UsersBreadcrumb currentPage="Detalle de Usuario" showHeader={false} />
+        <UsersBreadcrumb currentPage="Detalle de Usuario" showHeader={true} />
         <UserDetail id={id} />
       </main>
     </>

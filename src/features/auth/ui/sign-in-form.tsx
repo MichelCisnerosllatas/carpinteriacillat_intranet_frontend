@@ -14,6 +14,8 @@ import { Input } from '@/shared/ui/input'
 import { PasswordInput } from '@/shared/ui/password-input'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
+import { getHomeUrl } from '@/features/auth/lib/home-url'
+import { GoogleLoginButton } from '@/widgets/buttonproveedor/GoogleLoginButton'
 
 const schema = z.object({
   email: z.email({ error: (i) => (i.input === '' ? 'Ingresa tu correo electrónico.' : undefined) }),
@@ -45,14 +47,15 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
       return
     }
 
-    const user = useAuthStore.getState().loginDataDTO
+    const user = useAuthStore.getState().session
 
     toastSuccess(
       'Bienvenido a la intranet',
-      `Has iniciado sesión exitosamente ${user?.person?.person_name ?? ''}`
+      `Has iniciado sesión exitosamente ${user?.user.person?.person_name ?? ''}`
     )
 
-    window.location.replace(redirectTo ?? '/dashboard')
+    // Sin redirect pendiente → su pantalla de inicio según su rol (dashboard o primer módulo permitido).
+    window.location.replace(redirectTo ?? getHomeUrl(user))
   }
 
   return (
@@ -123,6 +126,14 @@ export function SignInForm({ className, redirectTo, ...props }: SignInFormProps)
           {loadingLogin ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
           {loadingLogin ? 'Ingresando...' : 'Ingresar al sistema'}
         </Button>
+
+        <div className="relative my-1 flex items-center">
+          <div className="flex-1 border-t" />
+          <span className="mx-3 text-xs text-muted-foreground">o continúa con</span>
+          <div className="flex-1 border-t" />
+        </div>
+
+        <GoogleLoginButton redirectTo={redirectTo} />
       </form>
     </Form>
   )

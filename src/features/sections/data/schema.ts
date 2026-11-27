@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { SectionDisplaySettingsSchema } from '../model/sectionget.dto'
 
 export const sectionStatusSchema = z.union([z.literal('active'), z.literal('inactive')])
 export type SectionStatus = z.infer<typeof sectionStatusSchema>
@@ -6,12 +7,46 @@ export type SectionStatus = z.infer<typeof sectionStatusSchema>
 export const sectionSchema = z.object({
   id: z.number(),
   name: z.string(),
+  /** Solo lectura — ver `SectionApiItem.section_key`. */
+  key: z.string().nullable(),
   title: z.string().nullable(),
+  subtitle: z.string().nullable(),
   description: z.string().nullable(),
   content: z.string().nullable(),
+  variant: z.string().nullable(),
   idTypesection: z.number(),
+  typesectionKey: z.string().nullable(),
   typesectionName: z.string(),
   typesectionDescription: z.string().nullable(),
+  /**
+   * Config técnica de ESTA sección puntual (`web_settings`, tabla `section_web_setting`) —
+   * qué tabs mostrar en el detalle (ver `useTabQueryParam` en `SectionDetail`) y, para
+   * Imágenes/Botones/Items, si se puede agregar/reordenar/eliminar filas (ver
+   * `SectionDetailButtonsTab`/`SectionDetailItemsTab`). Dos secciones del mismo tipo pueden
+   * tener valores distintos acá — no es config compartida por tipo.
+   */
+  tabInfo: z.boolean(),
+  tabImages: z.boolean(),
+  tabButtons: z.boolean(),
+  tabItems: z.boolean(),
+  // Pestaña "Trabajos" (web_works) — solo «Galería» y «Restauración» (ver section-works.config.ts)
+  tabWorks: z.boolean(),
+  imagesAdd: z.boolean(),
+  imagesReorder: z.boolean(),
+  imagesDelete: z.boolean(),
+  buttonsAdd: z.boolean(),
+  buttonsReorder: z.boolean(),
+  buttonsDelete: z.boolean(),
+  itemsAdd: z.boolean(),
+  itemsReorder: z.boolean(),
+  itemsDelete: z.boolean(),
+  /**
+   * Apariencia: qué muestra la web de esta sección (`section_display_setting`, ver pestaña
+   * "Apariencia" de Configuración). Valores ya resueltos por el backend { clave: valor }.
+   */
+  displaySettings: z.record(z.string(), z.unknown()),
+  /** Catálogo de la apariencia (lo manda el backend, config/section_display/*.php). Tal cual llega de la API. */
+  displaySettingsSchema: z.custom<SectionDisplaySettingsSchema>(),
   typesectionStateValue: z.number().nullable(),
   typesectionStateLabel: z.string().nullable(),
   typesectionStateBadge: z.string().nullable(),

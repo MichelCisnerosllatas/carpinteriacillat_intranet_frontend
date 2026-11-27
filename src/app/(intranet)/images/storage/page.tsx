@@ -1,14 +1,19 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
+import { ModuleDownloadIndicator } from '@/widgets/header/module-download-indicator'
 import { HardDrive } from 'lucide-react'
-import { StorageGallery } from '@/features/images_storage/ui/gallery/storage-gallery'
+import {
+  StorageGallery,
+} from '@/features/images_storage/ui/gallery/storage-gallery/storage-gallery'
 
 export const metadata: Metadata = { title: 'Almacenamiento — Imágenes' }
 
 export default function ImageStoragePage() {
   return (
     <>
-      <Header fixed title="Almacenamiento del Servidor" />
+      <Header fixed title="Almacenamiento del Servidor">
+        <ModuleDownloadIndicator route="/images/storage" />
+      </Header>
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
         <div>
           <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight">

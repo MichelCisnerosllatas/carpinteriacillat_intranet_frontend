@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { CalendarDays, Pencil, SortAsc } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
@@ -12,15 +13,7 @@ import { getStateOption } from '@/shared/config/entity-states'
 import { useCompanyBankAccountListStore } from '../../stores/useCompanyBankAccountListStore'
 import { BankLogo } from '../list/bank-logo'
 import NProgress from 'nprogress'
-
-function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-0.5">
-      <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium">{value ?? '—'}</span>
-    </div>
-  )
-}
+import { DetailRow } from './detail-row'
 
 export function CompanyBankAccountDetail({ id }: { id: string }) {
   const router = useRouter()
@@ -61,14 +54,17 @@ export function CompanyBankAccountDetail({ id }: { id: string }) {
                 </Badge>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={() => { NProgress.start(); router.push(`/company-bank-accounts/edit/${item.id}`) }}
-            >
-              <Pencil className="mr-1 size-4" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar */}
+            <Can permission="company_bank_accounts.update">
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => { NProgress.start(); router.push(`/company-bank-accounts/edit/${item.id}`) }}
+              >
+                <Pencil className="mr-1 size-4" />Editar
+              </Button>
+            </Can>
           </div>
         </CardContent>
       </Card>

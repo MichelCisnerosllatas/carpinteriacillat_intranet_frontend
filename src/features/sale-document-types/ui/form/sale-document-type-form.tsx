@@ -9,9 +9,10 @@ import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { swalConfirm, swalError, swalSuccess } from '@/shared/lib/swal'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
@@ -24,6 +25,7 @@ const schema = z.object({
   name:   z.string().min(1, 'El nombre es requerido.').max(100),
   code:   z.string().max(10).optional(),
   series: z.string().min(1, 'La serie es requerida.').max(10),
+  description: z.string().optional(),
   status: z.number(),
 })
 
@@ -38,7 +40,7 @@ export function SaleDocumentTypeForm({ mode, id }: { mode: 'create' | 'edit'; id
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', code: '', series: '', status: 1 },
+    defaultValues: { name: '', code: '', series: '', description: '', status: 1 },
   })
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function SaleDocumentTypeForm({ mode, id }: { mode: 'create' | 'edit'; id
         name:   resolved.name,
         code:   resolved.code ?? '',
         series: resolved.series,
+        description: resolved.description ?? '',
         status: resolved.stateValue,
       })
     }
@@ -62,8 +65,8 @@ export function SaleDocumentTypeForm({ mode, id }: { mode: 'create' | 'edit'; id
     if (!confirmed) return
 
     const success = isEdit
-      ? await update(resolved!.id, { name: values.name, code: values.code, series: values.series, status: values.status })
-      : await create({ name: values.name, code: values.code, series: values.series, status: values.status })
+      ? await update(resolved!.id, { name: values.name, code: values.code, series: values.series, description: values.description?.trim() || null, status: values.status })
+      : await create({ name: values.name, code: values.code, series: values.series, description: values.description?.trim() || null, status: values.status })
 
     if (success) {
       await swalSuccess(isEdit ? 'Actualizado' : 'Creado', values.name)
@@ -110,6 +113,14 @@ export function SaleDocumentTypeForm({ mode, id }: { mode: 'create' | 'edit'; id
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descripción</FormLabel>
+                <FormControl><Textarea placeholder="Para qué sirve este tipo..." className="resize-none" rows={3} {...field} /></FormControl>
+                <FormDescription>Nota interna: no se muestra a los clientes.</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />

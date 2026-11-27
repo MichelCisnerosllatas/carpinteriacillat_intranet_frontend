@@ -15,9 +15,13 @@ import { useContactMessageListStore } from '../../stores/useContactMessageListSt
 import { useContactMessageStatusStore } from '../../stores/useContactMessageStatusStore'
 import { useContactMessageDeleteStore } from '../../stores/useContactMessageDeleteStore'
 import type { ContactMessageStatus } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ContactMessageDetail({ id }: { id: string }) {
   const router = useRouter()
+  // Botones según permisos (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('contact_messages.state')
+  const canDelete = useCan('contact_messages.delete')
   const { currentItem, items, setCurrentItem, loadById } = useContactMessageListStore()
   const { updateStatus, isSubmitting } = useContactMessageStatusStore()
   const { deleteItem } = useContactMessageDeleteStore()
@@ -128,15 +132,17 @@ export function ContactMessageDetail({ id }: { id: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
-          {otherStatuses.map((status) => (
+          {canState && otherStatuses.map((status) => (
             <Button key={status} variant="outline" size="sm" disabled={isSubmitting} onClick={() => void handleChangeStatus(status)}>
               {statusIcon[status]}Marcar {getContactMessageStatusOption(status).label}
             </Button>
           ))}
         </div>
-        <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" onClick={() => void handleDelete()}>
-          <Trash2 className="size-4 mr-1" />Eliminar
-        </Button>
+        {canDelete && (
+          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" onClick={() => void handleDelete()}>
+            <Trash2 className="size-4 mr-1" />Eliminar
+          </Button>
+        )}
       </div>
     </div>
   )

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Users2 } from 'lucide-react'
 import { ClientsTable } from '@/features/clients/ui/list/clients-table'
 
@@ -17,9 +18,12 @@ export default function ClientsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Clientes</h2>
             <p className="text-muted-foreground">Clientes comerciales que reciben proformas</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/clients/create"><Users2 size={18} /><span>Nuevo Cliente</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="clients.create">
+            <Button asChild className="space-x-1">
+              <Link href="/clients/create"><Users2 size={18} /><span>Nuevo Cliente</span></Link>
+            </Button>
+          </Can>
         </div>
         <ClientsTable />
       </main>

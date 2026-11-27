@@ -1,17 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import {
-  Globe,
-  HardDrive,
-  Loader2,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Terminal,
-  Wifi,
-  WifiOff,
-} from 'lucide-react'
+import { Loader2, Wifi, WifiOff } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
@@ -19,17 +9,8 @@ import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirm } from '@/shared/lib/swal'
 import { useMyDevicesStore } from '../../stores/useMyDevicesStore'
 import { UserDevicesError } from '../user-devices-error'
-import type { UserDevice, DeviceType } from '../../data/schema'
-
-function DeviceIcon({ type, platform }: { type: DeviceType; platform: UserDevice['platform'] }) {
-  const cls = 'size-5 text-muted-foreground'
-  if (platform === 'ios' || platform === 'android') return <Smartphone className={cls} />
-  if (type === 'tablet')  return <Tablet className={cls} />
-  if (type === 'desktop') return <Monitor className={cls} />
-  if (type === 'api')     return <Terminal className={cls} />
-  if (platform === 'web') return <Globe className={cls} />
-  return <HardDrive className={cls} />
-}
+import type { UserDevice } from '../../data/schema'
+import { DeviceIcon } from './device-icon'
 
 function deviceDisplayName(device: UserDevice): string {
   if (device.deviceName) return device.deviceName

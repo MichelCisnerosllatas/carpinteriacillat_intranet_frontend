@@ -20,7 +20,8 @@ type UpdateParams = {
 }
 
 type Action = {
-  create: (params: CreateParams) => Promise<boolean>
+  /** Devuelve el id del rol creado (para ir a sus permisos) o null si falló. */
+  create: (params: CreateParams) => Promise<number | null>
   update: (params: UpdateParams) => Promise<boolean>
   reset: () => void
 }
@@ -42,19 +43,20 @@ export const useRoleFormStore = create<State & Action>((set) => ({
           error: response.message || 'No se pudo crear el rol.',
           fieldErrors: response.errors ?? null,
         })
-        return false
+        return null
       }
 
       await useRoleListStore.getState().load()
       set({ isSubmitting: false })
-      return true
+      // El backend devuelve el rol creado; su id sirve para abrir /roles/{id}/permissions
+      return response.data?.id_role ?? null
     } catch (error: any) {
       set({
         isSubmitting: false,
         error: error?.response?.data?.message ?? error?.message ?? 'Error al crear el rol.',
         fieldErrors: error?.response?.data?.errors ?? null,
       })
-      return false
+      return null
     }
   },
 

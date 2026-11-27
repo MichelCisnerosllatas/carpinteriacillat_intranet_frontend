@@ -2,6 +2,7 @@
 export const AUTH_ENDPOINTS = {
   v1 : {
     login: '/v1/intranet/auth/login',
+    loginWithGoogle: '/v1/intranet/auth/google',
     verify: '/v1/intranet/auth/verify',
     refresh: '/v1/intranet/auth/refresh',
     forgotPassword: '/v1/intranet/auth/forgot-password',

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Package } from 'lucide-react'
 import { ProductsServicesTable } from '@/features/products-services/ui/list/products-services-table'
 
@@ -17,9 +18,12 @@ export default function ProductsServicesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Productos y Servicios</h2>
             <p className="text-muted-foreground">Catálogo de ítems facturables para proformas</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/products-services/create"><Package size={18} /><span>Nuevo Producto/Servicio</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="products_services.create">
+            <Button asChild className="space-x-1">
+              <Link href="/products-services/create"><Package size={18} /><span>Nuevo Producto/Servicio</span></Link>
+            </Button>
+          </Can>
         </div>
         <ProductsServicesTable />
       </main>
