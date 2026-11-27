@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { RefreshCw, Upload } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { cn } from '@/shared/lib/utils'
 import { useImageListStore } from '../../stores/useImageListStore'
 
@@ -20,9 +21,12 @@ export function ImagesHeaderActions() {
       >
         <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
       </Button>
-      <Button asChild className="space-x-1">
-        <Link href="/images/upload"><Upload size={18} /><span>Subir</span></Link>
-      </Button>
+      {/* Solo si tiene permiso de subir imágenes (ver ROLES_Y_PERMISOS.md) */}
+      <Can permission="images.create">
+        <Button asChild className="space-x-1">
+          <Link href="/images/upload"><Upload size={18} /><span>Subir</span></Link>
+        </Button>
+      </Can>
     </div>
   )
 }

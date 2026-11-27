@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { NavigationsBreadcrumb } from '@/features/navigations/ui/navigations-breadcrumb'
-import { NavigationsReorderList } from '@/features/navigations/ui/reorder/navigations-reorder-list'
+import {
+  NavigationsReorderList,
+} from '@/features/navigations/ui/reorder/navigations-reorder-list/navigations-reorder-list'
 
 export const metadata: Metadata = { title: 'Reordenar Navegación' }
 

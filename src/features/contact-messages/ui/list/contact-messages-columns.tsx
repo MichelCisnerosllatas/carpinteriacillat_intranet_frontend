@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -37,13 +38,14 @@ export const contactMessagesColumns: ColumnDef<ContactMessage>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Remitente" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/contact-messages/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
         <span className="text-xs text-muted-foreground">{row.original.email}</span>
         {row.original.phone && <span className="text-xs text-muted-foreground">{row.original.phone}</span>}
       </div>
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Remitente' },
   },
 
   {
@@ -56,7 +58,7 @@ export const contactMessagesColumns: ColumnDef<ContactMessage>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Proyecto' },
   },
 
   {
@@ -67,6 +69,7 @@ export const contactMessagesColumns: ColumnDef<ContactMessage>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
+    meta: { label: 'Mensaje' },
   },
 
   {
@@ -82,7 +85,7 @@ export const contactMessagesColumns: ColumnDef<ContactMessage>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -98,12 +101,12 @@ export const contactMessagesColumns: ColumnDef<ContactMessage>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[150px]' },
+    meta: { className: 'w-[150px]', label: 'Fecha' },
   },
 
   {
     id: 'actions',
     cell: ContactMessagesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

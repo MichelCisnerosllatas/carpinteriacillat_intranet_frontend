@@ -11,25 +11,30 @@ import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/shared/ui/form'
+import { VisibilityToggle } from '@/shared/ui/visibility-toggle'
 import { swalConfirm, swalSuccess } from '@/shared/lib/swal'
 import { applyApiErrors } from '@/shared/lib/api-errors'
 import { formatDatetime } from '@/shared/lib/utils'
-import { ENTITY_STATES } from '@/shared/config/entity-states'
-import { AlertError } from '@/widgets/alerts_components'
+import { AlertError } from '@/widgets/alerts_components/alert-error'
 import { TypeSectionSelect } from '@/features/typesections/ui/typesection-select'
 import { TypeSectionQuickCreateDialog } from '@/features/typesections/ui/typesection-quick-create-dialog'
 import { NavigationSelect } from '@/features/navigations/ui/navigation-select'
 import { NavigationQuickCreateDialog } from '@/features/navigations/ui/navigation-quick-create-dialog'
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { useLiveSitePreview } from '@/shared/hooks/use-live-site-preview'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
 import { useSectionListStore } from '../../stores/useSectionListStore'
 import { useSectionFormStore } from '../../stores/useSectionFormStore'
+import { PublicSiteBadge } from './public-site-badge'
 
 const schema = z.object({
   section_name:        z.string().max(255).optional(),
   section_title:        z.string().optional(),
+  section_subtitle:    z.string().optional(),
   section_description: z.string().optional(),
   section_content:     z.string().optional(),
+  section_variant:     z.string().max(50).optional(),
   section_state:       z.number(),
   id_type_section:     z.number({ error: 'Seleccione el tipo de sección.' }),
   id_navigation:       z.number({ error: 'Seleccione la navegación.' }),
@@ -46,10 +51,12 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
   const [showTypeSectionCreate, setShowTypeSectionCreate] = useState(false)
   const [showNavigationCreate, setShowNavigationCreate]   = useState(false)
+  const canCreateTypeSection = useCan('type_sections.create')
+  const canCreateNavigation  = useCan('navigations.create')
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { section_name: '', section_title: '', section_description: '', section_content: '', section_state: 1, id_type_section: undefined, id_navigation: undefined },
+    defaultValues: { section_name: '', section_title: '', section_subtitle: '', section_description: '', section_content: '', section_variant: '', section_state: 1, id_type_section: undefined, id_navigation: undefined },
   })
 
   // Siempre trae el registro fresco del backend al editar — no depende de que la tabla ya esté cargada en memoria.
@@ -62,8 +69,10 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
       form.reset({
         section_name:        resolved.name,
         section_title:       resolved.title ?? '',
+        section_subtitle:    resolved.subtitle ?? '',
         section_description: resolved.description ?? '',
         section_content:     resolved.content ?? '',
+        section_variant:     resolved.variant ?? '',
         section_state:       resolved.stateValue,
         id_type_section:     resolved.idTypesection,
         id_navigation:       resolved.idNavigation ?? undefined,
@@ -72,6 +81,25 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
   }, [isEdit, resolved?.id])
 
   useEffect(() => () => { reset(); setCurrentItem(null) }, [])
+
+  // Vista previa en vivo del sitio público (ver widgets/landing-preview) — "fields" ya va en
+  // el idioma público (SiteSectionDto): section_name se queda afuera a propósito, es de uso
+  // interno del intranet y nunca sale hacia /v1/public/site (ver PublicSiteBadge arriba).
+  const toPreviewPayload = (values: FormValues): PreviewPayload => ({
+    entity: 'section',
+    id: isEdit ? resolved!.id : null,
+    id_navigation: values.id_navigation,
+    fields: {
+      id_type_section: values.id_type_section,
+      section_title: values.section_title || null,
+      section_subtitle: values.section_subtitle || null,
+      section_description: values.section_description || null,
+      section_content: values.section_content || null,
+      section_variant: values.section_variant || null,
+      section_state: values.section_state === 1,
+    },
+  })
+  useLiveSitePreview(form, toPreviewPayload, isEdit ? !!resolved : true)
 
   const onSubmit = async (values: FormValues) => {
     const confirmed = await swalConfirm({
@@ -86,8 +114,10 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
       ? await update(resolved!.id, {
           section_name:        values.section_name,
           section_title:       values.section_title,
+          section_subtitle:    values.section_subtitle,
           section_description: values.section_description,
           section_content:     values.section_content,
+          section_variant:     values.section_variant,
           section_state:       values.section_state,
           id_type_section:     values.id_type_section,
           id_navigation:       values.id_navigation,
@@ -96,8 +126,10 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
       : await create({
           section_name:        values.section_name,
           section_title:       values.section_title,
+          section_subtitle:    values.section_subtitle,
           section_description: values.section_description,
           section_content:     values.section_content,
+          section_variant:     values.section_variant,
           section_state:       values.section_state,
           id_type_section:     values.id_type_section,
           id_navigation:       values.id_navigation,
@@ -127,8 +159,22 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
             <FormField control={form.control} name="section_title" render={({ field }) => (
               <FormItem>
-                <FormLabel>Título</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Título</FormLabel>
+                  <PublicSiteBadge />
+                </div>
                 <FormControl><Input placeholder="Ej: Bienvenido a Carpintería Cillat" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="section_subtitle" render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Subtítulo</FormLabel>
+                  <PublicSiteBadge />
+                </div>
+                <FormControl><Input placeholder="Ej: Contáctanos" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -137,13 +183,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Tipo de Sección <span className="text-destructive">*</span></FormLabel>
-                  <button
-                    type="button"
-                    onClick={() => setShowTypeSectionCreate(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Plus className="size-3.5" />Nuevo
-                  </button>
+                  {/* Crea un tipo de sección: pide el permiso de ESE módulo (ver ROLES_Y_PERMISOS.md) */}
+                  {canCreateTypeSection && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTypeSectionCreate(true)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="size-3.5" />Nuevo
+                    </button>
+                  )}
                 </div>
                 <FormControl>
                   <TypeSectionSelect
@@ -160,13 +209,16 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Navegación <span className="text-destructive">*</span></FormLabel>
-                  <button
-                    type="button"
-                    onClick={() => setShowNavigationCreate(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Plus className="size-3.5" />Nuevo
-                  </button>
+                  {/* Crea una navegación: pide el permiso de ESE módulo (ver ROLES_Y_PERMISOS.md) */}
+                  {canCreateNavigation && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNavigationCreate(true)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="size-3.5" />Nuevo
+                    </button>
+                  )}
                 </div>
                 <FormControl>
                   <NavigationSelect
@@ -180,23 +232,21 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
             )} />
 
             <FormField control={form.control} name="section_state" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Estado</FormLabel>
-                <Select key={`state-${field.value}`} value={String(field.value)} onValueChange={(v) => field.onChange(Number(v))}>
-                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {ENTITY_STATES.map((s) => (
-                      <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <FormItem className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <FormLabel className="font-normal">Mostrar en el sitio web</FormLabel>
+                <FormControl>
+                  <VisibilityToggle checked={field.value === 1} onCheckedChange={(v) => field.onChange(v ? 1 : 0)} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="section_description" render={({ field }) => (
               <FormItem>
-                <FormLabel>Descripción</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Descripción</FormLabel>
+                  <PublicSiteBadge />
+                </div>
                 <FormControl><Textarea placeholder="Descripción opcional" className="resize-none" rows={3} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,11 +254,31 @@ export function SectionForm({ mode, id }: { mode: 'create' | 'edit'; id?: string
 
             <FormField control={form.control} name="section_content" render={({ field }) => (
               <FormItem>
-                <FormLabel>Contenido</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Contenido</FormLabel>
+                  <PublicSiteBadge />
+                </div>
                 <FormControl><Textarea placeholder="Contenido opcional" className="resize-none" rows={5} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
+
+            <FormField control={form.control} name="section_variant" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Variante</FormLabel>
+                <FormControl><Input placeholder="Ej: home" maxLength={50} {...field} /></FormControl>
+                <FormDescription>Campo reservado — hoy ningún componente del sitio web lo usa todavía, no cambia nada visualmente.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {resolved?.key && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium">Clave interna</span>
+                <code className="w-fit rounded bg-muted px-2 py-1 text-xs text-muted-foreground">{resolved.key}</code>
+                <p className="text-xs text-muted-foreground">Identifica esta sección en el código del sitio web — no es editable.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

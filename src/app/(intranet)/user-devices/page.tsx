@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
-import { UserDevicesAccordionTable } from '@/features/user-devices/ui/list/user-devices-accordion-table'
+import {
+  UserDevicesAccordionTable,
+} from '@/features/user-devices/ui/list/user-devices-accordion-table/user-devices-accordion-table'
 
 export const metadata: Metadata = { title: 'Dispositivos y Sesiones' }
 

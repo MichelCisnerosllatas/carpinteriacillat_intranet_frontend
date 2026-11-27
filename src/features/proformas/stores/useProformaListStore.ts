@@ -34,6 +34,8 @@ const defaultFilters: ProformaListRequestDto = {
   search: '',
   status: undefined,
   client_id: undefined,
+  user_id: undefined,
+  branch_ids: undefined,
   date_from: '',
   date_to: '',
 }
@@ -97,6 +99,12 @@ export const mapProformaFromApi = (item: ProformaJoinApiItem): Proforma => ({
     text: n.text,
     order: n.order,
   })),
+  saleId: item.sale_id ?? null,
+  saleCode: item.sale_code ?? null,
+  userId: item.user_id ?? null,
+  sellerName: item.seller_name ?? null,
+  companyBranchId: item.company_branch_id ?? null,
+  branchName: item.branch_name ?? null,
   createdAt: item.created_at,
   updatedAt: item.updated_at ?? '',
 })
@@ -121,7 +129,7 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await proformasService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
@@ -154,7 +162,7 @@ export const useProformaListStore = create<State & Action>((set, get) => ({
   },
 
   loadOne: async (id) => {
-    set({ isFetching: true, isError: false, message: null })
+    set({ isFetching: true })
     try {
       const response = await proformasService.getById(id)
       if (!response.success) throw new Error(response.message)

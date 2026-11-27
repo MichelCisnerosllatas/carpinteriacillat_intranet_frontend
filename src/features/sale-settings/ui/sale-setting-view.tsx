@@ -4,7 +4,7 @@
 import { useEffect } from 'react'
 import { useSaleSettingStore } from '../stores/useSaleSettingStore'
 import { SaleSettingForm } from './form/sale-setting-form'
-import { SaleSettingsSkeleton } from './form/sale-settings-skeleton'
+import { SaleSettingsSkeleton } from './form/sale-settings-skeleton/sale-settings-skeleton'
 import { ErrorState } from '@/widgets/error/error-state'
 
 export function SaleSettingView() {
@@ -21,6 +21,7 @@ export function SaleSettingView() {
   if (isError && !data) {
     return (
       <ErrorState
+        isPrimaryLoading={isLoading}
         title="No se pudo cargar la configuración"
         message={
           message ??

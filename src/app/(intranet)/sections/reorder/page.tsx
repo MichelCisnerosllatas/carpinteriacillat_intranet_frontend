@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import { SectionsBreadcrumb } from '@/features/sections/ui/sections-breadcrumb'
-import { SectionsReorderList } from '@/features/sections/ui/reorder/sections-reorder-list'
+import {
+  SectionsReorderList,
+} from '@/features/sections/ui/reorder/sections-reorder-list/sections-reorder-list'
 
 export const metadata: Metadata = { title: 'Reordenar Secciones' }
 

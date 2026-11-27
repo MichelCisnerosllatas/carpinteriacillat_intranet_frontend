@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   type SortingState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
@@ -13,6 +13,7 @@ import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { useSectionDeleteStore } from '../../stores/useSectionDeleteStore'
 import { sectionsGroupedColumns } from './sections-columns'
 import type { Section } from '../../data/schema'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 /**
  * Tabla de un solo grupo de navegación dentro del acordeón de `SectionsTable`. Cada grupo
@@ -23,15 +24,26 @@ import type { Section } from '../../data/schema'
 export function SectionsGroupTable({ sections }: { sections: Section[] }) {
   const { bulkToggleState, bulkDeleteItems } = useSectionDeleteStore()
 
+  // Acciones masivas solo si tiene permiso (ver ROLES_Y_PERMISOS.md)
+  const canState = useCan('sections.state')
+  const canDelete = useCan('sections.delete')
+  const canBulk = canState || canDelete
+
+  // Sin acciones masivas no tiene sentido la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? sectionsGroupedColumns : sectionsGroupedColumns.filter((c) => c.id !== 'select')),
+    [canBulk]
+  )
+
   const [rowSelection, setRowSelection] = useState({})
   const [sorting, setSorting]           = useState<SortingState>([{ id: 'order', desc: false }])
   const [isBulkLoading, setIsBulkLoading] = useState(false)
 
   const table = useReactTable({
     data: sections,
-    columns: sectionsGroupedColumns,
+    columns,
     state: { sorting, rowSelection },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -111,7 +123,7 @@ export function SectionsGroupTable({ sections }: { sections: Section[] }) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={sectionsGroupedColumns.length} className="h-16 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={columns.length} className="h-16 text-center text-sm text-muted-foreground">
                   No hay secciones en este grupo.
                 </TableCell>
               </TableRow>
@@ -123,9 +135,9 @@ export function SectionsGroupTable({ sections }: { sections: Section[] }) {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canState ? handleBulkActivate : undefined}
+        onDeactivate={canState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

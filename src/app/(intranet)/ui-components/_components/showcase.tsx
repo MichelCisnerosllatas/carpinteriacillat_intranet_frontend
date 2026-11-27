@@ -9,11 +9,20 @@ import { swalConfirm, swalSuccess, swalError, swalWarning, swalInput } from '@/s
 import api from '@/shared/api/apiClient'
 import { sleep } from '@/shared/lib/utils'
 import {
-  Bell, Check, ChevronDown, Info, Loader2, Mail, Moon,
-  Plus, Search, Settings, Sun, Trash, User, X,
+  Bell,
+  ChevronDown,
+  Info,
+  Loader2,
+  Moon,
+  Plus,
+  Search,
+  Settings,
+  Sun,
+  Trash,
+  User,
+  X,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
-
 // ── shadcn/ui ui ──────────────────────────────────────────────────
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import {
@@ -48,22 +57,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { ScrollArea } from '@/shared/ui/scroll-area'
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-function Section({ title, description, children }: {
-  title: string; description?: string; children: React.ReactNode
-}) {
-  return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description && <p className="text-sm text-muted-foreground">{description}</p>}
-      </div>
-      <div className="flex flex-wrap items-start gap-3">{children}</div>
-      <Separator />
-    </section>
-  )
-}
+import { Section } from './section'
 
 // ─── Main showcase ────────────────────────────────────────────────────────────
 export function UIComponentsShowcase() {

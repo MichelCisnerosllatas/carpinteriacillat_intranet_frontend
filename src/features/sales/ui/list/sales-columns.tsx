@@ -40,16 +40,23 @@ export const salesColumns: ColumnDef<Sale>[] = [
     accessorKey: 'code',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Código" />,
     cell: ({ row }) => (
-      <Link
-        href={`/sales/${row.original.id}`}
-        className="text-primary text-sm font-medium hover:underline"
-      >
-        {row.original.code}
-      </Link>
+      <div className="flex flex-col">
+        <Link
+          href={`/sales/${row.original.id}`}
+          className="text-primary text-sm font-medium hover:underline"
+        >
+          {row.original.code}
+        </Link>
+        {row.original.proformaCode && (
+          <span className="text-muted-foreground text-xs">
+            Desde proforma {row.original.proformaCode}
+          </span>
+        )}
+      </div>
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[120px]' },
+    meta: { className: 'min-w-[120px]', label: 'Código' },
   },
 
   {
@@ -59,7 +66,31 @@ export const salesColumns: ColumnDef<Sale>[] = [
     cell: ({ row }) => <span className="text-sm">{row.original.clientBusinessName ?? '—'}</span>,
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'min-w-[180px]' },
+    meta: { className: 'min-w-[180px]', label: 'Cliente' },
+  },
+
+  {
+    id: 'seller',
+    accessorFn: (row) => row.sellerName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Vendedor" />,
+    cell: ({ row }) => (
+      <span className="text-sm">{row.original.sellerName ?? '—'}</span>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'min-w-[140px]', label: 'Vendedor' },
+  },
+
+  {
+    id: 'branch',
+    accessorFn: (row) => row.branchName ?? '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Sucursal" />,
+    cell: ({ row }) => (
+      <span className="text-sm">{row.original.branchName ?? '—'}</span>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+    meta: { className: 'min-w-[140px]', label: 'Sucursal' },
   },
 
   {
@@ -70,7 +101,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px]' },
+    meta: { className: 'w-[130px]', label: 'Fecha de emisión' },
   },
 
   {
@@ -86,7 +117,7 @@ export const salesColumns: ColumnDef<Sale>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Estado' },
   },
 
   {
@@ -102,25 +133,32 @@ export const salesColumns: ColumnDef<Sale>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Cobro' },
   },
 
   {
     accessorKey: 'total',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Total" />,
     cell: ({ row }) => (
-      <span className="text-sm font-medium">
-        {formatCurrency(row.original.total, row.original.currency)}
-      </span>
+      <div className="flex flex-col items-end">
+        <span className="text-sm font-medium">
+          {formatCurrency(row.original.total, row.original.currency)}
+        </span>
+        {row.original.discountTotal > 0 && (
+          <span className="text-muted-foreground text-xs">
+            Desc. {formatCurrency(row.original.discountTotal, row.original.currency)}
+          </span>
+        )}
+      </div>
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[130px] text-right' },
+    meta: { className: 'w-[130px] text-right', label: 'Total' },
   },
 
   {
     id: 'actions',
     cell: SalesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

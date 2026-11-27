@@ -1,26 +1,30 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ServerCrash } from 'lucide-react'
+import { Home, Wrench } from 'lucide-react'
+import { Button } from '@/shared/ui/button'
+import { ErrorPage } from '@/shared/ui/error-page'
+import { GoBackButton } from '@/shared/ui/go-back-button'
 
 export const metadata: Metadata = { title: 'Error 500' }
 
 export default function Error500Page() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 text-center">
-      <div className="flex size-20 items-center justify-center rounded-full bg-muted">
-        <ServerCrash className="size-10 text-muted-foreground" />
-      </div>
-      <div className="space-y-2">
-        <h1 className="text-6xl font-bold tracking-tight">500</h1>
-        <h2 className="text-xl font-semibold">Internal Server Error</h2>
-        <p className="max-w-sm text-sm text-muted-foreground">Something went wrong on our end. Please try again later.</p>
-      </div>
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-      >
-        Go back home
-      </Link>
-    </div>
+    <ErrorPage
+      code="500"
+      title="Error del servidor"
+      description="Algo falló de nuestro lado. Intenta de nuevo en unos minutos."
+      icon={<Wrench className="size-10" />}
+      actions={
+        <>
+          <Button asChild>
+            <Link href="/">
+              <Home className="mr-2 size-4" />
+              Ir al inicio
+            </Link>
+          </Button>
+          <GoBackButton />
+        </>
+      }
+    />
   )
 }

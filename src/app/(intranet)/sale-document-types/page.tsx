@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Tags } from 'lucide-react'
 import { SaleDocumentTypesTable } from '@/features/sale-document-types/ui/list/sale-document-types-table'
 
@@ -17,9 +18,12 @@ export default function SaleDocumentTypesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Tipos de Comprobante de Venta</h2>
             <p className="text-muted-foreground">Catálogo de tipos de comprobante de venta</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/sale-document-types/create"><Tags size={18} /><span>Nuevo Tipo</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="sale_document_types.create">
+            <Button asChild className="space-x-1">
+              <Link href="/sale-document-types/create"><Tags size={18} /><span>Nuevo Tipo</span></Link>
+            </Button>
+          </Can>
         </div>
         <SaleDocumentTypesTable />
       </main>

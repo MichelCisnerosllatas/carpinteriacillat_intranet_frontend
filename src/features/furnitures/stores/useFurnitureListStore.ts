@@ -39,6 +39,7 @@ const mapFromApi = (item: FurnitureJoinApiItem): Furniture => {
   return {
     id: item.id_furniture,
     name: item.furniture_name,
+    title: item.furniture_title ?? null,
     description: item.furniture_description,
     largo: item.furniture_largo !== null && item.furniture_largo !== undefined ? Number(item.furniture_largo) : null,
     ancho: item.furniture_ancho !== null && item.furniture_ancho !== undefined ? Number(item.furniture_ancho) : null,
@@ -59,6 +60,12 @@ const mapFromApi = (item: FurnitureJoinApiItem): Furniture => {
       imageUrl: buildImageUrl(g.image?.image_patch ?? null),
       imageName: g.image?.image_name ?? null,
     })),
+    webWorks: (item.web_works ?? []).map((w) => ({
+      id: w.id_web_work,
+      title: w.webwork_title,
+      state: w.webwork_state,
+      typeworkKey: w.typework_key ?? null,
+    })),
     status: item.furniture_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.furniture_state,
@@ -77,7 +84,7 @@ export const useFurnitureListStore = create<State & Action>((set, get) => ({
   setCurrentItem: (item) => set({ currentItem: item }),
 
   loadById: async (id) => {
-    set({ isFetching: true, isError: false, message: null })
+    set({ isFetching: true })
     try {
       const response = await furnituresService.getById(id)
       if (!response.success) throw new Error(response.message)
@@ -94,7 +101,7 @@ export const useFurnitureListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await furnituresService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

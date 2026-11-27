@@ -7,6 +7,12 @@ import type {
 } from '../model/saleget.dto'
 import type { SalePostRequestDto, SalePostResponseDto } from '../model/salepost.dto'
 import type { SalePutRequestDto, SalePutResponseDto } from '../model/saleput.dto'
+import type {
+  SaleFullPostRequestDto,
+  SaleFullPutRequestDto,
+  SaleFullResponseDto,
+} from '../model/salefull.dto'
+import type { SaleFormDataResponseDto } from '../model/saleformdata.dto'
 
 // Sales NO tiene motor de PDF — a diferencia de proformas.service.ts, no hay viewPdf/downloadPdf/
 // getPreviewStylePdf ni timeouts especiales para regeneración de documentos.
@@ -41,6 +47,24 @@ export const salesService = {
 
   patch: async (id: number, param: Partial<SalePutRequestDto>): Promise<SalePutResponseDto> => {
     const { data } = await apiClient.patch<SalePutResponseDto>(SALES_ENDPOINTS.v1.patch(id), param)
+    return data
+  },
+
+  // Tipos de comprobante, IGV vigente, monedas y métodos de pago para "Realizar venta".
+  getFormData: async (): Promise<SaleFormDataResponseDto> => {
+    const { data } = await apiClient.get<SaleFormDataResponseDto>(SALES_ENDPOINTS.v1.formData)
+    return data
+  },
+
+  // Crea la venta completa (cabecera + líneas + pagos) en una sola transacción.
+  postFull: async (param: SaleFullPostRequestDto): Promise<SaleFullResponseDto> => {
+    const { data } = await apiClient.post<SaleFullResponseDto>(SALES_ENDPOINTS.v1.postFull, param)
+    return data
+  },
+
+  // Edita una venta GUARDADA completa (cabecera + sincroniza líneas).
+  putFull: async (id: number, param: SaleFullPutRequestDto): Promise<SaleFullResponseDto> => {
+    const { data } = await apiClient.put<SaleFullResponseDto>(SALES_ENDPOINTS.v1.putFull(id), param)
     return data
   },
 

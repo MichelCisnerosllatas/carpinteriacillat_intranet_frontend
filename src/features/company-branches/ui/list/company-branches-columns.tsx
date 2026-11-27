@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -37,7 +38,7 @@ export const companyBranchesColumns: ColumnDef<CompanyBranch>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Sucursal" />,
     cell: ({ row }) => (
       <div className="flex min-w-[220px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/company-branches/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
         {row.original.address && (
           <span className="text-xs text-muted-foreground">{row.original.address}</span>
         )}
@@ -48,6 +49,7 @@ export const companyBranchesColumns: ColumnDef<CompanyBranch>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Sucursal' },
   },
 
   {
@@ -63,7 +65,7 @@ export const companyBranchesColumns: ColumnDef<CompanyBranch>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -85,12 +87,12 @@ export const companyBranchesColumns: ColumnDef<CompanyBranch>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: CompanyBranchesRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

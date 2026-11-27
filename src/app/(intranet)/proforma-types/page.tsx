@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Tags } from 'lucide-react'
 import { ProformaTypesTable } from '@/features/proforma-types/ui/list/proforma-types-table'
 
@@ -17,9 +18,12 @@ export default function ProformaTypesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Tipos de Proforma</h2>
             <p className="text-muted-foreground">Catálogo de tipos de proforma</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/proforma-types/create"><Tags size={18} /><span>Nuevo Tipo</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="proforma_types.create">
+            <Button asChild className="space-x-1">
+              <Link href="/proforma-types/create"><Tags size={18} /><span>Nuevo Tipo</span></Link>
+            </Button>
+          </Can>
         </div>
         <ProformaTypesTable />
       </main>

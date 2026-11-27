@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { FileText } from 'lucide-react'
 import { ProformasTable } from '@/features/proformas/ui/list/proformas-table'
+import { Can } from '@/features/auth/ui/can'
 
 export const metadata: Metadata = { title: 'Proformas' }
 
@@ -17,9 +18,12 @@ export default function ProformasPage() {
             <h2 className="text-2xl font-bold tracking-tight">Proformas</h2>
             <p className="text-muted-foreground">Cotizaciones emitidas a clientes</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/proformas/create"><FileText size={18} /><span>Nueva Proforma</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear proformas (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="proformas.create">
+            <Button asChild className="space-x-1">
+              <Link href="/proformas/create"><FileText size={18} /><span>Nueva Proforma</span></Link>
+            </Button>
+          </Can>
         </div>
         <ProformasTable />
       </main>

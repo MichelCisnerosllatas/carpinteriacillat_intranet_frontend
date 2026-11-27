@@ -10,14 +10,14 @@ import {
   FormMessage,
 } from '@/shared/ui/form'
 
-import { CompanyLogoField } from './company-logo-field'
+import { LogoField } from '@/shared/ui/logo-field'
 import { CompanySectionTitle } from './company-section-title'
 import { CompanySettingFormValues } from '../../lib/company-setting-form.schema'
-import { CompanyLogoFieldHandle } from '../../lib/company-logo-field.types'
+import type { LogoFieldHandle } from '@/shared/lib/logo-field.types'
 
 interface CompanyLogoCardProps {
   control: Control<CompanySettingFormValues>
-  logoFieldRef: RefObject<CompanyLogoFieldHandle | null>
+  logoFieldRef: RefObject<LogoFieldHandle | null>
   disabled: boolean
 }
 
@@ -36,21 +36,22 @@ export function CompanyLogoCard({control, logoFieldRef, disabled}: CompanyLogoCa
       <CardHeader className="border-b">
         <CompanySectionTitle
           title="Logo"
-          help="Pasa el cursor sobre el logo para cambiarlo o eliminarlo."
+          help="Pasa el cursor sobre el logo para cambiarlo o eliminarlo. Este logo se usa en el header y en el footer del sitio web público — cambiarlo aquí lo actualiza en ambos lugares."
         />
       </CardHeader>
 
-      <CardContent className="flex min-h-72 items-center justify-center">
+      <CardContent className="flex min-h-48 items-center justify-center">
         <FormField
           control={control}
           name="logo"
           render={({ field }) => (
             <FormItem className="w-full">
               <FormControl>
-                <CompanyLogoField
+                <LogoField
                   ref={logoFieldRef}
                   value={field.value}
                   disabled={disabled}
+                  alt="Logo de la empresa"
                 />
               </FormControl>
 

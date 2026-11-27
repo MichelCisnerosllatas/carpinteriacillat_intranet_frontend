@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import {
   Globe,
@@ -66,7 +67,7 @@ export const userDevicesColumns: ColumnDef<UserDevice>[] = [
       )
     },
     enableSorting: false,
-    meta: { className: 'min-w-[200px]' },
+    meta: { className: 'min-w-[200px]', label: 'Usuario' },
   },
 
   // Dispositivo
@@ -85,7 +86,7 @@ export const userDevicesColumns: ColumnDef<UserDevice>[] = [
         <div className="flex min-w-[220px] flex-col gap-0.5 py-1 text-xs leading-5">
           <div className="flex items-center gap-1.5">
             <DeviceTypeIcon type={d.deviceType} />
-            <span className="font-semibold text-foreground">{name}</span>
+            <Link href={`/user-devices/${d.id}`} className="font-semibold text-primary hover:underline">{name}</Link>
           </div>
           {osLine && <span className="text-muted-foreground">{osLine}</span>}
           {hardware && <span className="text-muted-foreground">{hardware}</span>}
@@ -97,7 +98,7 @@ export const userDevicesColumns: ColumnDef<UserDevice>[] = [
       )
     },
     enableSorting: false,
-    meta: { className: 'min-w-[220px]' },
+    meta: { className: 'min-w-[220px]', label: 'Dispositivo' },
   },
 
   // Plataforma
@@ -113,7 +114,7 @@ export const userDevicesColumns: ColumnDef<UserDevice>[] = [
       )
     },
     enableSorting: false,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Plataforma' },
   },
 
   // Estado
@@ -142,7 +143,7 @@ export const userDevicesColumns: ColumnDef<UserDevice>[] = [
       )
     },
     enableSorting: false,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   // Fechas
@@ -167,7 +168,7 @@ export const userDevicesColumns: ColumnDef<UserDevice>[] = [
       )
     },
     enableSorting: false,
-    meta: { className: 'w-[180px] min-w-[180px]' },
+    meta: { className: 'w-[180px] min-w-[180px]', label: 'Acceso' },
   },
 
   // Acciones

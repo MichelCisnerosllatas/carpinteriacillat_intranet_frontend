@@ -1,5 +1,7 @@
+// También se usa para PATCH (Partial<FurniturePutRequestDto>).
 export type FurniturePutRequestDto = {
   furniture_name: string
+  furniture_title?: string | null
   furniture_description?: string
   furniture_largo?: number | null
   furniture_ancho?: number | null

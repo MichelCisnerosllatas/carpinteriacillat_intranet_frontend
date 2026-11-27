@@ -12,7 +12,7 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
     <>
       <Header fixed title="Detalle de Rol" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <RolesBreadcrumb currentPage="Detalle de Rol" showHeader={false} />
+        <RolesBreadcrumb currentPage="Detalle de Rol" showHeader={true} />
         <RoleDetail id={id} />
       </main>
     </>

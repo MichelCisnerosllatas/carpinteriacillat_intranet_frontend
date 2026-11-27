@@ -7,9 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Separator } from '@/shared/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { getInitials } from '@/shared/lib/get-initials'
 import { callTypes, roles } from '@/features/users/data/data'
 import { useUserListStore } from '@/features/users/stores/useUserListStore'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { DetailRow } from './detail-row'
 
 interface UserDetailProps {
   id: string
@@ -17,6 +21,8 @@ interface UserDetailProps {
 
 export function UserDetail({ id }: UserDetailProps) {
   const router = useRouter()
+  // Solo si tiene permiso de editar (ver ROLES_Y_PERMISOS.md)
+  const canEdit = useCan('users.update')
   const { currentUser, users, setCurrentUser } = useUserListStore()
 
   useEffect(() => {
@@ -55,9 +61,10 @@ export function UserDetail({ id }: UserDetailProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-2xl font-semibold uppercase shrink-0">
-              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-            </div>
+            <Avatar className="size-16 shrink-0 text-2xl">
+              <AvatarImage src={user.photoUrl ?? undefined} alt={user.username} />
+              <AvatarFallback className="text-2xl font-semibold">{getInitials(user.username)}</AvatarFallback>
+            </Avatar>
             <div className="flex flex-1 flex-col gap-1">
               <h3 className="text-xl font-semibold">{user.firstName} {user.lastName}</h3>
               <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -71,10 +78,12 @@ export function UserDetail({ id }: UserDetailProps) {
                 </Badge>
               </div>
             </div>
-            <Button onClick={handleEdit} variant="outline" size="sm" className="shrink-0">
-              <UserPen className="size-4 mr-2" />
-              Editar
-            </Button>
+            {canEdit && (
+              <Button onClick={handleEdit} variant="outline" size="sm" className="shrink-0">
+                <UserPen className="size-4 mr-2" />
+                Editar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -113,6 +122,17 @@ export function UserDetail({ id }: UserDetailProps) {
             <DetailRow label="Rol" value={user.roleLabel} />
             <Separator />
             <DetailRow label="Estado" value={user.statusLabel} />
+            <Separator />
+            <DetailRow
+              label="Sucursales"
+              value={
+                user.allBranches
+                  ? 'Todas las sucursales'
+                  : user.branches.length
+                    ? user.branches.map((b) => (b.isDefault ? `${b.name} (principal)` : b.name)).join(', ')
+                    : 'Sin sucursal asignada'
+              }
+            />
           </CardContent>
         </Card>
 
@@ -137,21 +157,6 @@ export function UserDetail({ id }: UserDetailProps) {
           </CardContent>
         </Card>
       </div>
-    </div>
-  )
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  label: React.ReactNode
-  value: string
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-muted-foreground shrink-0">{label}</span>
-      <span className="font-medium text-right">{value}</span>
     </div>
   )
 }

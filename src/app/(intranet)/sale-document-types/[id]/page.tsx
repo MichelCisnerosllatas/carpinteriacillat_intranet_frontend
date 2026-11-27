@@ -11,7 +11,7 @@ export default async function SaleDocumentTypeDetailPage({ params }: { params: P
     <>
       <Header fixed title="Detalle de Tipo de Comprobante" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <SaleDocumentTypesBreadcrumb currentPage="Detalle" showHeader={false} />
+        <SaleDocumentTypesBreadcrumb currentPage="Detalle" showHeader={true} />
         <SaleDocumentTypeDetail id={id} />
       </main>
     </>

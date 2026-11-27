@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pencil, Building2, CalendarDays, Clock, MapPin } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
@@ -42,9 +43,12 @@ export function CompanyBranchDetail({ id }: { id: string }) {
               {item.address && <p className="text-sm text-muted-foreground">{item.address}</p>}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/company-branches/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar */}
+            <Can permission="company_branches.update">
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/company-branches/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            </Can>
           </div>
         </CardContent>
       </Card>

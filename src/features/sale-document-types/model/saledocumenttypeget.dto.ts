@@ -6,6 +6,8 @@ export type SaleDocumentTypeApiItem = {
   name: string
   code: string | null
   series: string
+  /** Nota interna: para qué sirve este tipo. */
+  description: string | null
   status: number
   created_at: string
   updated_at: string | null

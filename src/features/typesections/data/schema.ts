@@ -5,6 +5,7 @@ export type TypeSectionStatus = z.infer<typeof typeSectionStatusSchema>
 
 export const typeSectionSchema = z.object({
   id: z.number(),
+  key: z.string().nullable(),
   name: z.string(),
   description: z.string().nullable(),
   status: typeSectionStatusSchema,

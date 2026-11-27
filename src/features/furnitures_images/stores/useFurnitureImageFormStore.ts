@@ -11,8 +11,8 @@ type State = {
   fieldErrors: Record<string, string[]> | null
 }
 
-type BulkCreateItem   = { imageId: number; order: number }
-type BulkReorderItem  = { furnitureImageId: number; order: number }
+type BulkCreateItem  = { imageId: number; order: number }
+type BulkReorderItem = { furnitureImageId: number; order: number }
 
 type Action = {
   create: (params: FurnitureImagePostRequestDto) => Promise<number | null>
@@ -118,6 +118,7 @@ export const useFurnitureImageFormStore = create<State & Action>((set) => ({
       set({
         isSubmitting: false,
         error: error?.response?.data?.message ?? error?.message ?? 'Error al guardar imágenes de galería.',
+        fieldErrors: error?.response?.data?.errors ?? null,
       })
       return false
     }

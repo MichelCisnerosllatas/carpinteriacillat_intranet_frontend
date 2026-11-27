@@ -11,7 +11,7 @@ export default async function TypeSectionDetailPage({ params }: { params: Promis
     <>
       <Header fixed title="Detalle de Sección" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <TypeSectionsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <TypeSectionsBreadcrumb currentPage="Detalle" showHeader={true} />
         <TypeSectionDetail id={id} />
       </main>
     </>

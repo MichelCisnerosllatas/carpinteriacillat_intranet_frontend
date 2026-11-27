@@ -22,6 +22,7 @@ export const saleDetailViewSchema = z.object({
   unit: z.string().nullable(),
   quantity: z.number(),
   unitPrice: z.number(),
+  discount: z.number(),
   subtotal: z.number(),
   tax: z.number().nullable(),
   total: z.number(),
@@ -62,6 +63,15 @@ export const saleSchema = z.object({
   subtotal: z.number(),
   tax: z.number(),
   total: z.number(),
+  discountTotal: z.number(),
+  proformaId: z.number().nullable(),
+  proformaCode: z.string().nullable(),
+  // Vendedor (usuario) que registró la venta.
+  userId: z.number().nullable(),
+  sellerName: z.string().nullable(),
+  // Sucursal donde se registró la venta.
+  companyBranchId: z.number().nullable(),
+  branchName: z.string().nullable(),
   amountPaid: z.number(),
   balance: z.number(),
   paymentStatus: salePaymentStatusSchema,

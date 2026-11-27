@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { Download, Eye, Loader2, Pencil, Repeat, Trash2 } from 'lucide-react'
+import { Download, Eye, Loader2, Pencil, Receipt, Repeat, ShoppingCart, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 import { Button } from '@/shared/ui/button'
@@ -26,6 +26,7 @@ import { useProformaListStore } from '../../stores/useProformaListStore'
 import { useProformaDeleteStore } from '../../stores/useProformaDeleteStore'
 import { proformasService } from '../../services/proformas.service'
 import { getProformaStatusOption, getValidStatusTransitions } from '../../data/data'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import type { Proforma, ProformaStatus } from '../../data/schema'
 
 export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
@@ -34,6 +35,15 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
   const { deleteItem, changeStatus } = useProformaDeleteStore()
   const [isDownloading, setIsDownloading] = useState(false)
   const transitions = getValidStatusTransitions(row.original.status)
+
+  // Permisos del usuario (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('proformas.view')
+  const canUpdate = useCan('proformas.update')
+  const canDelete = useCan('proformas.delete')
+  const canChangeState = useCan('proformas.state')
+  const canPdf = useCan('proformas.pdf')
+  const canCreateSale = useCan('sales.create')
+  const canViewSale = useCan('sales.view')
 
   const handleView = () => {
     setCurrentItem(row.original)
@@ -45,6 +55,19 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
     setCurrentItem(row.original)
     NProgress.start()
     router.push(`/proformas/edit/${row.original.id}`)
+  }
+
+  // Solo una proforma ACEPTADA y sin venta se puede convertir (contrato §6). La pantalla de venta
+  // se precarga sola con `?proforma={id}`.
+  // Además necesita permiso para crear ventas.
+  const canConvert = row.original.status === 'ACEPTADA' && !row.original.saleId && canCreateSale
+  const showEdit = row.original.status === 'PENDIENTE' && canUpdate
+  const showViewSale = Boolean(row.original.saleId) && canViewSale
+  const showChangeState = transitions.length > 0 && canChangeState
+
+  const goTo = (path: string) => {
+    NProgress.start()
+    router.push(path)
   }
 
   const handleDownloadPdf = async () => {
@@ -96,6 +119,11 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
     )
   }
 
+  // Si no queda ninguna acción, no mostramos el botón "..."
+  if (!canView && !showEdit && !canConvert && !showViewSale && !canPdf && !showChangeState && !canDelete) {
+    return null
+  }
+
   return (
     <DropdownMenu modal={false}>
       {/* El `span` intermedio evita que el `data-state` del tooltip pise el `data-state="open"/
@@ -116,13 +144,15 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle{' '}
-          <DropdownMenuShortcut>
-            <Eye size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-        {row.original.status === 'PENDIENTE' && (
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle{' '}
+            <DropdownMenuShortcut>
+              <Eye size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {showEdit && (
           <DropdownMenuItem onClick={handleEdit}>
             Editar{' '}
             <DropdownMenuShortcut>
@@ -130,17 +160,35 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => void handleDownloadPdf()} disabled={isDownloading}>
-          Descargar PDF{' '}
-          <DropdownMenuShortcut>
-            {isDownloading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Download size={16} />
-            )}
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
-        {transitions.length > 0 && (
+        {canConvert && (
+          <DropdownMenuItem onClick={() => goTo(`/sales/create?proforma=${row.original.id}`)}>
+            Convertir en venta{' '}
+            <DropdownMenuShortcut>
+              <ShoppingCart size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {showViewSale && (
+          <DropdownMenuItem onClick={() => goTo(`/sales/${row.original.saleId}`)}>
+            Ver venta {row.original.saleCode ?? ''}{' '}
+            <DropdownMenuShortcut>
+              <Receipt size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canPdf && (
+          <DropdownMenuItem onClick={() => void handleDownloadPdf()} disabled={isDownloading}>
+            Descargar PDF{' '}
+            <DropdownMenuShortcut>
+              {isDownloading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Download size={16} />
+              )}
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {showChangeState && (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               Cambiar estado{' '}
@@ -157,13 +205,17 @@ export function ProformasRowActions({ row }: { row: Row<Proforma> }) {
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar{' '}
-          <DropdownMenuShortcut>
-            <Trash2 size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+              Eliminar{' '}
+              <DropdownMenuShortcut>
+                <Trash2 size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

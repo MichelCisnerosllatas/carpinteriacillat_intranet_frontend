@@ -1,25 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
 import { AlertTriangle, Eye, EyeOff, Loader2, Maximize2, RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-
-// pdf.js necesita `canvas`/Web Worker del navegador — sin ssr:false, Next intentaría
-// renderizarlo también en el servidor (como cualquier componente 'use client' en su primer
-// render) y reventaría ahí por falta de esas APIs.
-const PdfViewer = dynamic(() => import('@/shared/ui/pdf-viewer').then((m) => m.PdfViewer), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center">
-      <Loader2 className="size-6 animate-spin text-muted-foreground" />
-    </div>
-  ),
-})
+import { PdfViewer } from './pdf-viewer'
 
 interface TemplatePreviewCardProps {
   previewUrl: string | null

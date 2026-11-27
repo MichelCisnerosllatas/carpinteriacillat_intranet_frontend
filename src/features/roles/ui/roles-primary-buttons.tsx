@@ -3,8 +3,14 @@
 import { ShieldPlus } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function RolesPrimaryButtons() {
+  const canCreate = useCan('roles.create')
+
+  // Los permisos de cada rol se editan desde su fila: menú "…" → Permisos (/roles/{id}/permissions).
+  if (!canCreate) return null
+
   return (
     <div className="flex gap-2">
       <Button asChild className="space-x-1">

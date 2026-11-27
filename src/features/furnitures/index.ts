@@ -5,6 +5,7 @@ export * from './ui/list/furniture-card'
 export * from './ui/list/furniture-stats-bar'
 export * from './ui/list/furniture-grid-pagination'
 export * from './ui/form/furniture-form'
+export * from './ui/furniture-select'
 export * from './ui/detail/furniture-detail'
 export * from './ui/furnitures-breadcrumb'
 
@@ -16,3 +17,4 @@ export * from './services/furnitures.service'
 export * from './services/furnitures.endpoint'
 
 export * from './data/schema'
+export * from './data/furniture-form.schema'

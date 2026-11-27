@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
 import { FileStack } from 'lucide-react'
 import { ProformaTemplatesTable } from '@/features/proforma-templates/ui/list/proforma-templates-table'
+import { Can } from '@/features/auth/ui/can'
 
 export const metadata: Metadata = { title: 'Plantillas de Proforma' }
 
@@ -17,9 +18,12 @@ export default function ProformaTemplatesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Plantillas de Proforma</h2>
             <p className="text-muted-foreground">Diseños de PDF para proformas</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/proforma-templates/create"><FileStack size={18} /><span>Nueva Plantilla</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear plantillas (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="proforma_templates.create">
+            <Button asChild className="space-x-1">
+              <Link href="/proforma-templates/create"><FileStack size={18} /><span>Nueva Plantilla</span></Link>
+            </Button>
+          </Can>
         </div>
         <ProformaTemplatesTable />
       </main>

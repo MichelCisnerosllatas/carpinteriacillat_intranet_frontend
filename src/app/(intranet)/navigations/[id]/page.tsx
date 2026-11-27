@@ -11,7 +11,7 @@ export default async function NavigationDetailPage({ params }: { params: Promise
     <>
       <Header fixed title="Detalle de Navegación" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <NavigationsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <NavigationsBreadcrumb currentPage="Detalle" showHeader={true} />
         <NavigationDetail id={id} />
       </main>
     </>

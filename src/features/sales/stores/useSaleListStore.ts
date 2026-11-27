@@ -35,6 +35,7 @@ const defaultFilters: SaleListRequestDto = {
   status: undefined,
   payment_status: undefined,
   client_id: undefined,
+  user_id: undefined,
   date_from: '',
   date_to: '',
 }
@@ -63,6 +64,13 @@ export const mapSaleFromApi = (item: SaleJoinApiItem): Sale => ({
   subtotal: Number(item.subtotal),
   tax: Number(item.tax),
   total: Number(item.total),
+  discountTotal: Number(item.discount_total ?? 0),
+  proformaId: item.proforma_id ?? null,
+  proformaCode: item.proforma_code ?? null,
+  userId: item.user_id ?? null,
+  sellerName: item.seller_name ?? null,
+  companyBranchId: item.company_branch_id ?? null,
+  branchName: item.branch_name ?? null,
   amountPaid: Number(item.amount_paid),
   balance: Number(item.balance),
   paymentStatus: item.payment_status,
@@ -76,6 +84,7 @@ export const mapSaleFromApi = (item: SaleJoinApiItem): Sale => ({
     unit: d.unit,
     quantity: Number(d.quantity),
     unitPrice: Number(d.unit_price),
+    discount: Number(d.discount ?? 0),
     subtotal: Number(d.subtotal),
     tax: d.tax !== null ? Number(d.tax) : null,
     total: Number(d.total),
@@ -112,7 +121,7 @@ export const useSaleListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await salesService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
@@ -145,7 +154,7 @@ export const useSaleListStore = create<State & Action>((set, get) => ({
   },
 
   loadOne: async (id) => {
-    set({ isFetching: true, isError: false, message: null })
+    set({ isFetching: true })
     try {
       const response = await salesService.getById(id)
       if (!response.success) throw new Error(response.message)

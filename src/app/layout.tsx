@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/shared/ui/sonner'
 import { getLayoutScript } from '@/shared/lib/layout-script'
+import { getHistoryBaselineScript } from '@/shared/lib/navigation-history'
 import NextTopLoader from 'nextjs-toploader'
 import '@/shared/styles/globals.css'
 
@@ -27,6 +28,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
         <script
           dangerouslySetInnerHTML={{ __html: getLayoutScript() }}
+        />
+        {/*
+          Marca la longitud de window.history al cargar la primera página de la pestaña,
+          para que BackButton pueda saber si hay una pantalla anterior dentro de la app
+          antes de decidir entre router.back() o su listado de respaldo.
+        */}
+        <script
+          dangerouslySetInnerHTML={{ __html: getHistoryBaselineScript() }}
         />
       </head>
       <body className={`${inter.variable} font-inter antialiased`}>

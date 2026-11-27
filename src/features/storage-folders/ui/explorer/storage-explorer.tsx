@@ -7,24 +7,27 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails'
 import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import {
-  CheckSquare2, Folder, FolderPlus, Loader2, MoveRight,
+  CheckSquare2, Download, Folder, FolderPlus, Loader2, MoveRight,
   RefreshCw, Search, SquareDashed, Trash2, Upload, X,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
-import { swalDeleteConfirm } from '@/shared/lib/swal'
-import { toastSuccess, toastError } from '@/shared/lib/toast'
+import { swalConfirm, swalDeleteConfirm } from '@/shared/lib/swal'
+import { toastSuccess, toastError, toastInfo } from '@/shared/lib/toast'
+import { runBulkDownload } from '@/shared/lib/bulk-download'
 import { useStorageFolderListStore } from '../../stores/useStorageFolderListStore'
 import { useStorageFolderActionStore } from '../../stores/useStorageFolderActionStore'
 import { useStorageFileListStore } from '@/features/storage-files/stores/useStorageFileListStore'
 import { useStorageFileActionStore } from '@/features/storage-files/stores/useStorageFileActionStore'
 import { isImage } from '@/features/storage-files/data/schema'
 import { FolderBreadcrumb } from './folder-breadcrumb'
-import { StorageItemCard, StorageItemSkeleton } from './storage-item-card'
+import { StorageItemCard } from './storage-item-card/storage-item-card'
+import { StorageItemSkeleton } from './storage-item-card/storage-item-skeleton'
 import { FileUploadModal } from '@/features/storage-files/ui/modals/file-upload-modal'
 import { FileRenameModal } from '@/features/storage-files/ui/modals/file-rename-modal'
 import { FileMoveModal } from '@/features/storage-files/ui/modals/file-move-modal'
@@ -211,6 +214,38 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
     else toastError('Eliminación parcial', `${done} ok, ${errors} con error.`)
   }
 
+  // ── Bulk download (solo archivos; las carpetas se ignoran) ───────────────
+  // Corre en segundo plano (ver gestor de descargas del header) — uno por uno, no en
+  // paralelo ni con un zip del backend: el servidor de producción es básico.
+  const handleBulkDownload = async () => {
+    if (selectedFiles.length === 0) {
+      if (selectedFolders.length > 0) toastError('No se puede descargar', 'Selecciona archivos: las carpetas no se pueden descargar en masa.')
+      return
+    }
+    const skippedFolders = selectedFolders.length
+    const toDownload = selectedFiles
+    const count = toDownload.length
+
+    const confirmed = await swalConfirm({
+      title: `¿Descargar ${count} archivo${count !== 1 ? 's' : ''}?`,
+      text: 'Se descargan uno por uno. Puedes seguir navegando mientras tanto — el progreso queda en la campanita de notificaciones.',
+      confirmText: 'Descargar',
+    })
+    if (!confirmed) return
+
+    clearSelection()
+    if (skippedFolders > 0) {
+      toastInfo('Solo se descargan archivos', `${skippedFolders} carpeta${skippedFolders !== 1 ? 's' : ''} seleccionada${skippedFolders !== 1 ? 's' : ''} se ${skippedFolders !== 1 ? 'omitieron' : 'omitió'}.`)
+    }
+    runBulkDownload({
+      label: 'Carpetas',
+      route: '/storage/folders',
+      items: toDownload.map((file) => ({
+        run: () => fileActionStore.download(file.path_encoded, file.name),
+      })),
+    })
+  }
+
   // ── File preview ──────────────────────────────────────────────────────────
 
   const handleFilePreview = (file: StorageFile) => {
@@ -338,14 +373,19 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               <RefreshCw className={cn('size-3.5', isFetching && 'animate-spin')} />
               <span className="hidden sm:inline text-xs">Actualizar</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={onNewFolder} className="gap-1.5 h-8">
-              <FolderPlus className="size-3.5" />
-              <span className="hidden sm:inline text-xs">Nueva carpeta</span>
-            </Button>
-            <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5 h-8">
-              <Upload className="size-3.5" />
-              <span className="text-xs">Subir archivo</span>
-            </Button>
+            {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="storage_folders.create">
+              <Button variant="outline" size="sm" onClick={onNewFolder} className="gap-1.5 h-8">
+                <FolderPlus className="size-3.5" />
+                <span className="hidden sm:inline text-xs">Nueva carpeta</span>
+              </Button>
+            </Can>
+            <Can permission="storage_folders.create">
+              <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5 h-8">
+                <Upload className="size-3.5" />
+                <span className="text-xs">Subir archivo</span>
+              </Button>
+            </Can>
           </div>
         </div>
 
@@ -479,12 +519,17 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
             </div>
             {!search && (
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={onNewFolder} className="gap-1.5">
-                  <FolderPlus className="size-3.5" />Nueva carpeta
-                </Button>
-                <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5">
-                  <Upload className="size-3.5" />Subir archivo
-                </Button>
+                {/* Solo si tiene permiso de crear */}
+                <Can permission="storage_folders.create">
+                  <Button size="sm" variant="outline" onClick={onNewFolder} className="gap-1.5">
+                    <FolderPlus className="size-3.5" />Nueva carpeta
+                  </Button>
+                </Can>
+                <Can permission="storage_folders.create">
+                  <Button size="sm" onClick={() => setUploadOpen(true)} className="gap-1.5">
+                    <Upload className="size-3.5" />Subir archivo
+                  </Button>
+                </Can>
               </div>
             )}
           </div>
@@ -554,15 +599,26 @@ export function StorageExplorer({ onNavigate, onNewFolder, onRename, onDelete, o
               )}
             </div>
 
-            <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => setBulkMove(true)}>
-              <MoveRight className="size-3.5" />
-              <span className="hidden sm:inline">Mover</span>
+            {/* Mover en bloque: permiso de editar */}
+            <Can permission="storage_folders.update">
+              <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => setBulkMove(true)}>
+                <MoveRight className="size-3.5" />
+                <span className="hidden sm:inline">Mover</span>
+              </Button>
+            </Can>
+
+            <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-8 px-2 text-foreground pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing || selectedFiles.length === 0} onClick={() => void handleBulkDownload()}>
+              <Download className="size-3.5" />
+              <span className="hidden sm:inline">Descargar</span>
             </Button>
 
-            <Button size="sm" variant="destructive" className="shrink-0 gap-1.5 h-8 px-2 pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => void handleBulkDelete()}>
-              {isActing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-              <span className="hidden sm:inline">Eliminar</span>
-            </Button>
+            {/* Eliminar en bloque: permiso de eliminar */}
+            <Can permission="storage_folders.delete">
+              <Button size="sm" variant="destructive" className="shrink-0 gap-1.5 h-8 px-2 pointer-coarse:h-10 pointer-coarse:px-4" disabled={isActing} onClick={() => void handleBulkDelete()}>
+                {isActing ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                <span className="hidden sm:inline">Eliminar</span>
+              </Button>
+            </Can>
 
             <Tooltip>
               <TooltipTrigger asChild>

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { sectionImagesService } from '../services/sectionimages.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
+import { buildImageUrl } from '@/shared/lib/images'
 import type { SectionImageListRequestDto, SectionImageJoinApiItem } from '../model/sectionimageget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -24,26 +25,44 @@ type State = {
 type Action = {
   setForceReload: (value: boolean) => void
   load: (params?: SectionImageListRequestDto) => Promise<boolean>
+  loadById: (id: number) => Promise<boolean>
   setCurrentItem: (item: SectionImage | null) => void
   reset: () => void
 }
 
 const defaultFilters: SectionImageListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
-const mapFromApi = (item: SectionImageJoinApiItem): SectionImage => {
-  const stateOpt = getStateOption(item.sectionimage_state)
+/** Convierte una foto del API (endpoint _join) al tipo SectionImage que usa la UI. */
+export const mapSectionImageFromApi = (item: SectionImageJoinApiItem): SectionImage => {
+  const stateOpt = getVisibilityStateOption(item.sectionimage_state)
   return {
-    id: item.id_sectionimage,
-    idSection: item.id_section,
+    id: item.id_section_image,
+    // El endpoint `_join` (el único que usa este módulo, para lista y detalle) NO trae
+    // `id_section`/`id_image` a nivel raíz — solo existen anidados dentro de `section`/`image`.
+    // Leerlos como `item.id_section`/`item.id_image` daba siempre `undefined`.
+    idSection: item.section?.id_section ?? 0,
     sectionName: item.section?.section_name ?? '',
-    idImage: item.id_image,
+    navigationName: item.section?.navigation?.navigation_name ?? null,
+    idImage: item.image?.id_image ?? 0,
     imageName: item.image?.image_name ?? '',
-    imageUrl: item.image?.image_url ?? '',
+    imageUrl: buildImageUrl(item.image?.image_patch) ?? '',
+    objectFit: item.sectionimage_fix ?? null,
+    title: item.sectionimage_title ?? null,
+    description: item.sectionimage_description ?? null,
+    label: item.sectionimage_label ?? null,
+    link: item.sectionimage_link ?? null,
+    linkLabel: item.sectionimage_link_label ?? null,
+    variant: item.sectionimage_variant ?? null,
+    idSectionItem: item.section_item?.id_section_item ?? item.id_section_item ?? null,
+    sectionItemTitle: item.section_item?.sectionitem_title ?? null,
+    order: item.sectionimage_order ?? null,
     status: item.sectionimage_state === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.sectionimage_state,
     createdAt: item.sectionimage_created_at,
     updatedAt: item.sectionimage_updated_at ?? '',
+    createdAtFormatted: item.sectionimage_created_at_format ?? null,
+    updatedAtFormatted: item.sectionimage_updated_at_format ?? null,
   }
 }
 
@@ -56,18 +75,32 @@ export const useSectionImageListStore = create<State & Action>((set, get) => ({
   setForceReload: (value) => set({ forceReload: value }),
   setCurrentItem: (item) => set({ currentItem: item }),
 
+  loadById: async (id) => {
+    set({ isFetching: true })
+    try {
+      const response = await sectionImagesService.getById(id)
+      if (!response.success) throw new Error(response.message)
+      const mapped = mapSectionImageFromApi(response.data)
+      set({ isFetching: false, currentItem: mapped, hasLoaded: true })
+      return true
+    } catch (error: any) {
+      set({ isFetching: false, isError: true, message: error?.response?.data?.message ?? error?.message ?? 'Error al cargar.' })
+      return false
+    }
+  },
+
   load: async (params = {}) => {
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await sectionImagesService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)
       set({
         hasLoaded: true, isInitialLoading: false, isFetching: false, isError: false,
         message: response.message,
-        items: response.data.map(mapFromApi),
+        items: response.data.map(mapSectionImageFromApi),
         links: response.links, meta: response.meta,
         filters: { ...nextFilters, page: response.meta?.current_page ?? nextFilters.page, per_page: response.meta?.per_page ?? nextFilters.per_page },
       })

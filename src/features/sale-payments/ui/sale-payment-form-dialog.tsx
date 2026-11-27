@@ -22,12 +22,19 @@ import { applyApiErrors } from '@/shared/lib/api-errors'
 import { AlertError } from '@/widgets/alerts_components'
 import { toastSuccess } from '@/shared/lib/toast'
 import { useSalePaymentFormStore } from '../stores/useSalePaymentFormStore'
+import { SALE_PAYMENT_METHODS } from '../data/data'
 import type { SalePayment } from '../data/schema'
+
+// Valores permitidos — se arman desde la constante compartida para no repetir la lista.
+const METHOD_VALUES = SALE_PAYMENT_METHODS.map((m) => m.value as string)
 
 const schema = z.object({
   amount: z.number({ error: 'Ingrese un monto válido.' }).min(0.01, 'El monto debe ser mayor a 0.'),
   payment_date: z.string().min(1, 'La fecha del pago es requerida.'),
-  payment_method: z.string().max(50, 'Máximo 50 caracteres.').optional(),
+  // Requerido y solo de la lista fija: el backend lo valida con Rule::in (contrato §2).
+  payment_method: z
+    .string()
+    .refine((v) => METHOD_VALUES.includes(v), 'Elige un método de pago.'),
   observation: z.string().optional(),
 })
 
@@ -68,7 +75,11 @@ export function SalePaymentFormDialog({
       form.reset({
         amount: editingPayment.amount,
         payment_date: editingPayment.paymentDate.slice(0, 10),
-        payment_method: editingPayment.paymentMethod ?? '',
+        // Pagos antiguos pueden tener texto libre ("Contado") — si no está en la lista se deja
+        // vacío para obligar a elegir uno válido al guardar.
+        payment_method: METHOD_VALUES.includes(editingPayment.paymentMethod ?? '')
+          ? (editingPayment.paymentMethod as string)
+          : '',
         observation: editingPayment.observation ?? '',
       })
     } else {
@@ -82,7 +93,7 @@ export function SalePaymentFormDialog({
     const payload = {
       amount: values.amount,
       payment_date: values.payment_date,
-      payment_method: values.payment_method || undefined,
+      payment_method: values.payment_method,
       observation: values.observation || undefined,
     }
 
@@ -161,10 +172,26 @@ export function SalePaymentFormDialog({
               name="payment_method"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Forma de pago</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Yape, Transferencia, Efectivo" maxLength={50} {...field} />
-                  </FormControl>
+                  <FormLabel>
+                    Método de pago <span className="text-destructive">*</span>
+                  </FormLabel>
+                  {/* Chips en vez de un Select: son pocas opciones y así se elige con un solo
+                   * clic (o Tab + Enter con teclado). */}
+                  <div className="flex flex-wrap gap-2">
+                    {SALE_PAYMENT_METHODS.map((m) => (
+                      <Button
+                        key={m.value}
+                        type="button"
+                        size="sm"
+                        variant={field.value === m.value ? 'default' : 'outline'}
+                        aria-pressed={field.value === m.value}
+                        className="h-8"
+                        onClick={() => field.onChange(m.value)}
+                      >
+                        {m.label}
+                      </Button>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

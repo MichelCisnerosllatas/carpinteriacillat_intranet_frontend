@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { navigationsService } from '../services/navigations.service'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { NavigationListRequestDto, NavigationApiItem } from '../model/navigationget.dto'
 import type { LinksPaginationType } from '@/shared/type/linksPagination.type'
 import type { MetaPaginationType } from '@/shared/type/metaPagination.type'
@@ -31,7 +31,7 @@ type Action = {
 const defaultFilters: NavigationListRequestDto = { page: 1, per_page: 10, search: '', state: undefined }
 
 const mapFromApi = (item: NavigationApiItem): Navigation => {
-  const stateOpt = getStateOption(item.navigation_state)
+  const stateOpt = getVisibilityStateOption(item.navigation_state)
   return {
     id: item.id_navigation,
     name: item.navigation_name,
@@ -58,7 +58,7 @@ export const useNavigationListStore = create<State & Action>((set, get) => ({
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await navigationsService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

@@ -5,6 +5,7 @@ import { type Row } from '@tanstack/react-table'
 import { CheckCircle2, Eye, Trash2, UserPen, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
+import { useCan } from '@/features/auth/hooks/usePermission'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
@@ -20,6 +21,12 @@ export function UsersRowActions({ row }: { row: Row<User> }) {
   const { toggleState, deleteItem } = useUserDeleteStore()
 
   const isActive = row.original.status === 'active'
+
+  // Acciones visibles según los permisos del usuario (ver ROLES_Y_PERMISOS.md)
+  const canView = useCan('users.view')
+  const canEdit = useCan('users.update')
+  const canState = useCan('users.state')
+  const canDelete = useCan('users.delete')
 
   const handleView = () => {
     setCurrentUser(row.original)
@@ -74,6 +81,9 @@ export function UsersRowActions({ row }: { row: Row<User> }) {
     )
   }
 
+  // Si no tiene ninguna acción permitida, no mostramos el botón "..."
+  if (!canView && !canEdit && !canState && !canDelete) return null
+
   return (
     <DropdownMenu modal={false}>
       <Tooltip>
@@ -90,22 +100,30 @@ export function UsersRowActions({ row }: { row: Row<User> }) {
         <TooltipContent>Más acciones</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={handleView}>
-          Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleEdit}>
-          Editar <DropdownMenuShortcut><UserPen size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleToggleState()}>
-          {isActive
-            ? <><span>Desactivar</span> <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
-            : <><span>Activar</span> <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
-          Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {canView && (
+          <DropdownMenuItem onClick={handleView}>
+            Ver detalle <DropdownMenuShortcut><Eye size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {canEdit && (
+          <DropdownMenuItem onClick={handleEdit}>
+            Editar <DropdownMenuShortcut><UserPen size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+        {(canView || canEdit) && canState && <DropdownMenuSeparator />}
+        {canState && (
+          <DropdownMenuItem onClick={() => void handleToggleState()}>
+            {isActive
+              ? <><span>Desactivar</span> <DropdownMenuShortcut><XCircle size={16} /></DropdownMenuShortcut></>
+              : <><span>Activar</span> <DropdownMenuShortcut><CheckCircle2 size={16} /></DropdownMenuShortcut></>}
+          </DropdownMenuItem>
+        )}
+        {(canView || canEdit || canState) && canDelete && <DropdownMenuSeparator />}
+        {canDelete && (
+          <DropdownMenuItem onClick={() => void handleDelete()} className="text-red-500!">
+            Eliminar <DropdownMenuShortcut><Trash2 size={16} /></DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

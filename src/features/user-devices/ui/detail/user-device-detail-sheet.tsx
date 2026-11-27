@@ -12,6 +12,7 @@ import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { Wifi, WifiOff } from 'lucide-react'
 import type { UserDevice, DevicePlatform } from '../../data/schema'
+import { Row } from './row'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -25,17 +26,6 @@ const platformBadgeClass: Record<DevicePlatform, string> = {
   web:     'bg-blue-100/30 text-blue-900 dark:text-blue-200 border-blue-300',
   desktop: 'bg-slate-100/30 text-slate-700 dark:text-slate-300 border-slate-300',
   unknown: 'bg-neutral-300/40 text-neutral-700 dark:text-neutral-300 border-neutral-300',
-}
-
-function Row({ label, value }: { label: string; value?: string | null | boolean }) {
-  if (value === undefined || value === null || value === '') return null
-  const display = typeof value === 'boolean' ? (value ? 'Sí' : 'No') : value
-  return (
-    <div className="grid grid-cols-[160px_1fr] gap-x-3 py-1.5 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="break-all font-medium text-foreground">{display}</span>
-    </div>
-  )
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────

@@ -47,7 +47,9 @@ const mapRoleFromApi = (role: RoleType): Role => {
   return {
     id: role.id_role,
     name: role.role_name,
+    slug: role.role_slug ?? null,
     description: role.role_description,
+    isSystem: role.role_is_system === 1, // 1 = rol del sistema (superadmin)
     status,
     statusLabel: status === 'active' ? 'Activo' : 'Inactivo',
     createdAt: role.role_created_at,
@@ -76,7 +78,7 @@ export const useRoleListStore = create<State & Action>((set, get) => ({
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
 
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
 
     try {
       const response = await rolesService.getList(nextFilters)

@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 // import { Loader2 } from 'lucide-react'
 import { useCompanySettingStore } from '../stores/useCompanySettingStore'
 import { CompanySettingForm } from './form/company-setting-form'
-import { CompanySettingsSkeleton } from './form/company-settings-skeleton'
+import { CompanySettingsSkeleton } from './form/company-settings-skeleton/company-settings-skeleton'
 import { ErrorState } from '@/widgets/error/error-state'
 
 export function CompanySettingView() {
@@ -30,7 +30,7 @@ export function CompanySettingView() {
         // message2="Comprueba tu conexión o vuelve a intentarlo."
         primaryLabel="Reintentar"
         secondaryLabel="Volver al inicio"
-        // isPrimaryLoading={isFetching}
+        isPrimaryLoading={isLoading}
         onPrimaryAction={() => {
           fetch()
         }}

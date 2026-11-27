@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Globe, ExternalLink } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -45,7 +46,7 @@ export const companySocialNetworksColumns: ColumnDef<CompanySocialNetwork>[] = [
             <Icon className="size-4 text-muted-foreground" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+            <Link href={`/company-social-networks/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
             <a
               href={row.original.link} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary hover:underline"
@@ -60,6 +61,7 @@ export const companySocialNetworksColumns: ColumnDef<CompanySocialNetwork>[] = [
     },
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Red social' },
   },
 
   {
@@ -72,7 +74,7 @@ export const companySocialNetworksColumns: ColumnDef<CompanySocialNetwork>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Sitio web' },
   },
 
   {
@@ -88,12 +90,12 @@ export const companySocialNetworksColumns: ColumnDef<CompanySocialNetwork>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Estado' },
   },
 
   {
     id: 'actions',
     cell: CompanySocialNetworksRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

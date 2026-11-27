@@ -2,6 +2,8 @@
 export type FurnitureApiItem = {
   id_furniture: number
   furniture_name: string
+  /** Título público opcional — si es null el sitio web usa furniture_name. */
+  furniture_title: string | null
   furniture_description: string | null
   furniture_largo: number | null
   furniture_ancho: number | null
@@ -58,4 +60,18 @@ export type FurnitureJoinApiItem = FurnitureApiItem & {
       image_type: string | null
     } | null
   }>
+
+  /**
+   * Trabajos de la galería web (web_works) que referencian este mueble.
+   * Solo lectura: se administran desde Galería → Trabajos. Puede no venir (backend viejo).
+   */
+  web_works?: FurnitureWebWorkApiItem[]
+}
+
+/** Trabajo de la galería web que usa un mueble (resumen que manda FurnitureJoinResource). */
+export type FurnitureWebWorkApiItem = {
+  id_web_work: number
+  webwork_title: string
+  webwork_state: number
+  typework_key: string | null
 }

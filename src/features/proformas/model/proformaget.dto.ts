@@ -12,6 +12,10 @@ export type ProformaListRequestDto = {
   search?: string
   status?: ProformaStatusApi
   client_id?: number
+  /** Filtrar por vendedor — el backend solo lo respeta con `proformas.view_all`. */
+  user_id?: number
+  /** Sucursales (múltiple). El backend recorta a las que el usuario puede ver. */
+  branch_ids?: number[]
   date_from?: string
   date_to?: string
   per_page?: number

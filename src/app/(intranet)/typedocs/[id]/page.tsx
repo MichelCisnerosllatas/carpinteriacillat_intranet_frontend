@@ -11,7 +11,7 @@ export default async function TypeDocDetailPage({ params }: { params: Promise<{ 
     <>
       <Header fixed title="Detalle de Documento" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <TypeDocsBreadcrumb currentPage="Detalle" showHeader={false} />
+        <TypeDocsBreadcrumb currentPage="Detalle" showHeader={true} />
         <TypeDocDetail id={id} />
       </main>
     </>

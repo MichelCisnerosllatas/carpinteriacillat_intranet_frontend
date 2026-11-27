@@ -1,4 +1,4 @@
-const BASE = '/v1/public/section'
+const BASE = '/v1/intranet/section'
 
 export const SECTIONS_ENDPOINTS = {
   v1: {

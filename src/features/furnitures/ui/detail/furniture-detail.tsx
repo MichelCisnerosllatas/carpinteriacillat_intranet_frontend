@@ -11,11 +11,13 @@ import 'yet-another-react-lightbox/styles.css'
 import 'yet-another-react-lightbox/plugins/thumbnails.css'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
 import { getStateOption } from '@/shared/config/entity-states'
 import { useFurnitureListStore } from '../../stores/useFurnitureListStore'
+import { FurnitureWebWorksCard } from '../furniture-web-works-card'
 
 export function FurnitureDetail({ id }: { id: string }) {
   const router  = useRouter()
@@ -124,18 +126,21 @@ export function FurnitureDetail({ id }: { id: string }) {
               {stateOpt.label}
             </Badge>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            onClick={() => {
-              NProgress.start()
-              router.push(`/furnitures/edit/${item.id}`)
-            }}
-          >
-            <Pencil className="mr-1.5 size-4" />
-            Editar
-          </Button>
+          {/* Solo si tiene permiso de editar muebles */}
+          <Can permission="furnitures.update">
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => {
+                NProgress.start()
+                router.push(`/furnitures/edit/${item.id}`)
+              }}
+            >
+              <Pencil className="mr-1.5 size-4" />
+              Editar
+            </Button>
+          </Can>
         </div>
 
         {item.description && (
@@ -189,6 +194,8 @@ export function FurnitureDetail({ id }: { id: string }) {
             )}
           </CardContent>
         </Card>
+
+        <FurnitureWebWorksCard furnitureId={item.id} webWorks={item.webWorks} />
 
         <Card>
           <CardHeader>

@@ -6,6 +6,7 @@ import { Pencil, Building2, CalendarDays, Mail, MapPin, Phone, User } from 'luci
 import NProgress from 'nprogress'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 import { cn } from '@/shared/lib/utils'
@@ -46,9 +47,12 @@ export function ClientDetail({ id }: { id: string }) {
               )}
               <Badge variant="outline" className={cn('mt-1 w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/clients/edit/${item.id}`) }}>
-              <Pencil className="size-4 mr-1" />Editar
-            </Button>
+            {/* Solo si tiene permiso de editar */}
+            <Can permission="clients.update">
+              <Button variant="outline" size="sm" onClick={() => { NProgress.start(); router.push(`/clients/edit/${item.id}`) }}>
+                <Pencil className="size-4 mr-1" />Editar
+              </Button>
+            </Can>
           </div>
         </CardContent>
       </Card>

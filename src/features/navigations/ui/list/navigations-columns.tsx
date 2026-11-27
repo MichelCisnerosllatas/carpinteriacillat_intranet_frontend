@@ -1,9 +1,10 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { Navigation } from '../../data/schema'
 import { NavigationsRowActions } from './navigations-row-actions'
 
@@ -37,7 +38,7 @@ export const navigationsColumns: ColumnDef<Navigation>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Navegación" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/navigations/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.name}</Link>
         {row.original.url && (
           <span className="text-xs text-muted-foreground truncate">{row.original.url}</span>
         )}
@@ -45,6 +46,7 @@ export const navigationsColumns: ColumnDef<Navigation>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Navegación' },
   },
 
   {
@@ -57,14 +59,14 @@ export const navigationsColumns: ColumnDef<Navigation>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[80px]' },
+    meta: { className: 'w-[80px]', label: 'Orden' },
   },
 
   {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
-      const opt = getStateOption(row.original.stateValue)
+      const opt = getVisibilityStateOption(row.original.stateValue)
       return (
         <Badge variant="outline" className={cn('text-xs', opt.badge)}>
           {opt.label}
@@ -73,7 +75,7 @@ export const navigationsColumns: ColumnDef<Navigation>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -95,12 +97,12 @@ export const navigationsColumns: ColumnDef<Navigation>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: NavigationsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

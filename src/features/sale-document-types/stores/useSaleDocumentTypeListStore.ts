@@ -39,6 +39,7 @@ const mapFromApi = (item: SaleDocumentTypeApiItem): SaleDocumentType => {
     name: item.name,
     code: item.code,
     series: item.series,
+    description: item.description ?? null,
     status: item.status === 1 ? 'active' : 'inactive',
     statusLabel: stateOpt.label,
     stateValue: item.status,
@@ -60,7 +61,7 @@ export const useSaleDocumentTypeListStore = create<State & Action>((set, get) =>
     if (get().isFetching) return false
     if (!get().forceReload && get().hasLoaded) return true
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const response = await saleDocumentTypesService.getList(nextFilters)
       if (!response.success) throw new Error(response.message)

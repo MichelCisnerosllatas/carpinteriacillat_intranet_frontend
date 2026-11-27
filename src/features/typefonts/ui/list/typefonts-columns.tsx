@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
@@ -14,7 +15,7 @@ function TypeFontNameCell({ font }: { font: TypeFont }) {
 
   return (
     <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-      <span className="text-sm font-medium leading-none text-foreground" style={fontFamilyStyle(font.name)}>{font.name}</span>
+      <Link href={`/typefonts/${font.id}`} className="text-sm font-medium leading-none text-primary hover:underline" style={fontFamilyStyle(font.name)}>{font.name}</Link>
       {font.description && (
         <span className="text-xs text-muted-foreground">{font.description}</span>
       )}
@@ -53,6 +54,7 @@ export const typefontsColumns: ColumnDef<TypeFont>[] = [
     cell: ({ row }) => <TypeFontNameCell font={row.original} />,
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Tipografía' },
   },
 
   {
@@ -68,7 +70,7 @@ export const typefontsColumns: ColumnDef<TypeFont>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -90,12 +92,12 @@ export const typefontsColumns: ColumnDef<TypeFont>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: TypeFontsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

@@ -84,6 +84,7 @@ export function ModalSelect<T>({
   footer,
   onCreateNew,
   createLabel,
+  toolbar,
 }: ModalSelectProps<T>) {
   const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
@@ -123,6 +124,8 @@ export function ModalSelect<T>({
         onCreateNew={onCreateNew}
         createLabel={createLabel}
       />
+
+      {toolbar && <div className="px-6 pt-3">{toolbar}</div>}
 
       <div onKeyDown={onKeyDown} tabIndex={-1} className="min-h-0 flex-1">
         <ModalSelectBody

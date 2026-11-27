@@ -1,9 +1,10 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { DataTableColumnHeader } from '@/shared/ui/data-table/column-header'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
 import type { Section } from '../../data/schema'
 import { SectionsRowActions } from './sections-row-actions'
 
@@ -37,7 +38,9 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Sección" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.name}</span>
+        <Link href={`/sections/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">
+          {row.original.name}
+        </Link>
         {row.original.title && (
           <span className="text-xs text-muted-foreground">{row.original.title}</span>
         )}
@@ -48,6 +51,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Sección' },
   },
 
   {
@@ -59,7 +63,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[70px]' },
+    meta: { className: 'w-[70px]', label: 'Orden' },
   },
 
   {
@@ -73,7 +77,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[150px]' },
+    meta: { className: 'w-[150px]', label: 'Tipo de Sección' },
   },
 
   {
@@ -87,14 +91,14 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[140px]' },
+    meta: { className: 'w-[140px]', label: 'Navegación' },
   },
 
   {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
-      const opt = getStateOption(row.original.stateValue)
+      const opt = getVisibilityStateOption(row.original.stateValue)
       return (
         <Badge variant="outline" className={cn('text-xs', opt.badge)}>
           {opt.label}
@@ -103,7 +107,7 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[120px]' },
+    meta: { className: 'w-[120px]', label: 'Estado' },
   },
 
   {
@@ -125,13 +129,13 @@ export const sectionsColumns: ColumnDef<Section>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Fechas' },
   },
 
   {
     id: 'actions',
     cell: SectionsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]
 

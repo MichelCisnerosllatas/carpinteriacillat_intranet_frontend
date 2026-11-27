@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { StorageDetailDialog } from '../dialogs/storage-detail-dialog'
 import { StorageActionDialog } from '../dialogs/storage-action-dialog'
 import { StorageMoveDialog } from '../dialogs/storage-move-dialog'
+import { Can } from '@/features/auth/ui/can'
 import type { EnrichedStorageFile } from '../../data/schema'
 
 interface StorageCardProps {
@@ -120,32 +121,38 @@ export function StorageCard({ file, isSelected, onToggleSelect, onPreview }: Sto
               </TooltipTrigger>
               <TooltipContent>Ver detalles</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="pointer-events-auto size-8 rounded-full shadow-md"
-                  onClick={(e) => { e.stopPropagation(); setMoveOpen(true) }}
-                >
-                  <FolderInput className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Mover / Renombrar</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="pointer-events-auto size-8 rounded-full shadow-md"
-                  onClick={(e) => { e.stopPropagation(); setActionOpen(true) }}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Eliminar</TooltipContent>
-            </Tooltip>
+            {/* Solo si tiene permiso de editar (mover / renombrar) */}
+            <Can permission="storage_images.update">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="pointer-events-auto size-8 rounded-full shadow-md"
+                    onClick={(e) => { e.stopPropagation(); setMoveOpen(true) }}
+                  >
+                    <FolderInput className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Mover / Renombrar</TooltipContent>
+              </Tooltip>
+            </Can>
+            {/* Solo si tiene permiso de eliminar */}
+            <Can permission="storage_images.delete">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="pointer-events-auto size-8 rounded-full shadow-md"
+                    onClick={(e) => { e.stopPropagation(); setActionOpen(true) }}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Eliminar</TooltipContent>
+              </Tooltip>
+            </Can>
           </div>
         </div>
 

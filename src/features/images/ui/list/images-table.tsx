@@ -1,24 +1,26 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState, type SortingState, type VisibilityState,
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
 import { useImageListStore } from '../../stores/useImageListStore'
 import { useImageDeleteStore } from '../../stores/useImageDeleteStore'
 import { imagesColumns } from './images-columns'
+import { useCan } from '@/features/auth/hooks/usePermission'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
 
 export function ImagesTable() {
   const {
@@ -26,6 +28,8 @@ export function ImagesTable() {
     load, reset,
   } = useImageListStore()
   const { bulkDeleteItems } = useImageDeleteStore()
+  // Solo si tiene permiso de eliminar imágenes (ver ROLES_Y_PERMISOS.md)
+  const canDelete = useCan('images.delete')
 
   const [rowSelection, setRowSelection]         = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -54,6 +58,17 @@ export function ImagesTable() {
     }, 500)
     return () => window.clearTimeout(t)
   }, [search])
+
+  // Limpia la búsqueda (el efecto de arriba recarga la página 1)
+  const resetFilters = () => setSearch('')
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== ''
 
   const table = useReactTable({
     data: items,
@@ -97,20 +112,22 @@ export function ImagesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="mb-3 size-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Cargando imágenes...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar imágenes</p>
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <Button size="sm" variant="outline" onClick={() => { reset(); void load() }}>Reintentar</Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar imágenes'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset();
+          void load()
+        }}
+      />
     )
   }
 
@@ -131,11 +148,12 @@ export function ImagesTable() {
               className="h-8 w-full sm:w-[260px]"
             />
           </div>
-          {search && (
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={() => setSearch('')}>
-              Limpiar
-            </Button>
-          )}
+          <DataTableFilterActions
+            onClear={resetFilters}
+            onRefresh={handleRefresh}
+            hasActiveFilters={hasActiveFilters}
+            isFetching={isFetching}
+          />
         </div>
         <DataTableViewOptions table={table} />
       </div>
@@ -196,7 +214,7 @@ export function ImagesTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onDelete={handleBulkDelete}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

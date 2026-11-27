@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { ShieldPlus } from 'lucide-react'
 import { TypeColorsTable } from '@/features/typecolors/ui/list/typecolors-table'
 
@@ -17,9 +18,12 @@ export default function TypeColorsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Colores</h2>
             <p className="text-muted-foreground">Tipos de color disponibles para muebles</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/typecolors/create"><ShieldPlus size={18} /><span>Nuevo Color</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="type_colors.create">
+            <Button asChild className="space-x-1">
+              <Link href="/typecolors/create"><ShieldPlus size={18} /><span>Nuevo Color</span></Link>
+            </Button>
+          </Can>
         </div>
         <TypeColorsTable />
       </main>

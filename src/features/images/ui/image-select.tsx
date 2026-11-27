@@ -15,6 +15,8 @@ const PER_PAGE = 20
 interface ImageSelectProps {
   value:         number | null
   onValueChange: (value: number | null) => void
+  /** Opcional: se dispara con el objeto completo de la imagen seleccionada (o null) — útil cuando el formulario que la usa necesita algo más que el id, ej. mostrar una vista previa. */
+  onSelectedChange?: (item: ImageApiItem | null) => void
   placeholder?:  string
   disabled?:     boolean
   showAll?:      boolean
@@ -23,6 +25,7 @@ interface ImageSelectProps {
 export function ImageSelect({
   value,
   onValueChange,
+  onSelectedChange,
   placeholder = 'Seleccionar imagen',
   disabled    = false,
   showAll     = false,
@@ -38,6 +41,11 @@ export function ImageSelect({
   const [error,           setError]           = useState(false)
   const [selected,        setSelected]        = useState<ImageApiItem | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Avisar al consumidor cada vez que cambia la imagen resuelta — sin `onSelectedChange` en las
+  // dependencias a propósito: es un callback que el padre suele pasar inline (se recrearía en
+  // cada render y dispararía el efecto de más); solo interesa reaccionar a que `selected` cambió.
+  useEffect(() => { onSelectedChange?.(selected) }, [selected])
 
   // Fetch a page of images
   const fetchPage = async (p: number, q: string) => {

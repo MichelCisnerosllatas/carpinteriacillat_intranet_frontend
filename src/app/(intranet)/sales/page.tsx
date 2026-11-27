@@ -4,6 +4,7 @@ import { Header } from '@/widgets/header/header'
 import { Button } from '@/shared/ui/button'
 import { ReceiptText } from 'lucide-react'
 import { SalesTable } from '@/features/sales/ui/list/sales-table'
+import { Can } from '@/features/auth/ui/can'
 
 export const metadata: Metadata = { title: 'Ventas' }
 
@@ -17,12 +18,15 @@ export default function SalesPage() {
             <h2 className="text-2xl font-bold tracking-tight">Ventas</h2>
             <p className="text-muted-foreground">Gestión de ventas a los clientes</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/sales/create">
-              <ReceiptText size={18} />
-              <span>Nueva Venta</span>
-            </Link>
-          </Button>
+          {/* Solo si tiene permiso de crear ventas (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="sales.create">
+            <Button asChild className="space-x-1">
+              <Link href="/sales/create">
+                <ReceiptText size={18} />
+                <span>Nueva Venta</span>
+              </Link>
+            </Button>
+          </Can>
         </div>
         <SalesTable />
       </main>

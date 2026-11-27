@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/widgets/header/header'
 import Link from 'next/link'
 import { Button } from '@/shared/ui/button'
+import { Can } from '@/features/auth/ui/can'
 import { Phone } from 'lucide-react'
 import { CompanyContactsTable } from '@/features/company-contacts/ui/list/company-contacts-table'
 
@@ -17,9 +18,12 @@ export default function CompanyContactsPage() {
             <h2 className="text-2xl font-bold tracking-tight">Contactos</h2>
             <p className="text-muted-foreground">Teléfonos y contactos adicionales de la empresa</p>
           </div>
-          <Button asChild className="space-x-1">
-            <Link href="/company-contacts/create"><Phone size={18} /><span>Nuevo Contacto</span></Link>
-          </Button>
+          {/* Solo si tiene permiso de crear (ver ROLES_Y_PERMISOS.md) */}
+          <Can permission="company_contacts.create">
+            <Button asChild className="space-x-1">
+              <Link href="/company-contacts/create"><Phone size={18} /><span>Nuevo Contacto</span></Link>
+            </Button>
+          </Can>
         </div>
         <CompanyContactsTable />
       </main>

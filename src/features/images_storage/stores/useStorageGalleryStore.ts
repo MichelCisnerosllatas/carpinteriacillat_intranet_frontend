@@ -48,7 +48,7 @@ export const useStorageGalleryStore = create<State & Action>((set, get) => ({
 
   load: async (params = {}) => {
     const nextFilters = { ...get().filters, ...params }
-    set({ filters: nextFilters, isFetching: true, isError: false, message: null })
+    set({ filters: nextFilters, isFetching: true })
     try {
       const res = await storageService.getAll(nextFilters)
       if (!res.success && res.data?.length === 0) {

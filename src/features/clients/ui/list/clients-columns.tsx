@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Mail, Phone, User } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -38,7 +39,7 @@ export const clientsColumns: ColumnDef<Client>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Cliente" />,
     cell: ({ row }) => (
       <div className="flex min-w-[200px] flex-col gap-0.5 py-1.5">
-        <span className="text-sm font-medium leading-none text-foreground">{row.original.businessName}</span>
+        <Link href={`/clients/${row.original.id}`} className="text-sm font-medium leading-none text-primary hover:underline">{row.original.businessName}</Link>
         {row.original.address && (
           <span className="text-xs text-muted-foreground">{row.original.address}</span>
         )}
@@ -46,6 +47,7 @@ export const clientsColumns: ColumnDef<Client>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
+    meta: { label: 'Cliente' },
   },
 
   {
@@ -64,7 +66,7 @@ export const clientsColumns: ColumnDef<Client>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[160px]' },
+    meta: { className: 'w-[160px]', label: 'Documento' },
   },
 
   {
@@ -87,7 +89,7 @@ export const clientsColumns: ColumnDef<Client>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-    meta: { className: 'w-[220px]' },
+    meta: { className: 'w-[220px]', label: 'Contacto' },
   },
 
   {
@@ -103,12 +105,12 @@ export const clientsColumns: ColumnDef<Client>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-    meta: { className: 'w-[110px]' },
+    meta: { className: 'w-[110px]', label: 'Estado' },
   },
 
   {
     id: 'actions',
     cell: ClientsRowActions,
-    meta: { className: 'w-[48px]' },
+    meta: { className: 'w-[48px]', label: 'Acciones' },
   },
 ]

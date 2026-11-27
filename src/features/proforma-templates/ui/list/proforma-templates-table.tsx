@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState,
   type SortingState,
@@ -12,7 +11,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -20,6 +18,7 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { ENTITY_STATES } from '@/shared/config/entity-states'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalDeleteConfirm } from '@/shared/lib/swal'
@@ -28,6 +27,9 @@ import { useProformaTemplateListStore } from '../../stores/useProformaTemplateLi
 import { useProformaTemplateDeleteStore } from '../../stores/useProformaTemplateDeleteStore'
 import { proformaTemplatesColumns } from './proforma-templates-columns'
 import { ProformaTemplateStatsBar } from './proforma-template-stats-bar'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { ErrorState } from '@/widgets/error/error-state'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ProformaTemplatesTable() {
   const {
@@ -43,6 +45,16 @@ export function ProformaTemplatesTable() {
     reset,
   } = useProformaTemplateListStore()
   const { bulkToggleState, bulkDeleteItems } = useProformaTemplateDeleteStore()
+
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canChangeState = useCan('proforma_templates.state')
+  const canDelete = useCan('proforma_templates.delete')
+  const canBulk = canChangeState || canDelete
+  // Sin acciones masivas no tiene sentido la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? proformaTemplatesColumns : proformaTemplatesColumns.filter((c) => c.id !== 'select')),
+    [canBulk]
+  )
   const { load: loadProformaTypes } = useProformaTypeSelectStore()
 
   const [rowSelection, setRowSelection] = useState({})
@@ -99,11 +111,11 @@ export function ProformaTemplatesTable() {
 
   const table = useReactTable({
     data: items,
-    columns: proformaTemplatesColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -131,6 +143,14 @@ export function ProformaTemplatesTable() {
     setIsUserFetching(true)
     void load({ search: '', status: undefined, page: 1 }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || status !== 'all'
 
   const handleBulkActivate = async () => {
     setIsBulkLoading(true)
@@ -185,29 +205,22 @@ export function ProformaTemplatesTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="text-muted-foreground mb-3 size-8 animate-spin" />
-        <p className="text-muted-foreground text-sm">Cargando plantillas de proforma...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar plantillas de proforma</p>
-        {message && <p className="text-muted-foreground text-xs">{message}</p>}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            reset()
-            void load()
-          }}
-        >
-          Reintentar
-        </Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar plantillas de proforma'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset()
+          void load()
+        }}
+      />
     )
   }
 
@@ -250,9 +263,12 @@ export function ProformaTemplatesTable() {
             </Select>
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-              Limpiar
-            </Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -326,9 +342,9 @@ export function ProformaTemplatesTable() {
       <DataTableBulkActions
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
-        onActivate={handleBulkActivate}
-        onDeactivate={handleBulkDeactivate}
-        onDelete={handleBulkDelete}
+        onActivate={canChangeState ? handleBulkActivate : undefined}
+        onDeactivate={canChangeState ? handleBulkDeactivate : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

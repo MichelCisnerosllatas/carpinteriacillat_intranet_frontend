@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LoaderCircle } from 'lucide-react'
 import {
   type PaginationState,
   type SortingState,
@@ -12,7 +11,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
@@ -20,14 +18,20 @@ import { DataTablePagination } from '@/shared/ui/data-table/pagination'
 import { DataTableViewOptions } from '@/shared/ui/data-table/view-options'
 import { DataTableBulkActions } from '@/shared/ui/data-table/bulk-actions'
 import { TableLoadingBar } from '@/shared/ui/data-table/table-loading-bar'
+import { DataTableFilterActions } from '@/shared/ui/data-table/filter-actions'
 import { toastError, toastSuccess } from '@/shared/lib/toast'
 import { swalConfirmAction, swalDeleteConfirm } from '@/shared/lib/swal'
 import { ClientSelect } from '@/features/clients'
+import { SellerSelect } from '@/features/sellers'
+import { BranchMultiSelect, useShowBranchFilter } from '@/features/company-branches'
 import { useProformaListStore } from '../../stores/useProformaListStore'
 import { useProformaDeleteStore } from '../../stores/useProformaDeleteStore'
 import { PROFORMA_STATUS_OPTIONS, getProformaStatusOption, getValidStatusTransitions } from '../../data/data'
 import type { ProformaStatus } from '../../data/schema'
 import { proformasColumns } from './proformas-columns'
+import { ErrorState } from '@/widgets/error/error-state'
+import { CircleProgressIndicatorPage } from '@/widgets/CircleProgressIndicatorPage'
+import { useCan } from '@/features/auth/hooks/usePermission'
 
 export function ProformasTable() {
   const {
@@ -44,12 +48,28 @@ export function ProformasTable() {
   } = useProformaListStore()
   const { bulkDeleteItems, bulkChangeStatus } = useProformaDeleteStore()
 
+  // Acciones masivas según permisos (ver ROLES_Y_PERMISOS.md)
+  const canChangeState = useCan('proformas.state')
+  const canDelete = useCan('proformas.delete')
+  // Solo quien ve las proformas de TODOS puede filtrar por vendedor (contrato §11).
+  const canViewAll = useCan('proformas.view_all')
+  // Filtro de sucursales: solo si el usuario puede ver más de una (company_branches.view_all).
+  const showBranchFilter = useShowBranchFilter()
+  const canBulk = canChangeState || canDelete
+  // Sin acciones masivas no tiene sentido la columna de selección
+  const columns = useMemo(
+    () => (canBulk ? proformasColumns : proformasColumns.filter((c) => c.id !== 'select')),
+    [canBulk]
+  )
+
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting] = useState<SortingState>([])
   const [search, setSearch] = useState(filters.search ?? '')
   const [status, setStatus] = useState<string>(filters.status ?? 'all')
   const [clientId, setClientId] = useState<number | null>(filters.client_id ?? null)
+  const [sellerId, setSellerId] = useState<number | null>(filters.user_id ?? null)
+  const [branchIds, setBranchIds] = useState<number[]>(filters.branch_ids ?? [])
   const [dateFrom, setDateFrom] = useState(filters.date_from ?? '')
   const [dateTo, setDateTo] = useState(filters.date_to ?? '')
   const [isBulkLoading, setIsBulkLoading] = useState(false)
@@ -82,6 +102,8 @@ export function ProformasTable() {
         search,
         status: status === 'all' ? undefined : (status as ProformaStatus),
         client_id: clientId ?? undefined,
+        user_id: sellerId ?? undefined,
+        branch_ids: branchIds.length ? branchIds : undefined,
         date_from: dateFrom,
         date_to: dateTo,
         page: 1,
@@ -95,11 +117,15 @@ export function ProformasTable() {
   const applyFilters = (overrides: {
     status?: string
     clientId?: number | null
+    sellerId?: number | null
+    branchIds?: number[]
     dateFrom?: string
     dateTo?: string
   }) => {
     const nextStatus = overrides.status ?? status
     const nextClientId = overrides.clientId !== undefined ? overrides.clientId : clientId
+    const nextSellerId = overrides.sellerId !== undefined ? overrides.sellerId : sellerId
+    const nextBranchIds = overrides.branchIds ?? branchIds
     const nextDateFrom = overrides.dateFrom ?? dateFrom
     const nextDateTo = overrides.dateTo ?? dateTo
     setIsUserFetching(true)
@@ -107,6 +133,8 @@ export function ProformasTable() {
       search,
       status: nextStatus === 'all' ? undefined : (nextStatus as ProformaStatus),
       client_id: nextClientId ?? undefined,
+      user_id: nextSellerId ?? undefined,
+      branch_ids: nextBranchIds.length ? nextBranchIds : undefined,
       date_from: nextDateFrom,
       date_to: nextDateTo,
       page: 1,
@@ -115,16 +143,18 @@ export function ProformasTable() {
 
   const handleStatusChange = (value: string) => { setStatus(value); applyFilters({ status: value }) }
   const handleClientIdChange = (value: number | null) => { setClientId(value); applyFilters({ clientId: value }) }
+  const handleSellerIdChange = (value: number | null) => { setSellerId(value); applyFilters({ sellerId: value }) }
+  const handleBranchIdsChange = (value: number[]) => { setBranchIds(value); applyFilters({ branchIds: value }) }
   const handleDateFromChange = (value: string) => { setDateFrom(value); applyFilters({ dateFrom: value }) }
   const handleDateToChange = (value: string) => { setDateTo(value); applyFilters({ dateTo: value }) }
 
   const table = useReactTable({
     data: items,
-    columns: proformasColumns,
+    columns,
     pageCount: meta?.last_page ?? 1,
     manualPagination: true,
     state: { sorting, pagination, rowSelection, columnVisibility },
-    enableRowSelection: true,
+    enableRowSelection: canBulk,
     onPaginationChange: (updater) => {
       const next = typeof updater === 'function' ? updater(pagination) : updater
       setIsUserFetching(true)
@@ -158,6 +188,8 @@ export function ProformasTable() {
     setSearch('')
     setStatus('all')
     setClientId(null)
+    setSellerId(null)
+    setBranchIds([])
     setDateFrom('')
     setDateTo('')
     setIsUserFetching(true)
@@ -165,11 +197,21 @@ export function ProformasTable() {
       search: '',
       status: undefined,
       client_id: undefined,
+      user_id: undefined,
+      branch_ids: undefined,
       date_from: '',
       date_to: '',
       page: 1,
     }).finally(() => setIsUserFetching(false))
   }
+
+  // Vuelve a pedir la lista con los filtros y la página actuales
+  const handleRefresh = () => {
+    setIsUserFetching(true)
+    void load().finally(() => setIsUserFetching(false))
+  }
+
+  const hasActiveFilters = search !== '' || status !== 'all' || clientId !== null || sellerId !== null || branchIds.length > 0 || dateFrom !== '' || dateTo !== ''
 
   const handleBulkChangeStatus = async (value: string) => {
     const newStatus = value as ProformaStatus
@@ -215,29 +257,22 @@ export function ProformasTable() {
 
   if (!hasLoaded && !isInitialLoading) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center">
-        <LoaderCircle className="text-muted-foreground mb-3 size-8 animate-spin" />
-        <p className="text-muted-foreground text-sm">Cargando proformas...</p>
-      </div>
+      <CircleProgressIndicatorPage/>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
-        <p className="text-sm font-semibold">Error al cargar proformas</p>
-        {message && <p className="text-muted-foreground text-xs">{message}</p>}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            reset()
-            void load()
-          }}
-        >
-          Reintentar
-        </Button>
-      </div>
+      <ErrorState
+        isPrimaryLoading={isFetching}
+        title='Error al cargar proformas'
+        message={message?.toString()}
+        primaryLabel="Reintentar"
+        onPrimaryAction={() => {
+          reset()
+          void load()
+        }}
+      />
     )
   }
 
@@ -285,6 +320,33 @@ export function ProformasTable() {
               />
             </div>
           </div>
+          {canViewAll && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-xs">Vendedor</span>
+              <div className="w-full sm:w-[180px]">
+                <SellerSelect
+                  value={sellerId}
+                  onValueChange={handleSellerIdChange}
+                  showAll
+                  allLabel="Todos"
+                  disabled={isFetching}
+                  className="h-8"
+                />
+              </div>
+            </div>
+          )}
+          {showBranchFilter && (
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground text-xs">Sucursales</span>
+              <div className="w-full sm:w-[180px]">
+                <BranchMultiSelect
+                  value={branchIds}
+                  onValueChange={handleBranchIdsChange}
+                  disabled={isFetching}
+                />
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">Fecha desde</span>
             <Input
@@ -306,9 +368,12 @@ export function ProformasTable() {
             />
           </div>
           <div className="flex flex-col justify-end">
-            <Button variant="ghost" size="sm" disabled={isFetching} onClick={resetFilters}>
-              Limpiar
-            </Button>
+            <DataTableFilterActions
+              onClear={resetFilters}
+              onRefresh={handleRefresh}
+              hasActiveFilters={hasActiveFilters}
+              isFetching={isFetching}
+            />
           </div>
         </div>
         <DataTableViewOptions table={table} />
@@ -383,8 +448,8 @@ export function ProformasTable() {
         selectedCount={selectedCount}
         isLoading={isBulkLoading}
         statusActions={statusActions}
-        onChangeStatus={handleBulkChangeStatus}
-        onDelete={handleBulkDelete}
+        onChangeStatus={canChangeState ? handleBulkChangeStatus : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
         onClear={() => table.resetRowSelection()}
       />
     </div>

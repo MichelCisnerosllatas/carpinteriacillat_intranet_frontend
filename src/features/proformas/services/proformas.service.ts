@@ -7,6 +7,10 @@ import type {
 } from '../model/proformaget.dto'
 import type { ProformaPostRequestDto, ProformaPostResponseDto } from '../model/proformapost.dto'
 import type { ProformaPutRequestDto, ProformaPutResponseDto } from '../model/proformaput.dto'
+import type {
+  ProformaPlainListResponseDto,
+  ProformaSaleDraftResponseDto,
+} from '../model/proforma-sale-draft.dto'
 
 // La generación del PDF de preview (con datos ficticios de cliente/ítems + datos reales de
 // empresa) puede tardar bastante, sobre todo en el primer render tras levantar el backend
@@ -22,6 +26,24 @@ const PREVIEW_TIMEOUT_MS = 120000
 const PROFORMA_CREATE_TIMEOUT_MS = 120000
 
 export const proformasService = {
+  // Proformas ACEPTADAS (candidatas a convertirse en venta) — index plano, sin relaciones.
+  getAcceptedForSale: async (search?: string): Promise<ProformaPlainListResponseDto> => {
+    const params: Record<string, string | number> = { status: 'ACEPTADA', per_page: 100 }
+    if (search) params.search = search
+    const { data } = await apiClient.get<ProformaPlainListResponseDto>(PROFORMAS_ENDPOINTS.v1.get, {
+      params,
+    })
+    return data
+  },
+
+  // Cliente + líneas + moneda listos para precargar la pantalla de venta (contrato §6).
+  getSaleDraft: async (id: number): Promise<ProformaSaleDraftResponseDto> => {
+    const { data } = await apiClient.get<ProformaSaleDraftResponseDto>(
+      PROFORMAS_ENDPOINTS.v1.saleDraft(id)
+    )
+    return data
+  },
+
   // Tabla principal y detalle: usa el endpoint -join (cliente, plantilla, firma, tipo y detalles).
   getList: async (param: ProformaListRequestDto): Promise<ProformaJoinListResponseDto> => {
     const params = Object.fromEntries(

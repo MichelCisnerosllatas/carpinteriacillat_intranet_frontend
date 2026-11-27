@@ -11,7 +11,7 @@ export default async function CompanySocialNetworkDetailPage({ params }: { param
     <>
       <Header fixed title="Detalle de Red Social" />
       <main className="flex flex-1 flex-col gap-4 p-4 pt-0 sm:gap-6">
-        <CompanySocialNetworksBreadcrumb currentPage="Detalle" showHeader={false} />
+        <CompanySocialNetworksBreadcrumb currentPage="Detalle" showHeader={true} />
         <CompanySocialNetworkDetail id={id} />
       </main>
     </>

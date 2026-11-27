@@ -2,19 +2,42 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, LayoutGrid, CalendarDays, Navigation2, ExternalLink, ListOrdered } from 'lucide-react'
+import NProgress from 'nprogress'
+import { Info, Pencil, LayoutGrid, Settings } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Separator } from '@/shared/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { getStateOption } from '@/shared/config/entity-states'
+import { getVisibilityStateOption } from '@/shared/config/entity-states'
+import { useTabQueryParam } from '@/shared/lib/use-tab-query-param'
+import { usePreviewOnView } from '@/shared/hooks/use-preview-on-view'
+import type { PreviewPayload } from '@/widgets/landing-preview/landing-preview.types'
+import { getGroupedSectionConfig } from '@/features/sectionimages/grouped'
 import { useSectionListStore } from '../../stores/useSectionListStore'
-import NProgress from 'nprogress'
+import { SectionDetailInfoTab } from './tabs/info/section-detail-info-tab'
+import { SectionDetailImagesTab } from './tabs/images/section-detail-images-tab'
+import { SectionDetailButtonsTab } from './tabs/buttons/section-detail-buttons-tab'
+import { SectionDetailItemsTab } from './tabs/items/section-detail-items-tab'
+import { SectionDetailTestimoniesTab } from './tabs/testimonies/section-detail-testimonies-tab'
+import { SectionDetailWorksTab } from './tabs/works/section-detail-works-tab'
+import { getSectionWorksConfig } from './tabs/works/section-works.config'
+import { Can } from '@/features/auth/ui/can'
 
+const TABS = ['info', 'works', 'images', 'buttons', 'items', 'testimonies'] as const
+
+/**
+ * Detalle de Section — cabecera de solo lectura + Tabs. Cada tab es su propio componente bajo
+ * `./tabs/<nombre>/` (Info general, Imágenes, Botones, Items) para que crecer uno no signifique
+ * tocar los demás. La pestaña activa vive en `?tab=` de la URL (ver `useTabQueryParam`): así un
+ * "volver" desde un formulario hijo (crear un botón, una imagen, etc.) recupera la pestaña
+ * correcta en vez de siempre caer en la primera.
+ */
 export function SectionDetail({ id }: { id: string }) {
   const router = useRouter()
   const { currentItem, items, loadById, setCurrentItem } = useSectionListStore()
+  const [activeTab, setActiveTab] = useTabQueryParam(TABS, 'info')
 
   // Siempre trae el registro fresco del backend — no depende de que la tabla ya esté cargada en memoria.
   useEffect(() => {
@@ -23,142 +46,267 @@ export function SectionDetail({ id }: { id: string }) {
   }, [id])
 
   const item = currentItem && String(currentItem.id) === id ? currentItem : items.find((i) => String(i.id) === id) ?? null
+
+  // Solo lectura: no hay un form.watch() que dispare esto — se manda una vez, cuando cambia QUÉ
+  // sección se está viendo (ver use-preview-on-view.ts). Antes del "if (!item) return" a
+  // propósito: los hooks se llaman siempre, en el mismo orden, en cada render.
+  usePreviewOnView(item?.id, (): PreviewPayload => ({
+    entity: 'section',
+    id: item!.id,
+    id_navigation: item!.idNavigation ?? undefined,
+    fields: {
+      id_type_section: item!.idTypesection,
+      section_title: item!.title,
+      section_subtitle: item!.subtitle,
+      section_description: item!.description,
+      section_content: item!.content,
+      section_variant: item!.variant,
+      section_state: item!.stateValue === 1,
+    },
+  }))
+
   if (!item) return <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Cargando...</div>
 
-  const stateOpt = getStateOption(item.stateValue)
+  const stateOpt = getVisibilityStateOption(item.stateValue)
+
+  // Qué tabs mostrar — config de ESTA sección puntual (`web_settings`, tabla
+  // `section_web_setting`, ver SectionSeeder). A diferencia de antes, "Info general" también es
+  // configurable ahora (`tab_info`) — así que si la URL trae un `?tab=` que ya no aplica
+  // (cambiaron los flags, o alguien la escribió a mano), no se puede asumir que "info" siempre
+  // esté disponible: se cae al PRIMER tab visible en el orden de `TABS`.
+  const showInfo = item.tabInfo
+  const showImages = item.tabImages
+  const showButtons = item.tabButtons
+  const showItems = item.tabItems
+  // No hay flag en `section_web_setting` para esto — a diferencia de las demás pestañas, los
+  // testimonios no son un concepto genérico de cualquier sección, solo existen para la única
+  // sección tipo `testimonial_carousel` de todo el sitio (ver TestimonyWebSeeder).
+  const showTestimonies = item.typesectionKey === 'testimonial_carousel'
+  // «Galería» / «Restauración»: su contenido son trabajos (`web_works`). El flag dice SI se muestra
+  // la pestaña; la config del tipo de sección dice QUÉ trabajos lista (ver section-works.config.ts).
+  const worksConfig = getSectionWorksConfig(item.typesectionKey)
+  const showWorks = item.tabWorks && worksConfig !== null
+  const visibility: Record<string, boolean> = {
+    info: showInfo, works: showWorks, images: showImages, buttons: showButtons, items: showItems, testimonies: showTestimonies,
+  }
+  const effectiveTab = visibility[activeTab] ? activeTab : (TABS.find((t) => visibility[t]) ?? activeTab)
+
+  // Secciones especiales con pestaña de items propia (ver GROUPED_SECTION_CONFIG[...].itemsTab):
+  //   carrusel «Muebles a medida» → "Categorías".
+  // Esa pestaña va ANTES de Imágenes (Info general | Categorías | Imágenes).
+  // El resto (incluido el hero de Servicios) sigue con "Items" en su lugar de siempre.
+  const groupedConfig = getGroupedSectionConfig(item.typesectionKey)
+  const specialItemsTab = groupedConfig?.itemsTab ?? null
+  const itemsTabTrigger = showItems && (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="flex flex-1">
+          <TabsTrigger value="items" className="w-full">{specialItemsTab?.label ?? 'Items'}</TabsTrigger>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {specialItemsTab?.tooltip ?? 'Estadísticas, características, ubicaciones y valoraciones'}
+      </TooltipContent>
+    </Tooltip>
+  )
 
   return (
     <div className="flex flex-col gap-6">
       {/* ── Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <LayoutGrid className="size-5 text-muted-foreground" />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <div>
-              <h2 className="text-2xl font-bold leading-tight">{item.name}</h2>
-              {item.title && <p className="text-sm text-muted-foreground">{item.title}</p>}
+      {/* Responsive por el ancho del CONTENEDOR (`@container`), no de la pantalla: con el panel de
+          vista previa abierto el contenido es mucho más angosto que la ventana, y con `sm:` los
+          botones se quedaban a la derecha aplastando el texto en una columna mínima. */}
+      <div className="@container overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="flex flex-col gap-4 p-4 @md:p-6 @3xl:flex-row @3xl:items-start @3xl:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-3 @md:gap-4">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm @md:size-14">
+              <LayoutGrid className="size-6 @md:size-7" />
             </div>
-            {item.description && (
-              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-            )}
-            <Badge variant="outline" className={cn('w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
+            <div className="flex min-w-0 flex-col gap-2">
+              <div>
+                <h2 className="break-words text-xl font-bold leading-tight @md:text-2xl">{item.name}</h2>
+                {item.title && <p className="text-sm text-muted-foreground">{item.title}</p>}
+                {item.subtitle && <p className="text-xs text-muted-foreground">{item.subtitle}</p>}
+              </div>
+              {item.description && (
+                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {item.typesectionName && (
+                  <Badge variant="secondary" className="w-fit text-xs font-normal">{item.typesectionName}</Badge>
+                )}
+                <Badge variant="outline" className={cn('w-fit text-xs', stateOpt.badge)}>{stateOpt.label}</Badge>
+              </div>
+            </div>
+          </div>
+          {/* Angosto: debajo del texto, en una fila que puede partirse. Ancho: a la derecha. */}
+          <div className="flex flex-wrap items-center gap-2 @3xl:shrink-0 @3xl:flex-nowrap">
+            <Button
+              variant="outline"
+              size="sm"
+              title="Configuración"
+              onClick={() => { NProgress.start(); router.push(`/sections/settings/${item.id}`) }}
+            >
+              <Settings className="size-4 @sm:mr-1.5" /><span className="hidden @sm:inline">Configuración</span>
+            </Button>
+            {/* Solo si tiene permiso de editar secciones (ver ROLES_Y_PERMISOS.md) */}
+            <Can permission="sections.update">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { NProgress.start(); router.push(`/sections/edit/${item.id}`) }}
+              >
+                <Pencil className="mr-1.5 size-4" />Editar
+              </Button>
+            </Can>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          onClick={() => { NProgress.start(); router.push(`/sections/edit/${item.id}`) }}
-        >
-          <Pencil className="mr-1.5 size-4" />Editar
-        </Button>
       </div>
 
-      {/* ── Info ── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><LayoutGrid className="size-4" />Tipo de Sección</CardTitle></CardHeader>
-            <CardContent className="flex flex-col gap-2 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Nombre</span>
-                <Badge variant="secondary" className="text-xs font-normal">{item.typesectionName || '—'}</Badge>
-              </div>
-              {item.typesectionDescription && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between gap-4">
-                    <span className="shrink-0 text-muted-foreground">Descripción</span>
-                    <span className="text-right font-medium">{item.typesectionDescription}</span>
-                  </div>
-                </>
-              )}
-              {item.typesectionStateLabel && (
-                <>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Estado</span>
-                    <Badge variant="outline" className={cn('text-xs', item.typesectionStateBadge)}>{item.typesectionStateLabel}</Badge>
-                  </div>
-                </>
-              )}
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-muted-foreground"><ListOrdered className="size-3.5" />Orden</span>
-                <span className="font-medium">{item.order ?? '—'}</span>
-              </div>
-            </CardContent>
-          </Card>
+      {/* ── Tabs ── */}
+      <Tabs value={effectiveTab} onValueChange={setActiveTab} className="flex-1">
+        <TabsList>
+          {
+            /* El `span` intermedio es a propósito: `TooltipTrigger asChild` pisaría el `data-state`
+            que usa Tabs para marcar la pestaña activa si se compusiera directo sobre
+            `TabsTrigger` (ambos primitivos de Radix escriben ese mismo atributo en el mismo
+            nodo). Ver proforma-detail.tsx, mismo patrón. */
+          }
 
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Navigation2 className="size-4" />Navegación conectada</CardTitle></CardHeader>
-            <CardContent className="flex flex-col gap-2 text-sm">
-              {item.navigationName ? (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-muted-foreground">Nombre</span>
-                    <span className="font-medium">{item.navigationName}</span>
-                  </div>
-                  {item.navigationUrl && (
-                    <>
-                      <Separator />
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-1.5 text-muted-foreground"><ExternalLink className="size-3.5" />URL</span>
-                        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{item.navigationUrl}</code>
-                      </div>
-                    </>
-                  )}
-                  {item.navigationDescription && (
-                    <>
-                      <Separator />
-                      <div className="flex justify-between gap-4">
-                        <span className="shrink-0 text-muted-foreground">Descripción</span>
-                        <span className="text-right font-medium">{item.navigationDescription}</span>
-                      </div>
-                    </>
-                  )}
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-muted-foreground"><ListOrdered className="size-3.5" />Orden</span>
-                    <span className="font-medium">{item.navigationOrder ?? '—'}</span>
-                  </div>
-                  {item.navigationStateLabel && (
-                    <>
-                      <Separator />
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Estado</span>
-                        <Badge variant="outline" className={cn('text-xs', item.navigationStateBadge)}>{item.navigationStateLabel}</Badge>
-                      </div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <span className="text-muted-foreground">Sin navegación conectada.</span>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {item.content && (
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><LayoutGrid className="size-4" />Contenido</CardTitle></CardHeader>
-              <CardContent className="text-sm whitespace-pre-wrap text-muted-foreground">{item.content}</CardContent>
-            </Card>
+          {showInfo && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex flex-1">
+                  <TabsTrigger value="info" className="w-full">Info general</TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Tipo, navegación, contenido y fechas</TooltipContent>
+            </Tooltip>
           )}
 
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />Registro</CardTitle></CardHeader>
-            <CardContent className="flex flex-col gap-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Creado el</span><span className="font-medium">{item.createdAtFormatted ?? item.createdAt}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Actualizado</span><span className="font-medium">{item.updatedAtFormatted ?? item.updatedAt ?? '—'}</span></div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          {showWorks && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex flex-1">
+                  <TabsTrigger value="works" className="w-full">Trabajos</TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{worksConfig?.title ?? 'Trabajos'} que muestra esta sección</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Carrusel: "Categorías" va antes de "Imágenes" */}
+          {specialItemsTab && itemsTabTrigger}
+
+          {showImages && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex flex-1">
+                  <TabsTrigger value="images" className="w-full">Imágenes</TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Imágenes asociadas a esta sección</TooltipContent>
+            </Tooltip>
+          )}
+
+          {showButtons && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex flex-1">
+                  <TabsTrigger value="buttons" className="w-full">Botones</TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Botones (CTA) de esta sección</TooltipContent>
+            </Tooltip>
+          )}
+
+          {!specialItemsTab && itemsTabTrigger}
+
+          {showTestimonies && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex flex-1">
+                  <TabsTrigger value="testimonies" className="w-full">Testimonios</TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Testimonios de clientes de esta sección</TooltipContent>
+            </Tooltip>
+          )}
+        </TabsList>
+
+        {showInfo && (
+          <TabsContent value="info" className="flex flex-col gap-4">
+            {/* Galería: no tiene fotos propias, avisarlo apenas se entra al detalle */}
+            {worksConfig?.mode === 'summary' && (
+              <Alert>
+                <Info />
+                <AlertTitle>Las fotos de esta sección son las de cada trabajo</AlertTitle>
+                <AlertDescription>
+                  <p>
+                    Se agregan y cambian en <strong>Galería → Trabajos</strong>. Lo que se ve en la página (tarjetas,
+                    filtros, detalle) se elige en <strong>Configuración → Apariencia</strong>.
+                  </p>
+                  {showWorks && (
+                    <Button size="sm" variant="outline" className="mt-2 w-fit" onClick={() => setActiveTab('works')}>
+                      Ver la pestaña Trabajos
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            <SectionDetailInfoTab item={item} />
+          </TabsContent>
+        )}
+
+        {showWorks && worksConfig && (
+          <TabsContent value="works" className="flex flex-col gap-3">
+            <SectionDetailWorksTab config={worksConfig} sectionId={item.id} />
+          </TabsContent>
+        )}
+
+        {showImages && (
+          <TabsContent value="images" className="flex flex-col gap-3">
+            <SectionDetailImagesTab
+              sectionId={item.id}
+              typesectionKey={item.typesectionKey}
+              canAdd={item.imagesAdd}
+              canReorder={item.imagesReorder}
+              canDelete={item.imagesDelete}
+            />
+          </TabsContent>
+        )}
+
+        {showButtons && (
+          <TabsContent value="buttons" className="flex flex-col gap-3">
+            <SectionDetailButtonsTab
+              sectionId={item.id}
+              canAdd={item.buttonsAdd}
+              canReorder={item.buttonsReorder}
+              canDelete={item.buttonsDelete}
+            />
+          </TabsContent>
+        )}
+
+        {showItems && (
+          <TabsContent value="items" className="flex flex-col gap-3">
+            <SectionDetailItemsTab
+              sectionId={item.id}
+              // Carrusel: los items son tarjetas (categorías)
+              title={specialItemsTab?.title}
+              addLabel={specialItemsTab ? groupedConfig?.addItemLabel : undefined}
+              canAdd={item.itemsAdd}
+              canReorder={item.itemsReorder}
+              canDelete={item.itemsDelete}
+            />
+          </TabsContent>
+        )}
+
+        {showTestimonies && (
+          <TabsContent value="testimonies" className="flex flex-col gap-3">
+            <SectionDetailTestimoniesTab sectionId={item.id} />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   )
 }
